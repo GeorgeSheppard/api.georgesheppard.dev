@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm lint:*)",
+      "WebFetch(domain:www.rabbitmq.com)",
+      "Bash(pnpm test:integration:*)",
+      "WebFetch(domain:node.testcontainers.org)",
+      "WebSearch",
+      "Bash(Select-String -Pattern \"Test Files|Tests|passed|failed\")",
+      "Bash(pnpm install)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm lint:*)"
+    ]
+  }
+}

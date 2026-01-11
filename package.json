@@ -1,0 +1,57 @@
+{
+  "name": "shelfie-api",
+  "version": "2.0.0",
+  "description": "TypeScript backend for Shelfie book recommendation service",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "dev:worker": "tsx watch src/core/queue/worker.ts",
+    "build": "tsup src/index.ts src/core/queue/worker.ts --format esm --dts",
+    "start": "node dist/index.js",
+    "worker": "node dist/worker.js",
+    "migrate": "tsx scripts/migrate.ts",
+    "migrate:generate": "drizzle-kit generate",
+    "migrate:push": "drizzle-kit push",
+    "test": "vitest --project unit",
+    "test:integration": "vitest --project integration",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "book",
+    "recommendations",
+    "api"
+  ],
+  "author": "me@georgesheppard.dev",
+  "license": "ISC",
+  "packageManager": "pnpm@10.22.0",
+  "dependencies": {
+    "@hono/node-server": "^1.19.7",
+    "@hono/swagger-ui": "^0.5.3",
+    "@hono/zod-openapi": "^1.2.0",
+    "@hono/zod-validator": "^0.7.6",
+    "amqplib": "^0.10.9",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.33.0",
+    "form-data": "^4.0.0",
+    "hono": "^4.11.3",
+    "openai": "^4.67.3",
+    "postgres": "^3.4.4",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^11.11.0",
+    "@testcontainers/rabbitmq": "^11.11.0",
+    "@types/amqplib": "^0.10.8",
+    "@types/node": "^22.7.5",
+    "@types/pg": "^8.11.10",
+    "drizzle-kit": "^0.24.2",
+    "testcontainers": "^11.11.0",
+    "tsc-alias": "^1.8.16",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.16"
+  }
+}
