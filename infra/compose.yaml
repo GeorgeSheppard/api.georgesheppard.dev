@@ -42,8 +42,8 @@ services:
     image: postgres:17
     environment:
       # POSTGRES_PASSWORD: Without this line a random password is used
-      POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_DB: ${DATABASE_DB}
+      POSTGRES_USER: "${DATABASE_USER}"
+      POSTGRES_DB: "${DATABASE_DB}"
       POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
     # Shared memory the container can use
     shm_size: 128mb
