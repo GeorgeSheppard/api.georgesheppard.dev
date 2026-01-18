@@ -28,10 +28,6 @@ const envSchema = z.object({
   // Encryption (must be exact lengths)
   ENCRYPTION_KEY: z.string().length(32),
   ENCRYPTION_IV: z.string().length(16),
-
-  // OpenAI Configuration
-  USE_REAL_OPENAI: z.coerce.boolean().default(true),
-  FAKE_OPENAI_DELAY_MS: z.coerce.number().default(1000),
 });
 
 export type Env = z.infer<typeof envSchema>;
