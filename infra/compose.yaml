@@ -1,0 +1,76 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel --no-autoupdate run
+    environment: 
+      TUNNEL_TOKEN: "${CloudflareToken}"
+    depends_on:
+      - api
+      - shelfie
+  api:
+    image: georgeshep/bord:api.georgesheppard.dev
+    platform: linux/amd64
+    ports:
+      - "5240:5240"
+    environment:
+      NODE_ENV: "production"
+      PORT: "5240"
+      DATABASE_URL: "postgresql://shelfie:${DatabasePassword}@db:5432/postgres"
+      RABBITMQ_URL: "amqp://shelfie:${RabbitMQPassword}@queues:5672"
+      MAILGUN_API_KEY: "${MailgunApiKey}"
+      OPENAI_API_KEY: "${OpenaiApiKey}"
+      TEXT_EXTRACTOR_URL: "http://host.docker.internal:5241"
+      API_KEY: "${ApiKey}"
+      ENCRYPTION_KEY: "${EncryptionKey}"
+      ENCRYPTION_IV: "${EncryptionIv}"
+      USE_REAL_OPENAI: "true"
+      FAKE_OPENAI_DELAY_MS: "1000"
+
+    depends_on:
+      - db
+      - queues
+
+  shelfie:
+    image: jawil576/frontend:dev
+    platform: linux/amd64
+
+  db:
+    image: postgres:17
+    environment:
+      # POSTGRES_PASSWORD: Without this line a random password is used
+      POSTGRES_USER: shelfie
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: "${DatabasePassword}"
+    # Shared memory the container can use
+    shm_size: 128mb
+    volumes:
+      # Persists the DB to ./pgdata
+      - ./pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  queues:
+    image: rabbitmq:4.0.5-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: shelfie
+      RABBITMQ_DEFAULT_PASS: "${RabbitMQPassword}"
+    volumes:
+      # Persists data to ./rabbitmq
+      - ./rabbitmq:/var/lib/rabbitmq
+
+  scheduler:
+    image: ubuntu:22.04
+    container_name: scheduler
+    restart: always
+    depends_on:
+      - api
+    volumes:
+      - ./cronjobs:/etc/cron.d
+    command: /bin/bash -c "apt-get update && apt-get install -y curl cron && cron -f"

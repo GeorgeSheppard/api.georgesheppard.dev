@@ -1,0 +1,2 @@
+API_KEY=<fill in from env>
+0 17 * * * root curl -H "x-api-key: $API_KEY" http://bookrecommender:5240/api/queue-due-recommendations >> /var/log/cron.log 2>&1
