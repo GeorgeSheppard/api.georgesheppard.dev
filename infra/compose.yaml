@@ -4,7 +4,7 @@ services:
     restart: always
     command: tunnel --no-autoupdate run
     environment: 
-      TUNNEL_TOKEN: "${CloudflareToken}"
+      TUNNEL_TOKEN: "${CLOUDFLARE_TOKEN}"
     depends_on:
       - api
       - shelfie
@@ -15,10 +15,14 @@ services:
       - "5240:5240"
     environment:
       NODE_ENV: "production"
-      PORT: "${PORT}"
+      PORT: "5240"
+      DATABASE_HOST: "db"
+      DATABASE_PORT: "5432"
       DATABASE_USER: "${DATABASE_USER}"
       DATABASE_DB: "${DATABASE_DB}"
       DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+      RABBITMQ_HOST: "queues"
+      RABBITMQ_PORT: "5672"
       RABBITMQ_USER: "${RABBITMQ_USER}"
       RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD}"
       MAILGUN_API_KEY: "${MAILGUN_API_KEY}"
@@ -31,8 +35,10 @@ services:
       FAKE_OPENAI_DELAY_MS: "${FAKE_OPENAI_DELAY_MS}"
 
     depends_on:
-      - db
-      - queues
+      db:
+        condition: service_healthy
+      queues:
+        condition: service_healthy
 
   shelfie:
     image: jawil576/frontend:dev
@@ -67,6 +73,12 @@ services:
     volumes:
       # Persists data to ./rabbitmq
       - ./rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   scheduler:
     image: ubuntu:22.04

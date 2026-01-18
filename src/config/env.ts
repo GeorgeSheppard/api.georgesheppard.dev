@@ -2,14 +2,18 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number(),
 
   // Database
+  DATABASE_HOST: z.string(),
+  DATABASE_PORT: z.coerce.number(),
   DATABASE_USER: z.string(),
   DATABASE_DB: z.string(),
   DATABASE_PASSWORD: z.string(),
 
   // RabbitMQ
+  RABBITMQ_HOST: z.string(),
+  RABBITMQ_PORT: z.coerce.number(),
   RABBITMQ_USER: z.string(),
   RABBITMQ_PASSWORD: z.string(),
 
@@ -41,7 +45,7 @@ export function validateEnv(): Env & { DATABASE_URL: string, RABBITMQ_URL: strin
 
   return {
     ...result.data,
-    DATABASE_URL: `postgresql://${result.data.DATABASE_USER}:${result.data.DATABASE_PASSWORD}@localhost:5432/${result.data.DATABASE_DB}`,
-    RABBITMQ_URL: `amqp://${result.data.RABBITMQ_USER}:${result.data.RABBITMQ_PASSWORD}@localhost:5672`
+    DATABASE_URL: `postgresql://${result.data.DATABASE_USER}:${result.data.DATABASE_PASSWORD}@${result.data.DATABASE_HOST}:${result.data.DATABASE_PORT}/${result.data.DATABASE_DB}`,
+    RABBITMQ_URL: `amqp://${result.data.RABBITMQ_USER}:${result.data.RABBITMQ_PASSWORD}@${result.data.RABBITMQ_HOST}:${result.data.RABBITMQ_PORT}`
   }
 }
