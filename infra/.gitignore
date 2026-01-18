@@ -1,0 +1,3 @@
+# If you run the production compose locally these will appear
+pgdata
+rabbitmq
