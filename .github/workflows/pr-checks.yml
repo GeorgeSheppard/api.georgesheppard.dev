@@ -5,7 +5,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  lint-and-test:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
