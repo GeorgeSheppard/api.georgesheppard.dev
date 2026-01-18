@@ -1,7 +1,9 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
   PORT: z.coerce.number(),
 
   // Database
@@ -26,26 +28,34 @@ const envSchema = z.object({
   // Encryption (must be exact lengths)
   ENCRYPTION_KEY: z.string().length(32),
   ENCRYPTION_IV: z.string().length(16),
-
-  // OpenAI Configuration
-  USE_REAL_OPENAI: z.coerce.boolean().default(true),
-  FAKE_OPENAI_DELAY_MS: z.coerce.number().default(1000),
 });
 
 export type Env = z.infer<typeof envSchema>;
 
-export function validateEnv(): Env & { DATABASE_URL: string, RABBITMQ_URL: string } {
+export function validateEnv() {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error('Invalid environment variables:');
+    console.error("Invalid environment variables:");
     console.error(z.treeifyError(result.error));
     process.exit(1);
   }
 
+  const {
+    DATABASE_USER,
+    DATABASE_PASSWORD,
+    DATABASE_HOST,
+    DATABASE_PORT,
+    RABBITMQ_USER,
+    RABBITMQ_PASSWORD,
+    RABBITMQ_HOST,
+    RABBITMQ_PORT,
+    ...conf
+  } = result.data;
+
   return {
-    ...result.data,
+    ...conf,
     DATABASE_URL: `postgresql://${result.data.DATABASE_USER}:${result.data.DATABASE_PASSWORD}@${result.data.DATABASE_HOST}:${result.data.DATABASE_PORT}/${result.data.DATABASE_DB}`,
-    RABBITMQ_URL: `amqp://${result.data.RABBITMQ_USER}:${result.data.RABBITMQ_PASSWORD}@${result.data.RABBITMQ_HOST}:${result.data.RABBITMQ_PORT}`
-  }
+    RABBITMQ_URL: `amqp://${result.data.RABBITMQ_USER}:${result.data.RABBITMQ_PASSWORD}@${result.data.RABBITMQ_HOST}:${result.data.RABBITMQ_PORT}`,
+  };
 }
