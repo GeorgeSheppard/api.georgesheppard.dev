@@ -5,10 +5,13 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
 
   // Database
-  DATABASE_URL: z.string().url(),
+  DATABASE_USER: z.string(),
+  DATABASE_DB: z.string(),
+  DATABASE_PASSWORD: z.string(),
 
   // RabbitMQ
-  RABBITMQ_URL: z.string().url(),
+  RABBITMQ_USER: z.string(),
+  RABBITMQ_PASSWORD: z.string(),
 
   // API Keys
   API_KEY: z.string(),
@@ -27,7 +30,7 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
-export function validateEnv(): Env {
+export function validateEnv(): Env & { DATABASE_URL: string, RABBITMQ_URL: string } {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
@@ -36,5 +39,9 @@ export function validateEnv(): Env {
     process.exit(1);
   }
 
-  return result.data;
+  return {
+    ...result.data,
+    DATABASE_URL: `postgresql://${result.data.DATABASE_USER}:${result.data.DATABASE_PASSWORD}@localhost:5432/${result.data.DATABASE_DB}`,
+    RABBITMQ_URL: `amqp://${result.data.RABBITMQ_USER}:${result.data.RABBITMQ_PASSWORD}@localhost:5672`
+  }
 }
