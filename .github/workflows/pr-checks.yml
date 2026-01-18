@@ -29,3 +29,28 @@ jobs:
 
       - name: Run Integration Tests
         run: pnpm test:integration
+        env:
+          NODE_ENV: test
+          PORT: 3001
+          # Database
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 5432
+          DATABASE_USER: test_user
+          DATABASE_PASSWORD: test_password
+          DATABASE_DB: test_db
+          # RabbitMQ
+          RABBITMQ_HOST: localhost
+          RABBITMQ_PORT: 5672
+          RABBITMQ_USER: guest
+          RABBITMQ_PASSWORD: guest
+          # API Keys
+          API_KEY: test-api-key-123456789
+          MAILGUN_API_KEY: test-mailgun-key
+          OPENAI_API_KEY: test-openai-key
+          TEXT_EXTRACTOR_URL: http://localhost:3002/extract
+          # Encryption
+          ENCRYPTION_KEY: 12345678901234567890123456789012
+          ENCRYPTION_IV: 1234567890123456
+          # OpenAI Configuration
+          USE_REAL_OPENAI: false
+          FAKE_OPENAI_DELAY_MS: 0
