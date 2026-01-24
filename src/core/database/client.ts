@@ -1,9 +1,8 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema/index.js';
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { config } from "@config/index.js";
 
 export interface DatabaseClient {
   db: ReturnType<typeof drizzle>;
@@ -18,11 +17,8 @@ export async function createDatabaseClient(url: string): Promise<DatabaseClient>
   const db = drizzle(queryClient, { schema });
 
   try {
-    const currentDir = dirname(fileURLToPath(import.meta.url));
-    const migrationsFolder = join(currentDir, 'migrations');
-
     await migrate(db, {
-      migrationsFolder,
+      migrationsFolder: config.DATABASE_MIGRATIONS_PATH,
     });
     console.log('✅ Database migrations completed');
   } catch (error) {

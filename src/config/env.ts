@@ -12,6 +12,7 @@ const envSchema = z.object({
   DATABASE_USER: z.string(),
   DATABASE_DB: z.string(),
   DATABASE_PASSWORD: z.string(),
+  DATABASE_MIGRATIONS_PATH: z.string(),
 
   // RabbitMQ
   RABBITMQ_HOST: z.string(),
