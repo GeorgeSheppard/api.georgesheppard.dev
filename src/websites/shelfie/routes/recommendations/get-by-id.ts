@@ -12,7 +12,7 @@ const RecommendationSchema = z.object({
   name: z.string(),
   author: z.string(),
   description: z.string(),
-  reasonForRecommendation: z.string(),
+  reason: z.string(),
   amazonLink: z.string(),
 });
 

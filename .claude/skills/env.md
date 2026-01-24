@@ -87,9 +87,13 @@ if (!config.DATABASE_URL) { ... } // ❌ Unnecessary
    - Add the new variable to `@.env.test` with a dummy test value
    - Include comments explaining what the variable is for (see existing examples)
 
-3. **Update Documentation** in `.claude/CLAUDE.md` if adding a new service or pattern
+3. **Update Docker Compose** in `@infra/compose.yaml`:
+   - Add the new environment variable to the `api` service under the `environment` section
+   - Use the pattern: `NEW_VAR: "${NEW_VAR}"` to pass it from the host environment into the container
 
-4. **Import and Use**:
+4. **Update Documentation** in `.claude/CLAUDE.md` if adding a new service or pattern
+
+5. **Import and Use**:
    ```typescript
    import { config } from '@config/index.js';
 

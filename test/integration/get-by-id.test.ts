@@ -184,7 +184,7 @@ describe('GET /api/recommendations/{id}', () => {
         name: 'Test Book',
         author: 'Test Author',
         description: 'Test Description',
-        reasonForRecommendation: 'Test Reason',
+        reason: 'Test Reason',
         amazonLink: 'https://amazon.com/test',
       },
     ];
@@ -246,7 +246,7 @@ describe('GET /api/recommendations/{id}', () => {
         name: 'Another Test Book',
         author: 'Another Test Author',
         description: 'Another Test Description',
-        reasonForRecommendation: 'Another Test Reason',
+        reason: 'Another Test Reason',
         amazonLink: 'https://amazon.com/test2',
       },
     ];
@@ -307,7 +307,7 @@ describe('GET /api/recommendations/{id}', () => {
         name: 'No Email Test Book',
         author: 'No Email Test Author',
         description: 'No Email Test Description',
-        reasonForRecommendation: 'No Email Test Reason',
+        reason: 'No Email Test Reason',
         amazonLink: 'https://amazon.com/test4',
       },
     ];

@@ -279,7 +279,7 @@ describe('POST /api/recommendations/add-email', () => {
           name: 'Test Book',
           author: 'Test Author',
           description: 'A test book',
-          reasonForRecommendation: 'Testing',
+          reason: 'Testing',
           amazonLink: 'https://amazon.com/test',
         }],
       })
@@ -351,7 +351,7 @@ describe('POST /api/recommendations/add-email', () => {
           name: 'Test Book',
           author: 'Test Author',
           description: 'A test book',
-          reasonForRecommendation: 'Testing',
+          reason: 'Testing',
           amazonLink: 'https://amazon.com/test',
         }],
       })
@@ -402,7 +402,7 @@ describe('POST /api/recommendations/add-email', () => {
           name: 'Test Book',
           author: 'Test Author',
           description: 'A test book',
-          reasonForRecommendation: 'Testing',
+          reason: 'Testing',
           amazonLink: 'https://amazon.com/test',
         }],
       })
