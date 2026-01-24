@@ -15,14 +15,14 @@ export function createMockRecommender(): Recommender {
           name: 'The Midnight Library',
           author: 'Matt Haig',
           description: 'A compelling novel about life\'s infinite possibilities and second chances.',
-          reasonForRecommendation: 'Based on your reading history, this book shares similar themes and writing style that you\'ll enjoy.',
+          reason: 'Based on your reading history, this book shares similar themes and writing style that you\'ll enjoy.',
           amazonLink: 'https://www.amazon.com/s?k=The%20Midnight%20Library%20Matt%20Haig&tag=test',
         },
         {
           name: 'Project Hail Mary',
           author: 'Andy Weir',
           description: 'An exciting science fiction adventure about an astronaut\'s mission to save Earth.',
-          reasonForRecommendation: 'Based on your reading history, this book shares similar themes and writing style that you\'ll enjoy.',
+          reason: 'Based on your reading history, this book shares similar themes and writing style that you\'ll enjoy.',
           amazonLink: 'https://www.amazon.com/s?k=Project%20Hail%20Mary%20Andy%20Weir&tag=test',
         },
       ];

@@ -58,7 +58,7 @@ export class OpenAIRecommender implements Recommender {
         name: rec.name || rec.title,
         author: rec.author,
         description: rec.description,
-        reasonForRecommendation: rec.reasonForRecommendation || rec.reason,
+        reason: rec.reasonForRecommendation,
         amazonLink: this.buildAmazonLink(rec.name || rec.title, rec.author, location),
       }));
     } catch (error) {

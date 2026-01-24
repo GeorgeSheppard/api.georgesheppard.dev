@@ -2,7 +2,7 @@ export interface Recommendation {
   name: string;
   author: string;
   description: string;
-  reasonForRecommendation: string;
+  reason: string;
   amazonLink: string;
 }
 
