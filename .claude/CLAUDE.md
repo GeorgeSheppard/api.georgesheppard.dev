@@ -25,3 +25,4 @@ Basic unit tests can be run using:
 2. Understand and use the existing structure of the codebase so that patterns are followed.
 3. Ask clarifications if specifications are unclear.
 4. Use `pnpm`.
+5. Use `.js` extensions in all import statements, even though this is a TypeScript project. This is necessary for ESM compatibility and matches the project's build output.
