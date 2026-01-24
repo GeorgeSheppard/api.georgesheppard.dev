@@ -28,6 +28,15 @@ const envSchema = z.object({
   // Encryption (must be exact lengths)
   ENCRYPTION_KEY: z.string().length(32),
   ENCRYPTION_IV: z.string().length(16),
+
+  // AWS Services (KitchenCalm)
+  AWS_REGION: z.string().default('us-east-1'),
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  DYNAMODB_TABLE_NAME: z.string(),
+  S3_BUCKET_NAME: z.string(),
+  COGNITO_USER_POOL_ID: z.string(),
+  COGNITO_REGION: z.string().default('us-east-1'),
 });
 
 export type Env = z.infer<typeof envSchema>;

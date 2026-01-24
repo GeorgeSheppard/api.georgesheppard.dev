@@ -9,6 +9,8 @@ import { EmailClient } from '@core/utils/mailgun.js';
 import { IpLocator } from '@core/utils/ip-locator.js';
 import { createMockEmailClient } from '../mocks/email.js';
 import { createMockIpLocator } from '../mocks/ip-locator.js';
+import { createMockDynamoDBClient } from '../mocks/dynamodb-client.js';
+import { createMockS3Client } from '../mocks/s3-client.js';
 import type { Recommendation } from '@core/types/index.js';
 
 let app: App;
@@ -22,7 +24,14 @@ beforeAll(async () => {
   queueClient = await createQueueClient(config.RABBITMQ_URL);
   emailClient = createMockEmailClient();
   ipLocator = createMockIpLocator();
-  app = await createApp(databaseClient, queueClient, emailClient, ipLocator);
+  app = await createApp(
+    databaseClient,
+    queueClient,
+    emailClient,
+    ipLocator,
+    createMockDynamoDBClient(),
+    createMockS3Client()
+  );
 });
 
 afterAll(async () => {

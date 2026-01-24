@@ -12,7 +12,9 @@
       "Bash(pnpm remove:*)",
       "Bash(pnpm list:*)",
       "Bash(pnpm build:*)",
-      "Bash(pnpm lint:*)"
+      "Bash(pnpm lint:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)"
     ]
   }
 }

@@ -6,15 +6,26 @@ import { securityHeaders } from '@core/middleware/security.js';
 import { errorHandler } from '@core/middleware/error-handler.js';
 import { QueueClient } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
+import { DynamoDBClientWrapper } from '@core/database/dynamodb-client.js';
+import { S3ClientWrapper } from '@core/storage/s3-client.js';
 import { registerShelfieRoutes } from '@websites/shelfie/routes/index.js';
+import { registerKitchenCalmRoutes } from '@websites/kitchencalm/routes/index.js';
 import { config } from "./config";
 import { Env } from "hono/types";
 import { EmailClient } from "@core/utils/mailgun";
 import { IpLocator } from "@core/utils/ip-locator";
+import { CognitoUser } from "@core/middleware/cognito-auth.js";
 
 export type App = OpenAPIHono<Env, {}, "/">
 
-export async function createApp(databaseClient: DatabaseClient, queueClient: QueueClient, emailClient: EmailClient, ipLocator: IpLocator) {
+export async function createApp(
+  databaseClient: DatabaseClient,
+  queueClient: QueueClient,
+  emailClient: EmailClient,
+  ipLocator: IpLocator,
+  dynamoDBClient: DynamoDBClientWrapper,
+  s3Client: S3ClientWrapper
+) {
   const app = new OpenAPIHono();
 
 
@@ -24,6 +35,8 @@ export async function createApp(databaseClient: DatabaseClient, queueClient: Que
     c.set('databaseClient', databaseClient);
     c.set('emailClient', emailClient)
     c.set('ipLocator', ipLocator)
+    c.set('dynamoDBClient', dynamoDBClient)
+    c.set('s3Client', s3Client)
     await next();
   });
   
@@ -41,13 +54,14 @@ export async function createApp(databaseClient: DatabaseClient, queueClient: Que
 
   // Register routes
   registerShelfieRoutes(app);
+  registerKitchenCalmRoutes(app);
 
   // OpenAPI documentation
   app.doc('/swagger/json', {
     openapi: '3.0.0',
     info: {
-      title: 'Shelfie API',
-      description: 'Book recommendation API for Shelfie',
+      title: 'Multi-Site API',
+      description: 'API for Shelfie (book recommendations) and KitchenCalm (recipe management)',
       version: '2.0.0',
     },
     servers: [
@@ -69,5 +83,8 @@ declare module 'hono' {
     databaseClient: DatabaseClient;
     emailClient: EmailClient;
     ipLocator: IpLocator;
+    dynamoDBClient: DynamoDBClientWrapper;
+    s3Client: S3ClientWrapper;
+    cognitoUser: CognitoUser | null;
   }
 }
