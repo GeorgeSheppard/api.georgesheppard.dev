@@ -1,7 +1,10 @@
-import fs from 'fs'
-import path from 'path'
-import { createTestApp } from "test/utils/app.js";
-import { fileURLToPath } from "url";
+import { config } from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { createTestApp } from 'test/utils/app.js';
+import { fileURLToPath } from 'url';
+
+config({ path: '.env.test' });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +14,7 @@ if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-const app = await createTestApp({ })
+const app = await createTestApp({});
 const spec = app.getOpenAPIDocument({
   openapi: '3.0.0',
   info: {

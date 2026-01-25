@@ -24,6 +24,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Load environment variables
+        run: grep -v '^#' .env.test | grep -v '^$' >> $GITHUB_ENV
+
       - name: Generate OpenAPI Spec
         run: pnpm generate:openapi
 
@@ -42,9 +45,6 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-
-      - name: Load environment variables
-        run: grep -v '^#' .env.test | grep -v '^$' >> $GITHUB_ENV
 
       - name: Run Integration Tests
         run: pnpm test:integration
