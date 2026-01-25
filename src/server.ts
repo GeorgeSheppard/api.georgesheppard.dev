@@ -14,12 +14,15 @@ import { IpLocator } from '@core/utils/ip-locator';
 
 export type App = OpenAPIHono<Env, {}, '/'>;
 
-export async function createApp(
-  databaseClient: DatabaseClient,
-  queueClient: QueueClient,
-  emailClient: EmailClient,
-  ipLocator: IpLocator
-) {
+export interface AppDependencies {
+  databaseClient: DatabaseClient;
+  queueClient: QueueClient;
+  emailClient: EmailClient;
+  ipLocator: IpLocator;
+}
+
+export async function createApp(dependencies: AppDependencies) {
+  const { databaseClient, queueClient, emailClient, ipLocator } = dependencies;
   const app = new OpenAPIHono();
 
   // Store clients in app context
