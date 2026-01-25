@@ -14,7 +14,11 @@
       "Bash(pnpm build:*)",
       "Bash(pnpm lint:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(pnpm generate:openapi:*)"
+      "Bash(pnpm generate:openapi:*)",
+      "Skill(update-pr-from-branch)",
+      "Bash(git rev-parse:*)",
+      "mcp__github__list_pull_requests",
+      "mcp__github__update_pull_request"
     ]
   }
 }
