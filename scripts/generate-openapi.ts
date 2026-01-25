@@ -1,8 +1,23 @@
-// Load test environment BEFORE any other imports
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.test' });
+// Set dummy env vars for config validation - no .env file needed
+// These are never used, just satisfy the validator during import
+process.env.PORT = '3000';
+process.env.DATABASE_HOST = 'localhost';
+process.env.DATABASE_PORT = '5432';
+process.env.DATABASE_USER = 'user';
+process.env.DATABASE_DB = 'db';
+process.env.DATABASE_PASSWORD = 'pass';
+process.env.DATABASE_MIGRATIONS_PATH = './migrations';
+process.env.RABBITMQ_HOST = 'localhost';
+process.env.RABBITMQ_PORT = '5672';
+process.env.RABBITMQ_USER = 'user';
+process.env.RABBITMQ_PASSWORD = 'pass';
+process.env.API_KEY = 'key';
+process.env.MAILGUN_API_KEY = 'key';
+process.env.OPENAI_API_KEY = 'key';
+process.env.TEXT_EXTRACTOR_URL = 'http://localhost';
+process.env.ENCRYPTION_KEY = '12345678901234567890123456789012';
+process.env.ENCRYPTION_IV = '1234567890123456';
 
-// Now dynamically import everything else after env is loaded
 async function main() {
   const { OpenAPIHono } = await import('@hono/zod-openapi');
   const fs = await import('fs');
@@ -12,20 +27,15 @@ async function main() {
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-
   const OUTPUT_DIR = path.resolve(__dirname, '../generated/openapi');
 
-  // Ensure output directory exists
   if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   }
 
   const app = new OpenAPIHono();
-
-  // Register all website routes
   registerShelfieRoutes(app);
 
-  // Generate the spec
   const spec = app.getOpenAPIDocument({
     openapi: '3.0.0',
     info: {
@@ -38,7 +48,6 @@ async function main() {
 
   const outputPath = path.join(OUTPUT_DIR, 'api.json');
   fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
-
   console.log(`Generated: ${outputPath}`);
 }
 
