@@ -26,5 +26,5 @@ const spec = app.getOpenAPIDocument({
 });
 
 const outputPath = path.join(OUTPUT_DIR, 'georgesheppard-spec.json');
-fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
+fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2) + '\n');
 console.log(`Generated: ${outputPath}`);
