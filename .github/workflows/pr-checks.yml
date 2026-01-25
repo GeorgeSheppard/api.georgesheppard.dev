@@ -20,16 +20,15 @@ jobs:
       - name: Generate OpenAPI Spec
         run: pnpm generate:openapi
 
-      - name: Commit OpenAPI Spec if Changed
+      - name: Validate OpenAPI Spec is Up to Date
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add generated/openapi/
-          if ! git diff --cached --quiet generated/openapi/; then
-            git commit -m "Generate OpenAPI spec"
-            git push origin HEAD:${{ github.head_ref }}
+          if ! git diff --quiet generated/openapi/; then
+            echo "❌ OpenAPI spec is out of date!"
+            echo "Run 'pnpm generate:openapi' locally and commit the changes."
+            git diff generated/openapi/
+            exit 1
           fi
+          echo "✅ OpenAPI spec is up to date"
 
   lint:
     runs-on: ubuntu-latest
