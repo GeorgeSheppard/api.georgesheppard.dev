@@ -7,7 +7,7 @@ import { DatabaseClient } from '@core/database/client.js';
 export async function processTextExtractionJob(
   job: TextExtractionJob,
   databaseClient: DatabaseClient,
-  queueClient: QueueClient,
+  queueClient: QueueClient
 ) {
   const { userId, recommendationId } = job;
 

@@ -1,8 +1,8 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema/index.js';
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { config } from "@config/index.js";
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { config } from '@config/index.js';
 
 export interface DatabaseClient {
   db: ReturnType<typeof drizzle>;

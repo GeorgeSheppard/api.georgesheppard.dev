@@ -39,12 +39,8 @@
           "name": "images_request_id_requests_id_fk",
           "tableFrom": "images",
           "tableTo": "requests",
-          "columnsFrom": [
-            "request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["request_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -88,12 +84,8 @@
           "name": "recommendations_request_id_requests_id_fk",
           "tableFrom": "recommendations",
           "tableTo": "requests",
-          "columnsFrom": [
-            "request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["request_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

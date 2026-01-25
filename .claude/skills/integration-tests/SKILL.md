@@ -26,6 +26,7 @@ Do NOT assume all endpoints follow the same pattern. Each endpoint's tests shoul
 ## Integration Test Checklist
 
 ### 1. Test File Setup
+
 **File**: `test/integration/[endpoint-name].test.ts`
 
 Create a test file with standard setup/teardown and describe block:
@@ -35,9 +36,9 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
 import { requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
-import { App, createApp } from "../../src/server.js";
-import { config } from "@config/index.js";
-import { createQueueClient, QueueClient } from "@core/queue/client.js";
+import { App, createApp } from '../../src/server.js';
+import { config } from '@config/index.js';
+import { createQueueClient, QueueClient } from '@core/queue/client.js';
 
 let app: App;
 let databaseClient: DatabaseClient;
@@ -60,6 +61,7 @@ describe('POST /api/your-endpoint', () => {
 ```
 
 **Key Points**:
+
 - Import test utilities from `vitest`
 - Import `DatabaseClient`, `QueueClient`, and `App` from their respective modules
 - Import the database tables and ORM utilities needed for assertions
@@ -79,16 +81,13 @@ For each field in your request schema, test that invalid input is rejected with 
 ```typescript
 it('should return an error if requestId is not a valid UUID', async () => {
   const response = await app.request(
-    new Request(
-      'http://localhost/api/your-endpoint',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'requestId=not-a-uuid',
-      }
-    )
+    new Request('http://localhost/api/your-endpoint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'requestId=not-a-uuid',
+    })
   );
 
   expect(response.status).toBeGreaterThanOrEqual(400);
@@ -98,16 +97,13 @@ it('should return an error if requestId is not a valid UUID', async () => {
 
 it('should return an error if requestId is missing from request', async () => {
   const response = await app.request(
-    new Request(
-      'http://localhost/api/your-endpoint',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: '',  // Empty body - missing required field
-      }
-    )
+    new Request('http://localhost/api/your-endpoint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: '', // Empty body - missing required field
+    })
   );
 
   expect(response.status).toBeGreaterThanOrEqual(400);
@@ -117,6 +113,7 @@ it('should return an error if requestId is missing from request', async () => {
 ```
 
 **Key Points**:
+
 - Use `app.request(new Request(...))` to make HTTP requests
 - Provide full URL with `http://localhost` prefix
 - Set correct `method` (POST, GET, DELETE, etc.)
@@ -133,6 +130,7 @@ it('should return an error if requestId is missing from request', async () => {
 **Strategy**: Read the endpoint implementation to understand all possible code paths and branches.
 
 Not all endpoints handle non-existent records the same way. Some may:
+
 - Return success with no database changes (graceful no-op)
 - Return an error (404 or 400)
 - Create a new record
@@ -141,21 +139,19 @@ Not all endpoints handle non-existent records the same way. Some may:
 Write tests for each code path in your endpoint implementation.
 
 **Example - Endpoint that does nothing if record doesn't exist**:
+
 ```typescript
 it('should return 200 and not modify anything if requestId does not exist in DB', async () => {
   const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
   const response = await app.request(
-    new Request(
-      'http://localhost/api/your-endpoint',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `requestId=${nonExistentId}`,
-      }
-    )
+    new Request('http://localhost/api/your-endpoint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `requestId=${nonExistentId}`,
+    })
   );
 
   // Check what the endpoint actually returns
@@ -174,19 +170,17 @@ it('should return 200 and not modify anything if requestId does not exist in DB'
 ```
 
 **Example - Endpoint that returns 404 if record doesn't exist**:
+
 ```typescript
 it('should return 404 if requestId does not exist in DB', async () => {
   const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
   const response = await app.request(
-    new Request(
-      'http://localhost/api/your-endpoint',
-      {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `requestId=${nonExistentId}`,
-      }
-    )
+    new Request('http://localhost/api/your-endpoint', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `requestId=${nonExistentId}`,
+    })
   );
 
   expect(response.status).toBe(404);
@@ -196,6 +190,7 @@ it('should return 404 if requestId does not exist in DB', async () => {
 ```
 
 **Key Points**:
+
 - Read the endpoint code first to understand what it does
 - Use valid UUID format that doesn't exist in the database
 - Test the actual behavior of your endpoint, not a generic expectation
@@ -229,10 +224,7 @@ it('should update email and related fields if requestId exists in DB', async () 
   const requestId = result[0].id;
 
   // 2. Verify initial state
-  let dbRequest = await databaseClient.db
-    .select()
-    .from(requests)
-    .where(eq(requests.id, requestId));
+  let dbRequest = await databaseClient.db.select().from(requests).where(eq(requests.id, requestId));
 
   expect(dbRequest[0].email).toBe(testEmail);
   expect(dbRequest[0].frequency).toBe(testFrequency);
@@ -240,16 +232,13 @@ it('should update email and related fields if requestId exists in DB', async () 
 
   // 3. Call the endpoint
   const response = await app.request(
-    new Request(
-      'http://localhost/api/your-endpoint',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `requestId=${requestId}`,
-      }
-    )
+    new Request('http://localhost/api/your-endpoint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `requestId=${requestId}`,
+    })
   );
 
   // 4. Verify the response
@@ -258,10 +247,7 @@ it('should update email and related fields if requestId exists in DB', async () 
   expect(responseBody).toEqual({});
 
   // 5. Verify the database was updated correctly
-  dbRequest = await databaseClient.db
-    .select()
-    .from(requests)
-    .where(eq(requests.id, requestId));
+  dbRequest = await databaseClient.db.select().from(requests).where(eq(requests.id, requestId));
 
   expect(dbRequest[0].email).toBeNull();
   expect(dbRequest[0].frequency).toBeNull();
@@ -270,6 +256,7 @@ it('should update email and related fields if requestId exists in DB', async () 
 ```
 
 **Key Points**:
+
 - Use `databaseClient.db.insert()` to create test data for a valid scenario
 - Use `.returning()` to get created records with generated IDs
 - Verify initial database state matches test setup
@@ -302,16 +289,13 @@ it('should return correct response object on successful validation', async () =>
 
   // Call the endpoint
   const response = await app.request(
-    new Request(
-      'http://localhost/api/your-endpoint',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `requestId=${requestId}`,
-      }
-    )
+    new Request('http://localhost/api/your-endpoint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `requestId=${requestId}`,
+    })
   );
 
   // Verify response status matches route definition
@@ -334,6 +318,7 @@ it('should return correct response object on successful validation', async () =>
 ```
 
 **Key Points**:
+
 - Read the route's `responses` section to see expected status codes and body schemas
 - Assert the actual status code matches the route definition
 - Assert `content-type` header contains `'application/json'`
@@ -360,18 +345,28 @@ Example test file structure (for delete-email):
 ```typescript
 describe('POST /api/recommendations/delete-email', () => {
   // Validation tests
-  it('should return an error if requestId is not a valid UUID', async () => { /* ... */ });
-  it('should return an error if requestId is missing from request', async () => { /* ... */ });
+  it('should return an error if requestId is not a valid UUID', async () => {
+    /* ... */
+  });
+  it('should return an error if requestId is missing from request', async () => {
+    /* ... */
+  });
 
   // Edge case: what does the endpoint do if the record doesn't exist?
   // This is endpoint-specific - don't assume all endpoints handle this the same way
-  it('should return 200 and not modify anything if requestId does not exist in DB', async () => { /* ... */ });
+  it('should return 200 and not modify anything if requestId does not exist in DB', async () => {
+    /* ... */
+  });
 
   // Success path: what changes when the endpoint succeeds?
-  it('should delete email and related fields if requestId exists in DB', async () => { /* ... */ });
+  it('should delete email and related fields if requestId exists in DB', async () => {
+    /* ... */
+  });
 
   // Response validation
-  it('should return correct response object on successful validation', async () => { /* ... */ });
+  it('should return correct response object on successful validation', async () => {
+    /* ... */
+  });
 });
 ```
 
@@ -383,10 +378,7 @@ Always verify database state after endpoint calls using this pattern:
 
 ```typescript
 // Query for the record
-const records = await databaseClient.db
-  .select()
-  .from(requests)
-  .where(eq(requests.id, someId));
+const records = await databaseClient.db.select().from(requests).where(eq(requests.id, someId));
 
 // Assert the record exists
 expect(records).toHaveLength(1);
@@ -398,6 +390,7 @@ expect(records[0].updatedUtc).toEqual(expectedDate);
 ```
 
 **Key Points**:
+
 - Always use `.select().from(table).where(eq(...))` for queries
 - Check `.toHaveLength(n)` before accessing array elements
 - Use specific assertions for each field (`.toBe()`, `.toBeNull()`, `.toEqual()`)
@@ -408,6 +401,7 @@ expect(records[0].updatedUtc).toEqual(expectedDate);
 ## Test Utilities Summary
 
 ### Making HTTP Requests
+
 ```typescript
 const response = await app.request(
   new Request('http://localhost/api/path', {
@@ -419,6 +413,7 @@ const response = await app.request(
 ```
 
 ### Parsing Response
+
 ```typescript
 const statusCode = response.status;
 const headerValue = response.headers.get('content-type');
@@ -426,6 +421,7 @@ const body = await response.json();
 ```
 
 ### Database Operations
+
 ```typescript
 // Insert
 const result = await databaseClient.db.insert(requests).values({...}).returning();
@@ -459,4 +455,3 @@ await databaseClient.db.delete(requests).where(eq(...));
 - [ ] Tests verify actual endpoint behavior, not generic expectations
 - [ ] Tests verify side effects actually persisted to database with follow-up SELECT queries
 - [ ] Coverage includes all code paths that can be reached with valid input
-

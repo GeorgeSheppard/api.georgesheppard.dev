@@ -2,9 +2,9 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
 import { requests, recommendations } from '@core/database/schema/index.js';
 import { eq, count } from 'drizzle-orm';
-import { App, createApp } from "../../src/server.js";
-import { config } from "@config/index.js";
-import { createQueueClient, QueueClient } from "@core/queue/client.js";
+import { App, createApp } from '../../src/server.js';
+import { config } from '@config/index.js';
+import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { EmailClient } from '@core/utils/mailgun.js';
 import { IpLocator } from '@core/utils/ip-locator.js';
 import { createMockEmailClient } from '../mocks/email.js';
@@ -37,7 +37,6 @@ afterEach(async () => {
 });
 
 describe('GET /api/queue-due-recommendations', () => {
-
   describe('No due recommendations', () => {
     it('should return 204 when there are no due recommendations', async () => {
       const response = await app.request(
@@ -72,9 +71,7 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(response.status).toBe(204);
 
       // Verify no recommendations were created
-      const [result] = await databaseClient.db
-        .select({ count: count() })
-        .from(recommendations);
+      const [result] = await databaseClient.db.select({ count: count() }).from(recommendations);
       expect(result.count).toBe(0);
     });
 
@@ -97,9 +94,7 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(response.status).toBe(204);
 
       // Verify no recommendations were created
-      const [result] = await databaseClient.db
-        .select({ count: count() })
-        .from(recommendations);
+      const [result] = await databaseClient.db.select({ count: count() }).from(recommendations);
       expect(result.count).toBe(0);
     });
   });
@@ -192,9 +187,7 @@ describe('GET /api/queue-due-recommendations', () => {
       // Both operations should have succeeded (atomicity check)
       expect(recs.count).toBe(1);
       expect(updatedRequest.nextRecommendationUtc).toBeTruthy();
-      expect(updatedRequest.nextRecommendationUtc!.getTime()).toBeGreaterThan(
-        Date.now()
-      );
+      expect(updatedRequest.nextRecommendationUtc!.getTime()).toBeGreaterThan(Date.now());
     });
   });
 
@@ -285,9 +278,7 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(response.status).toBe(204);
 
       // Verify all recommendations were created
-      const [result] = await databaseClient.db
-        .select({ count: count() })
-        .from(recommendations);
+      const [result] = await databaseClient.db.select({ count: count() }).from(recommendations);
       expect(result.count).toBe(batchCount);
 
       // Verify message count
@@ -450,9 +441,7 @@ describe('GET /api/queue-due-recommendations', () => {
         .returning();
 
       // Mock channel.sendToQueue to throw an error
-      const originalSendToQueue = queueClient.channel.sendToQueue.bind(
-        queueClient.channel
-      );
+      const originalSendToQueue = queueClient.channel.sendToQueue.bind(queueClient.channel);
       vi.spyOn(queueClient.channel, 'sendToQueue').mockImplementation(() => {
         throw new Error('Queue service unavailable');
       });
@@ -482,14 +471,10 @@ describe('GET /api/queue-due-recommendations', () => {
         .from(requests)
         .where(eq(requests.id, request.id));
       expect(updatedRequest.nextRecommendationUtc).toBeTruthy();
-      expect(updatedRequest.nextRecommendationUtc!.getTime()).toBeGreaterThan(
-        Date.now()
-      );
+      expect(updatedRequest.nextRecommendationUtc!.getTime()).toBeGreaterThan(Date.now());
 
       // Restore original implementation
-      vi.spyOn(queueClient.channel, 'sendToQueue').mockImplementation(
-        originalSendToQueue
-      );
+      vi.spyOn(queueClient.channel, 'sendToQueue').mockImplementation(originalSendToQueue);
     });
   });
 
@@ -526,9 +511,7 @@ describe('GET /api/queue-due-recommendations', () => {
 
       expect(recommendationCount.count).toBe(1);
       expect(updatedRequest.nextRecommendationUtc).toBeTruthy();
-      expect(updatedRequest.nextRecommendationUtc!.getTime()).toBeGreaterThan(
-        Date.now()
-      );
+      expect(updatedRequest.nextRecommendationUtc!.getTime()).toBeGreaterThan(Date.now());
     });
 
     it('should not process same user multiple times in single request', async () => {

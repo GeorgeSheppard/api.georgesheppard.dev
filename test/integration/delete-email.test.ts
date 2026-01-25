@@ -2,31 +2,31 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
 import { requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
-import { App, createApp } from "../../src/server.js";
-import { config } from "@config/index.js";
-import { createQueueClient, QueueClient } from "@core/queue/client.js";
+import { App, createApp } from '../../src/server.js';
+import { config } from '@config/index.js';
+import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { EmailClient } from '@core/utils/mailgun.js';
 import { IpLocator } from '@core/utils/ip-locator.js';
 import { createMockEmailClient } from '../mocks/email.js';
 import { createMockIpLocator } from '../mocks/ip-locator.js';
 
 let app: App;
-let databaseClient: DatabaseClient
-let queueClient: QueueClient
-let emailClient: EmailClient
-let ipLocator: IpLocator
+let databaseClient: DatabaseClient;
+let queueClient: QueueClient;
+let emailClient: EmailClient;
+let ipLocator: IpLocator;
 
 beforeAll(async () => {
-  databaseClient = await createDatabaseClient(config.DATABASE_URL)
-  queueClient = await createQueueClient(config.RABBITMQ_URL)
-  emailClient = createMockEmailClient()
-  ipLocator = createMockIpLocator()
-  app = await createApp(databaseClient, queueClient, emailClient, ipLocator)
+  databaseClient = await createDatabaseClient(config.DATABASE_URL);
+  queueClient = await createQueueClient(config.RABBITMQ_URL);
+  emailClient = createMockEmailClient();
+  ipLocator = createMockIpLocator();
+  app = await createApp(databaseClient, queueClient, emailClient, ipLocator);
 });
 
 afterAll(async () => {
-  queueClient.close()
-  databaseClient.close()
+  queueClient.close();
+  databaseClient.close();
 });
 
 afterEach(async () => {
@@ -37,16 +37,13 @@ afterEach(async () => {
 describe('DELETE /api/recommendations/delete-email', () => {
   it('should return an error if requestId is not a valid UUID', async () => {
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/delete-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: 'requestId=not-a-uuid',
-        }
-      )
+      new Request('http://localhost/api/recommendations/delete-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'requestId=not-a-uuid',
+      })
     );
 
     expect(response.status).toBeGreaterThanOrEqual(400);
@@ -58,16 +55,13 @@ describe('DELETE /api/recommendations/delete-email', () => {
     const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/delete-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `requestId=${nonExistentId}`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/delete-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `requestId=${nonExistentId}`,
+      })
     );
 
     expect(response.status).toBe(200);
@@ -75,7 +69,10 @@ describe('DELETE /api/recommendations/delete-email', () => {
     expect(responseBody).toEqual({});
 
     // Verify no request was created or modified
-    const requestCount = await databaseClient.db.select().from(requests).where(eq(requests.id, nonExistentId));
+    const requestCount = await databaseClient.db
+      .select()
+      .from(requests)
+      .where(eq(requests.id, nonExistentId));
     expect(requestCount).toHaveLength(0);
   });
 
@@ -108,16 +105,13 @@ describe('DELETE /api/recommendations/delete-email', () => {
 
     // Call the endpoint
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/delete-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `requestId=${requestId}`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/delete-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `requestId=${requestId}`,
+      })
     );
 
     expect(response.status).toBe(200);
@@ -125,10 +119,7 @@ describe('DELETE /api/recommendations/delete-email', () => {
     expect(responseBody).toEqual({});
 
     // Verify email and related fields were deleted
-    dbRequest = await databaseClient.db
-      .select()
-      .from(requests)
-      .where(eq(requests.id, requestId));
+    dbRequest = await databaseClient.db.select().from(requests).where(eq(requests.id, requestId));
 
     expect(dbRequest[0].email).toBeNull();
     expect(dbRequest[0].frequency).toBeNull();
@@ -146,16 +137,13 @@ describe('DELETE /api/recommendations/delete-email', () => {
     const requestId = result[0].id;
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/delete-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `requestId=${requestId}`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/delete-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `requestId=${requestId}`,
+      })
     );
 
     expect(response.status).toBe(200);
@@ -168,16 +156,13 @@ describe('DELETE /api/recommendations/delete-email', () => {
 
   it('should return an error if requestId is missing from request', async () => {
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/delete-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: '',
-        }
-      )
+      new Request('http://localhost/api/recommendations/delete-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: '',
+      })
     );
 
     expect(response.status).toBeGreaterThanOrEqual(400);

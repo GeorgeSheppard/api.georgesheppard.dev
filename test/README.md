@@ -162,13 +162,17 @@ Between tests, the database and queues are fresh. The test containers are epheme
 ## Troubleshooting
 
 ### Docker not running
+
 If you see connection errors, ensure Docker is running:
+
 ```bash
 docker ps
 ```
 
 ### Timeout errors
+
 If tests timeout during setup, it may be because containers are taking too long to start. The setup has a 120-second timeout. You can increase it in `vitest.config.ts`:
+
 ```typescript
 test: {
   testTimeout: 60000, // Test timeout
@@ -177,13 +181,17 @@ test: {
 ```
 
 ### Container connection issues
+
 The testcontainers are ephemeral (PostgreSQL data in tmpfs, RabbitMQ queues temporary). If you see connection errors:
+
 1. Ensure Docker is running
 2. Check available disk space (tmpfs needs space)
 3. Restart Docker if containers don't start
 
 ### RabbitMQ queue issues
+
 If tests fail to queue jobs or connect to RabbitMQ:
+
 - Verify `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD` are set by test setup
 - Increase hook timeout if RabbitMQ container is slow to start
 - Check Docker logs: `docker logs <container-id>`

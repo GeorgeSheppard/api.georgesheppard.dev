@@ -2,9 +2,9 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
 import { recommendations, requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
-import { App, createApp } from "../../src/server.js";
-import { config } from "@config/index.js";
-import { createQueueClient, QueueClient } from "@core/queue/client.js";
+import { App, createApp } from '../../src/server.js';
+import { config } from '@config/index.js';
+import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { EmailClient } from '@core/utils/mailgun.js';
 import { IpLocator } from '@core/utils/ip-locator.js';
 import { createMockEmailClient } from '../mocks/email.js';
@@ -39,12 +39,9 @@ describe('GET /api/recommendations/{id}', () => {
   // Validation tests
   it('should return an error if id is not a valid UUID', async () => {
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/not-a-uuid',
-        {
-          method: 'GET',
-        }
-      )
+      new Request('http://localhost/api/recommendations/not-a-uuid', {
+        method: 'GET',
+      })
     );
 
     expect(response.status).toBeGreaterThanOrEqual(400);
@@ -57,12 +54,9 @@ describe('GET /api/recommendations/{id}', () => {
     const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
     const response = await app.request(
-      new Request(
-        `http://localhost/api/recommendations/${nonExistentId}`,
-        {
-          method: 'GET',
-        }
-      )
+      new Request(`http://localhost/api/recommendations/${nonExistentId}`, {
+        method: 'GET',
+      })
     );
 
     expect(response.status).toBe(404);
@@ -96,26 +90,22 @@ describe('GET /api/recommendations/{id}', () => {
     const recommendationId = recommendationResult[0].id;
 
     const response = await app.request(
-      new Request(
-        `http://localhost/api/recommendations/${recommendationId}`,
-        {
-          method: 'GET',
-        }
-      )
+      new Request(`http://localhost/api/recommendations/${recommendationId}`, {
+        method: 'GET',
+      })
     );
 
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body).toHaveProperty('error', "We couldn't create any recommendations for you. Please make sure your bookshelf is readable.");
+    expect(body).toHaveProperty(
+      'error',
+      "We couldn't create any recommendations for you. Please make sure your bookshelf is readable."
+    );
     expect(body).toHaveProperty('success', false);
 
     // Cleanup
-    await databaseClient.db
-      .delete(recommendations)
-      .where(eq(recommendations.id, recommendationId));
-    await databaseClient.db
-      .delete(requests)
-      .where(eq(requests.id, requestId));
+    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
+    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 
   // 422 scenario: processedUtc exists but recommendations is empty array
@@ -143,26 +133,22 @@ describe('GET /api/recommendations/{id}', () => {
     const recommendationId = recommendationResult[0].id;
 
     const response = await app.request(
-      new Request(
-        `http://localhost/api/recommendations/${recommendationId}`,
-        {
-          method: 'GET',
-        }
-      )
+      new Request(`http://localhost/api/recommendations/${recommendationId}`, {
+        method: 'GET',
+      })
     );
 
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body).toHaveProperty('error', "We couldn't create any recommendations for you. Please make sure your bookshelf is readable.");
+    expect(body).toHaveProperty(
+      'error',
+      "We couldn't create any recommendations for you. Please make sure your bookshelf is readable."
+    );
     expect(body).toHaveProperty('success', false);
 
     // Cleanup
-    await databaseClient.db
-      .delete(recommendations)
-      .where(eq(recommendations.id, recommendationId));
-    await databaseClient.db
-      .delete(requests)
-      .where(eq(requests.id, requestId));
+    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
+    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 
   // 200 scenario: successful retrieval with email and no frequency
@@ -201,16 +187,13 @@ describe('GET /api/recommendations/{id}', () => {
     const recommendationId = recommendationResult[0].id;
 
     const response = await app.request(
-      new Request(
-        `http://localhost/api/recommendations/${recommendationId}`,
-        {
-          method: 'GET',
-        }
-      )
+      new Request(`http://localhost/api/recommendations/${recommendationId}`, {
+        method: 'GET',
+      })
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
     expect(body).toHaveProperty('success', true);
     expect(body).toHaveProperty('hasEmail', true);
     expect(body).toHaveProperty('isRecurringMonthly', false);
@@ -219,12 +202,8 @@ describe('GET /api/recommendations/{id}', () => {
     expect(body.recommendations[0]).toMatchObject(testRecommendations[0]);
 
     // Cleanup
-    await databaseClient.db
-      .delete(recommendations)
-      .where(eq(recommendations.id, recommendationId));
-    await databaseClient.db
-      .delete(requests)
-      .where(eq(requests.id, requestId));
+    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
+    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 
   // 200 scenario: successful retrieval with email and monthly frequency
@@ -263,16 +242,13 @@ describe('GET /api/recommendations/{id}', () => {
     const recommendationId = recommendationResult[0].id;
 
     const response = await app.request(
-      new Request(
-        `http://localhost/api/recommendations/${recommendationId}`,
-        {
-          method: 'GET',
-        }
-      )
+      new Request(`http://localhost/api/recommendations/${recommendationId}`, {
+        method: 'GET',
+      })
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
     expect(body).toHaveProperty('success', true);
     expect(body).toHaveProperty('hasEmail', true);
     expect(body).toHaveProperty('isRecurringMonthly', true);
@@ -281,12 +257,8 @@ describe('GET /api/recommendations/{id}', () => {
     expect(body.recommendations[0]).toMatchObject(testRecommendations[0]);
 
     // Cleanup
-    await databaseClient.db
-      .delete(recommendations)
-      .where(eq(recommendations.id, recommendationId));
-    await databaseClient.db
-      .delete(requests)
-      .where(eq(requests.id, requestId));
+    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
+    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 
   // 200 scenario: successful retrieval without email
@@ -324,16 +296,13 @@ describe('GET /api/recommendations/{id}', () => {
     const recommendationId = recommendationResult[0].id;
 
     const response = await app.request(
-      new Request(
-        `http://localhost/api/recommendations/${recommendationId}`,
-        {
-          method: 'GET',
-        }
-      )
+      new Request(`http://localhost/api/recommendations/${recommendationId}`, {
+        method: 'GET',
+      })
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
     expect(body).toHaveProperty('success', true);
     expect(body).toHaveProperty('hasEmail', false);
     expect(body).toHaveProperty('isRecurringMonthly', false);
@@ -342,11 +311,7 @@ describe('GET /api/recommendations/{id}', () => {
     expect(body.recommendations[0]).toMatchObject(testRecommendations[0]);
 
     // Cleanup
-    await databaseClient.db
-      .delete(recommendations)
-      .where(eq(recommendations.id, recommendationId));
-    await databaseClient.db
-      .delete(requests)
-      .where(eq(requests.id, requestId));
+    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
+    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 });
