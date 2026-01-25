@@ -12,7 +12,6 @@ const BodySchema = z.object({
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
     .optional(),
-  test: z.boolean().optional(),
 });
 
 const SuccessResponse = z.object({
