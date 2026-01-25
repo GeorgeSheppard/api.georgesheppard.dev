@@ -2,26 +2,19 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
 import { requests, recommendations } from '@core/database/schema/index.js';
 import { eq, count } from 'drizzle-orm';
-import { App, createApp } from '../../src/server.js';
+import { App } from '../../src/server.js';
 import { config } from '@config/index.js';
 import { createQueueClient, QueueClient } from '@core/queue/client.js';
-import { EmailClient } from '@core/utils/mailgun.js';
-import { IpLocator } from '@core/utils/ip-locator.js';
-import { createMockEmailClient } from '../mocks/email.js';
-import { createMockIpLocator } from '../mocks/ip-locator.js';
+import { createTestApp } from '../utils/app.js';
 
 let app: App;
 let databaseClient: DatabaseClient;
 let queueClient: QueueClient;
-let emailClient: EmailClient;
-let ipLocator: IpLocator;
 
 beforeAll(async () => {
   databaseClient = await createDatabaseClient(config.DATABASE_URL);
   queueClient = await createQueueClient(config.RABBITMQ_URL);
-  emailClient = createMockEmailClient();
-  ipLocator = createMockIpLocator();
-  app = await createApp(databaseClient, queueClient, emailClient, ipLocator);
+  app = await createTestApp({ databaseClient, queueClient });
 });
 
 afterAll(async () => {

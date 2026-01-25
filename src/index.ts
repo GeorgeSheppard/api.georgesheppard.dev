@@ -11,7 +11,7 @@ async function main() {
   const queueClient = await createQueueClient(config.RABBITMQ_URL);
   const emailClient = new MailgunClient();
   const ipLocator = new CountryIsIpLocator();
-  const app = await createApp(databaseClient, queueClient, emailClient, ipLocator);
+  const app = await createApp({ databaseClient, queueClient, emailClient, ipLocator });
 
   const server = serve({
     fetch: app.fetch,
