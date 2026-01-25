@@ -70,7 +70,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
     expect(body).toHaveProperty('success', true);
     expect(body).toHaveProperty('id');
     expect(body.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
@@ -137,7 +137,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
     expect(body).toHaveProperty('success', true);
     expect(body).toHaveProperty('id');
 
@@ -160,10 +160,10 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(storedImages).toHaveLength(3);
 
     // Verify each image has correct data
-    const imageTypes = storedImages.map(img => img.contentType).sort();
+    const imageTypes = storedImages.map((img) => img.contentType).sort();
     expect(imageTypes).toEqual(['image/jpeg', 'image/png', 'image/webp']);
 
-    const imageContents = storedImages.map(img => img.image.toString());
+    const imageContents = storedImages.map((img) => img.image.toString());
     expect(imageContents).toContain('fake-image-data-1');
     expect(imageContents).toContain('fake-image-data-2');
     expect(imageContents).toContain('fake-image-data-3');
@@ -187,7 +187,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     // Get the request to verify location
     const recommendation = await databaseClient.db
@@ -221,7 +221,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     // Get the request to verify location
     const recommendation = await databaseClient.db
@@ -254,7 +254,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     // Verify recommendation is linked to request
     const recommendation = await databaseClient.db
@@ -296,7 +296,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     // Get the recommendation to verify IDs
     const recommendation = await databaseClient.db
@@ -340,7 +340,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     const recommendation = await databaseClient.db
       .select()
@@ -355,7 +355,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
 
     expect(storedImages).toHaveLength(2);
 
-    const contentTypes = storedImages.map(img => img.contentType).sort();
+    const contentTypes = storedImages.map((img) => img.contentType).sort();
     expect(contentTypes).toEqual(['image/jpeg', 'image/png']);
   });
 
@@ -374,11 +374,13 @@ describe('POST /api/recommendations/from-bookcase', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     expect(body.id).toBeTruthy();
     // UUID v4 format
-    expect(body.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    expect(body.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
   });
 
   it('should create request with current timestamp', async () => {
@@ -400,7 +402,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     const afterRequest = new Date();
 
     expect(response.status).toBe(200);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     const recommendation = await databaseClient.db
       .select()

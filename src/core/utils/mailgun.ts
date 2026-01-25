@@ -15,7 +15,7 @@ export interface SendEmailOptions {
 }
 
 export abstract class EmailClient {
-  abstract sendRecommendationsEmail(options: SendEmailOptions): Promise<void>
+  abstract sendRecommendationsEmail(options: SendEmailOptions): Promise<void>;
 }
 
 export class MailgunClient implements EmailClient {

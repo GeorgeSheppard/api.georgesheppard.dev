@@ -3,8 +3,8 @@ services:
     image: cloudflare/cloudflared:latest
     restart: always
     command: tunnel --no-autoupdate run
-    environment: 
-      TUNNEL_TOKEN: "${CLOUDFLARE_TOKEN}"
+    environment:
+      TUNNEL_TOKEN: '${CLOUDFLARE_TOKEN}'
     depends_on:
       - api
       - shelfie
@@ -12,28 +12,28 @@ services:
     image: georgeshep/bord:api.georgesheppard.dev
     platform: linux/amd64
     ports:
-      - "5240:5240"
+      - '5240:5240'
     environment:
-      NODE_ENV: "production"
-      PORT: "5240"
-      DATABASE_HOST: "db"
-      DATABASE_PORT: "5432"
-      DATABASE_USER: "${DATABASE_USER}"
-      DATABASE_DB: "${DATABASE_DB}"
-      DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
-      DATABASE_MIGRATIONS_PATH: "${DATABASE_MIGRATIONS_PATH}"
-      RABBITMQ_HOST: "queues"
-      RABBITMQ_PORT: "5672"
-      RABBITMQ_USER: "${RABBITMQ_USER}"
-      RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD}"
-      MAILGUN_API_KEY: "${MAILGUN_API_KEY}"
-      OPENAI_API_KEY: "${OPENAI_API_KEY}"
-      TEXT_EXTRACTOR_URL: "${TEXT_EXTRACTOR_URL}"
-      API_KEY: "${API_KEY}"
-      ENCRYPTION_KEY: "${ENCRYPTION_KEY}"
-      ENCRYPTION_IV: "${ENCRYPTION_IV}"
-      USE_REAL_OPENAI: "${USE_REAL_OPENAI}"
-      FAKE_OPENAI_DELAY_MS: "${FAKE_OPENAI_DELAY_MS}"
+      NODE_ENV: 'production'
+      PORT: '5240'
+      DATABASE_HOST: 'db'
+      DATABASE_PORT: '5432'
+      DATABASE_USER: '${DATABASE_USER}'
+      DATABASE_DB: '${DATABASE_DB}'
+      DATABASE_PASSWORD: '${DATABASE_PASSWORD}'
+      DATABASE_MIGRATIONS_PATH: '${DATABASE_MIGRATIONS_PATH}'
+      RABBITMQ_HOST: 'queues'
+      RABBITMQ_PORT: '5672'
+      RABBITMQ_USER: '${RABBITMQ_USER}'
+      RABBITMQ_PASSWORD: '${RABBITMQ_PASSWORD}'
+      MAILGUN_API_KEY: '${MAILGUN_API_KEY}'
+      OPENAI_API_KEY: '${OPENAI_API_KEY}'
+      TEXT_EXTRACTOR_URL: '${TEXT_EXTRACTOR_URL}'
+      API_KEY: '${API_KEY}'
+      ENCRYPTION_KEY: '${ENCRYPTION_KEY}'
+      ENCRYPTION_IV: '${ENCRYPTION_IV}'
+      USE_REAL_OPENAI: '${USE_REAL_OPENAI}'
+      FAKE_OPENAI_DELAY_MS: '${FAKE_OPENAI_DELAY_MS}'
 
     depends_on:
       db:
@@ -49,16 +49,16 @@ services:
     image: postgres:17
     environment:
       # POSTGRES_PASSWORD: Without this line a random password is used
-      POSTGRES_USER: "${DATABASE_USER}"
-      POSTGRES_DB: "${DATABASE_DB}"
-      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+      POSTGRES_USER: '${DATABASE_USER}'
+      POSTGRES_DB: '${DATABASE_DB}'
+      POSTGRES_PASSWORD: '${DATABASE_PASSWORD}'
     # Shared memory the container can use
     shm_size: 128mb
     volumes:
       # Persists the DB to ./pgdata
       - ./pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -69,13 +69,13 @@ services:
     container_name: rabbitmq
     restart: always
     environment:
-      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER}"
-      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD}"
+      RABBITMQ_DEFAULT_USER: '${RABBITMQ_USER}'
+      RABBITMQ_DEFAULT_PASS: '${RABBITMQ_PASSWORD}'
     volumes:
       # Persists data to ./rabbitmq
       - ./rabbitmq:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
       interval: 30s
       timeout: 10s
       retries: 3

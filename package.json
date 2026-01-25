@@ -13,7 +13,8 @@
     "migrate:generate": "drizzle-kit generate",
     "test": "vitest --project unit",
     "test:integration": "vitest --project integration",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "format": "prettier --write ."
   },
   "keywords": [
     "book",
@@ -45,6 +46,7 @@
     "@types/node": "^22.7.5",
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.24.2",
+    "prettier": "^3.8.1",
     "testcontainers": "^11.11.0",
     "tsc-alias": "^1.8.16",
     "tsup": "^8.3.0",

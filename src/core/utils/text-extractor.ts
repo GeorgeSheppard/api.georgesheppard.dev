@@ -21,12 +21,16 @@ export class TextExtractorClient {
     });
 
     try {
-      const response = await axios.post<TextExtractionResponse>(`${this.baseUrl}/extract-books`, form, {
-        headers: {
-          ...form.getHeaders(),
-        },
-        timeout: 900000, // 15 minutes
-      });
+      const response = await axios.post<TextExtractionResponse>(
+        `${this.baseUrl}/extract-books`,
+        form,
+        {
+          headers: {
+            ...form.getHeaders(),
+          },
+          timeout: 900000, // 15 minutes
+        }
+      );
 
       return response.data;
     } catch (error) {

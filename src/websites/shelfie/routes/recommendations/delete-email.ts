@@ -19,7 +19,7 @@ const route = createRoute({
           schema: BodySchema,
         },
       },
-      required: true
+      required: true,
     },
   },
   responses: {

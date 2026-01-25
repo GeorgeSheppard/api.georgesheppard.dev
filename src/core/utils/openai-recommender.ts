@@ -34,7 +34,7 @@ export class OpenAIRecommender implements Recommender {
           {
             role: 'system',
             content:
-              'You are a book recommendation expert. Generate 5 book recommendations in JSON format based on the user\'s reading history.',
+              "You are a book recommendation expert. Generate 5 book recommendations in JSON format based on the user's reading history.",
           },
           {
             role: 'user',

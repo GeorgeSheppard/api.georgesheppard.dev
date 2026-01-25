@@ -10,6 +10,7 @@ This guide establishes the patterns and best practices for creating HTTP endpoin
 ## Endpoint Checklist
 
 ### 1. Add Route Path to ROUTES Constant
+
 **File**: `src/websites/shelfie/routes/paths.ts`
 
 Define the new endpoint path in the centralized `ROUTES` object using Hono's OpenAPI path format with curly braces for path parameters.
@@ -22,6 +23,7 @@ export const ROUTES = {
 ```
 
 **Key Points**:
+
 - All route paths must be centralized in this file
 - Use RESTful naming conventions
 - Use curly braces `{id}` for path parameters, not colons
@@ -30,6 +32,7 @@ export const ROUTES = {
 ---
 
 ### 2. Create Route Handler File
+
 **File**: `src/websites/shelfie/routes/recommendations/[endpoint-name].ts`
 
 Create a new TypeScript file in the appropriate routes directory (e.g., `recommendations/`, `emails/`).
@@ -37,6 +40,7 @@ Create a new TypeScript file in the appropriate routes directory (e.g., `recomme
 ---
 
 ### 3. Define Request Schema with Zod
+
 Define a Zod schema for request body validation. Be explicit about all required fields and their types.
 
 ```typescript
@@ -49,6 +53,7 @@ const BodySchema = z.object({
 ```
 
 **Key Points**:
+
 - Import from `@hono/zod-openapi`, not plain `zod`
 - Use Zod's built-in validators (`.uuid()`, `.email()`, etc.)
 - Document field constraints in the schema itself
@@ -57,6 +62,7 @@ const BodySchema = z.object({
 ---
 
 ### 4. Create Route Definition with createRoute
+
 Define the OpenAPI route specification using `createRoute()` from `@hono/zod-openapi`.
 
 ```typescript
@@ -64,9 +70,9 @@ import { createRoute, z } from '@hono/zod-openapi';
 import { ROUTES } from '../paths.js';
 
 const route = createRoute({
-  method: 'post',  // or 'get', 'put', 'delete', etc.
+  method: 'post', // or 'get', 'put', 'delete', etc.
   path: ROUTES.YOUR_ENDPOINT,
-  tags: ['recommendations'],  // or appropriate category
+  tags: ['recommendations'], // or appropriate category
   request: {
     body: {
       content: {
@@ -79,10 +85,14 @@ const route = createRoute({
   },
   responses: {
     200: {
-      content: { 'application/json': { schema: z.object({
-        // Define success response shape
-        id: z.string().uuid(),
-      }) } },
+      content: {
+        'application/json': {
+          schema: z.object({
+            // Define success response shape
+            id: z.string().uuid(),
+          }),
+        },
+      },
       description: 'Descriptive success message',
     },
     400: {
@@ -94,6 +104,7 @@ const route = createRoute({
 ```
 
 **Key Points**:
+
 - Always specify `content-type` in request body (use `'application/x-www-form-urlencoded'` for form data)
 - Set `required: true` for required request bodies
 - Define success response (200) with explicit schema
@@ -105,6 +116,7 @@ const route = createRoute({
 ---
 
 ### 5. Create Handler Function with Export
+
 Create a registration function that registers the route with the app and implements the handler logic.
 
 ```typescript
@@ -132,6 +144,7 @@ export function registerYourEndpointRoute(app: OpenAPIHono) {
 ```
 
 **Key Points**:
+
 - Function name should follow pattern: `register[EndpointName]Route`
 - Use `c.req.valid('form')` to extract and validate form data (Zod validation happens automatically)
 - Get database client with `c.get('databaseClient')` and extract the `db` property
@@ -144,12 +157,14 @@ export function registerYourEndpointRoute(app: OpenAPIHono) {
 ---
 
 ### 6. Import Database Tables and ORM Utilities
+
 ```typescript
 import { requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 ```
 
 **Key Points**:
+
 - Import specific tables from `@core/database/schema/index.js`
 - Import comparison operators from `drizzle-orm` (e.g., `eq`, `gt`, `lt`)
 - Available tables: `requests`, `images`, `recommendations`
@@ -157,6 +172,7 @@ import { eq } from 'drizzle-orm';
 ---
 
 ### 7. Register Route in Route Index File
+
 **File**: `src/websites/shelfie/routes/index.ts`
 
 Add the registration function to the main route registration file.
@@ -171,6 +187,7 @@ export function registerShelfieRoutes(app: OpenAPIHono) {
 ```
 
 **Key Points**:
+
 - Import the registration function from the endpoint file
 - Call the function within `registerShelfieRoutes()`
 - Routes must be registered before OpenAPI documentation generation
@@ -178,7 +195,9 @@ export function registerShelfieRoutes(app: OpenAPIHono) {
 ---
 
 ### 8. Use Consistent Content-Type
+
 For form-based endpoints, always use `'application/x-www-form-urlencoded'` in both:
+
 - Route definition (`createRoute()`)
 - Test request headers (`'Content-Type': 'application/x-www-form-urlencoded'`)
 
@@ -193,6 +212,7 @@ const data = c.req.valid('form');
 ```
 
 **Key Points**:
+
 - This format is consistent with HTML form submissions
 - Validation happens automatically via the schema defined in `createRoute()`
 - The schema must match the form-data being sent
@@ -200,6 +220,7 @@ const data = c.req.valid('form');
 ---
 
 ### 9. Error Handling
+
 Errors are handled globally by the centralized `errorHandler` middleware. Do not catch errors in route handlers unless you need custom logic.
 
 ```typescript
@@ -215,6 +236,7 @@ try {
 ```
 
 **Key Points**:
+
 - Validation errors from Zod schemas are automatically caught and formatted
 - Database errors are caught by centralized error handler
 - Only add try-catch for non-happy-path scenarios that need special handling
@@ -222,34 +244,25 @@ try {
 ---
 
 ### 10. Database Operations Pattern
+
 Use this pattern for all database operations:
 
 ```typescript
 // For UPDATE
-await db
-  .update(requests)
-  .set({ email: null, frequency: null })
-  .where(eq(requests.id, requestId));
+await db.update(requests).set({ email: null, frequency: null }).where(eq(requests.id, requestId));
 
 // For INSERT
-const result = await db
-  .insert(requests)
-  .values({ email: 'test@example.com' })
-  .returning();
+const result = await db.insert(requests).values({ email: 'test@example.com' }).returning();
 
 // For SELECT
-const records = await db
-  .select()
-  .from(requests)
-  .where(eq(requests.id, requestId));
+const records = await db.select().from(requests).where(eq(requests.id, requestId));
 
 // For DELETE
-await db
-  .delete(requests)
-  .where(eq(requests.id, requestId));
+await db.delete(requests).where(eq(requests.id, requestId));
 ```
 
 **Key Points**:
+
 - Always use the table constant (not string names)
 - Use `where()` with comparison operators from drizzle-orm
 - Use `.returning()` for INSERT to get created records
@@ -259,6 +272,7 @@ await db
 ---
 
 ### 11. Using Transactions
+
 Use transactions to wrap multiple **mutations** (INSERT, UPDATE, DELETE) across different tables that must succeed or fail together as a unit. Transactions ensure data consistency and prevent partial updates. Single mutations to a single table do not require transactions. Keep **read operations** (SELECT) outside the transaction for cleaner code and simpler error handling.
 
 ```typescript
@@ -268,11 +282,7 @@ export function registerYourEndpointRoute(app: OpenAPIHono) {
     const id = c.req.valid('form').id;
 
     // 1. Perform read operations OUTSIDE transaction
-    const [record] = await db
-      .select()
-      .from(requests)
-      .where(eq(requests.id, id))
-      .limit(1);
+    const [record] = await db.select().from(requests).where(eq(requests.id, id)).limit(1);
 
     if (!record) {
       return c.json({ error: 'Record not found', success: false }, 404);
@@ -281,18 +291,13 @@ export function registerYourEndpointRoute(app: OpenAPIHono) {
     // 2. Wrap only mutations in a transaction
     await db.transaction(async (tx) => {
       // Update operation
-      await tx
-        .update(requests)
-        .set({ email: 'newemail@example.com' })
-        .where(eq(requests.id, id));
+      await tx.update(requests).set({ email: 'newemail@example.com' }).where(eq(requests.id, id));
 
       // Insert operation
-      await tx
-        .insert(images)
-        .values({
-          requestId: id,
-          image: file.data,
-        });
+      await tx.insert(images).values({
+        requestId: id,
+        image: file.data,
+      });
 
       // Return if needed
       return { updated: true };
@@ -301,11 +306,9 @@ export function registerYourEndpointRoute(app: OpenAPIHono) {
     // 3. Handle external operations AFTER transaction commits
     const queueClient = c.get('queueClient');
     try {
-      queueClient.channel.sendToQueue(
-        queueClient.queue,
-        Buffer.from(JSON.stringify({ id })),
-        { persistent: true }
-      );
+      queueClient.channel.sendToQueue(queueClient.queue, Buffer.from(JSON.stringify({ id })), {
+        persistent: true,
+      });
     } catch (error) {
       return c.json({ error: 'Failed to queue operation', success: false }, 500);
     }
@@ -316,6 +319,7 @@ export function registerYourEndpointRoute(app: OpenAPIHono) {
 ```
 
 **Key Points**:
+
 - Perform **SELECT queries outside the transaction** - this allows you to validate data and return errors directly
 - **Use transactions only for multiple mutations across different tables** - do not wrap single mutations to a single table
 - When using transactions, wrap **only mutations (INSERT, UPDATE, DELETE)** - use `db.transaction(async (tx) => { ... })`

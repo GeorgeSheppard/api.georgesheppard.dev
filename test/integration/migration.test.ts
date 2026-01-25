@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { createDatabaseClient } from '../../src/core/database/client.js';
 import { requests, images, recommendations } from '../../src/core/database/schema/index.js';
-import { eq } from 'drizzle-orm'
-import { config } from "@config/index.js";
+import { eq } from 'drizzle-orm';
+import { config } from '@config/index.js';
 
 describe('Database Migrations', () => {
   it('should run migrations successfully on test container', async () => {
@@ -25,10 +25,13 @@ describe('Database Migrations', () => {
     const databaseClient = await createDatabaseClient(config.DATABASE_URL);
 
     // Insert test data
-    const newRequest = await databaseClient.db.insert(requests).values({
-      email: 'test@example.com',
-      location: 'US',
-    }).returning();
+    const newRequest = await databaseClient.db
+      .insert(requests)
+      .values({
+        email: 'test@example.com',
+        location: 'US',
+      })
+      .returning();
 
     expect(newRequest).toHaveLength(1);
     expect(newRequest[0].email).toBe('test@example.com');

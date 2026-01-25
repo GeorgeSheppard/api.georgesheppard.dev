@@ -5,13 +5,13 @@ services:
     environment:
       POSTGRES_USER: shelfie
       POSTGRES_DB: postgres
-      POSTGRES_PASSWORD: "Shelfie1234!"
+      POSTGRES_PASSWORD: 'Shelfie1234!'
     ports:
       - '5432:5432'
     # Shared memory the container can use
     shm_size: 128mb
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -28,14 +28,13 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: shelfie
       RABBITMQ_DEFAULT_PASS: Shelfie1234!
-      
+
   ml:
     image: georgeshep/shelfie-ml
 
     ports:
-      - "5241:5241"
+      - '5241:5241'
 
     environment:
-      PROCESSOR_PATH: "src/trocr_local/processor"
-      MODEL_PATH: "src/trocr_local/model"
-
+      PROCESSOR_PATH: 'src/trocr_local/processor'
+      MODEL_PATH: 'src/trocr_local/model'

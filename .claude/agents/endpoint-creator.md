@@ -62,6 +62,7 @@ You are an expert Hono endpoint developer specializing in creating production-re
 ## Success Criteria
 
 The task is complete only when ALL of the following are true:
+
 - The endpoint is implemented according to user specifications
 - `pnpm lint` produces no errors
 - `pnpm test:integration` passes all tests

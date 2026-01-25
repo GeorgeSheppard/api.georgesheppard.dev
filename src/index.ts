@@ -1,16 +1,16 @@
 import { serve } from '@hono/node-server';
 import { createApp } from './server.js';
 import { config } from '@config/index.js';
-import { createQueueClient } from "@core/queue/client.js";
-import { createDatabaseClient } from "@core/database/client.js";
-import { MailgunClient } from "@core/utils/mailgun.js";
-import { CountryIsIpLocator } from "@core/utils/ip-locator.js";
+import { createQueueClient } from '@core/queue/client.js';
+import { createDatabaseClient } from '@core/database/client.js';
+import { MailgunClient } from '@core/utils/mailgun.js';
+import { CountryIsIpLocator } from '@core/utils/ip-locator.js';
 
 async function main() {
-  const databaseClient = await createDatabaseClient(config.DATABASE_URL)
-  const queueClient = await createQueueClient(config.RABBITMQ_URL)
-  const emailClient = new MailgunClient()
-  const ipLocator = new CountryIsIpLocator()
+  const databaseClient = await createDatabaseClient(config.DATABASE_URL);
+  const queueClient = await createQueueClient(config.RABBITMQ_URL);
+  const emailClient = new MailgunClient();
+  const ipLocator = new CountryIsIpLocator();
   const app = await createApp(databaseClient, queueClient, emailClient, ipLocator);
 
   const server = serve({

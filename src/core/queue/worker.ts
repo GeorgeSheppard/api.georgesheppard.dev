@@ -2,7 +2,7 @@ import { createQueueClient } from './client.js';
 import { createDatabaseClient } from '@core/database/client.js';
 import { processTextExtractionJob } from '@websites/shelfie/workers/text-extraction-worker.js';
 import { processRecommendationJob } from '@websites/shelfie/workers/recommendation-worker.js';
-import { config } from "@config/index.js";
+import { config } from '@config/index.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { OpenAIRecommender } from '@core/utils/openai-recommender.js';
 

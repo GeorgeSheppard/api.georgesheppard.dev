@@ -19,11 +19,11 @@ export const errorHandler: ErrorHandler = (error, c) => {
       400
     );
   }
-  
+
   // Handle errors with statusCode property (includes Hono validation errors)
   const statusCode = (error as any).statusCode || (error as any).status || 500;
   const message = statusCode === 500 ? 'Internal server error' : error.message;
-  
+
   return c.json(
     {
       error: message,

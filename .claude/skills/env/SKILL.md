@@ -74,6 +74,7 @@ if (!config.DATABASE_URL) { ... } // ❌ Unnecessary
 ## Adding New Environment Variables
 
 1. **Add to Zod Schema** in `@src/config/env.js`:
+
    ```typescript
    const envSchema = z.object({
      // ... existing fields
@@ -94,6 +95,7 @@ if (!config.DATABASE_URL) { ... } // ❌ Unnecessary
 4. **Update Documentation** in `.claude/CLAUDE.md` if adding a new service or pattern
 
 5. **Import and Use**:
+
    ```typescript
    import { config } from '@config/index.js';
 
@@ -145,10 +147,10 @@ See `@src/config/env.js` for the complete schema. Common variables:
 
 ## Common Mistakes to Avoid
 
-| ❌ Wrong | ✅ Correct | Reason |
-|---------|----------|--------|
-| `process.env.API_KEY` | `config.API_KEY` | Type safety & validation |
-| `const val = validateEnv()` | Import from `@config/index.js` | Avoid redundant validation |
-| `config.VALUE \|\| 'default'` | `config.VALUE` | All values are guaranteed |
-| `if (!config.VALUE)` | Direct use | No null checks needed |
-| Adding defaults in schema | Required values only | Catch missing env vars early |
+| ❌ Wrong                      | ✅ Correct                     | Reason                       |
+| ----------------------------- | ------------------------------ | ---------------------------- |
+| `process.env.API_KEY`         | `config.API_KEY`               | Type safety & validation     |
+| `const val = validateEnv()`   | Import from `@config/index.js` | Avoid redundant validation   |
+| `config.VALUE \|\| 'default'` | `config.VALUE`                 | All values are guaranteed    |
+| `if (!config.VALUE)`          | Direct use                     | No null checks needed        |
+| Adding defaults in schema     | Required values only           | Catch missing env vars early |

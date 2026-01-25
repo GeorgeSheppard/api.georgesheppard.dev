@@ -1,9 +1,7 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const envSchema = z.object({
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number(),
 
   // Database
@@ -37,7 +35,7 @@ export function validateEnv() {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error("Invalid environment variables:");
+    console.error('Invalid environment variables:');
     console.error(z.treeifyError(result.error));
     process.exit(1);
   }

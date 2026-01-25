@@ -2,9 +2,9 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
 import { requests, recommendations } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
-import { App, createApp } from "../../src/server.js";
-import { config } from "@config/index.js";
-import { createQueueClient, QueueClient } from "@core/queue/client.js";
+import { App, createApp } from '../../src/server.js';
+import { config } from '@config/index.js';
+import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { EmailClient } from '@core/utils/mailgun.js';
 import { IpLocator } from '@core/utils/ip-locator.js';
 import { createMockEmailClient } from '../mocks/email.js';
@@ -40,16 +40,13 @@ describe('POST /api/recommendations/add-email', () => {
   // Validation tests
   it('should return an error if id is not a valid UUID', async () => {
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: 'id=not-a-uuid',
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'id=not-a-uuid',
+      })
     );
 
     expect(response.status).toBeGreaterThanOrEqual(400);
@@ -59,16 +56,13 @@ describe('POST /api/recommendations/add-email', () => {
 
   it('should return an error if id is missing from request', async () => {
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: '',
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: '',
+      })
     );
 
     expect(response.status).toBeGreaterThanOrEqual(400);
@@ -78,16 +72,13 @@ describe('POST /api/recommendations/add-email', () => {
 
   it('should return an error if email is provided but not valid', async () => {
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: 'id=550e8400-e29b-41d4-a716-446655440000&email=invalid-email',
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'id=550e8400-e29b-41d4-a716-446655440000&email=invalid-email',
+      })
     );
 
     expect(response.status).toBeGreaterThanOrEqual(400);
@@ -100,16 +91,13 @@ describe('POST /api/recommendations/add-email', () => {
     const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${nonExistentId}&email=test@example.com`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${nonExistentId}&email=test@example.com`,
+      })
     );
 
     expect(response.status).toBe(404);
@@ -119,10 +107,7 @@ describe('POST /api/recommendations/add-email', () => {
 
   it('should return 400 if no email provided and request has no email', async () => {
     // Create a request without email
-    const [request] = await databaseClient.db
-      .insert(requests)
-      .values({})
-      .returning();
+    const [request] = await databaseClient.db.insert(requests).values({}).returning();
 
     // Create a recommendation
     const [recommendation] = await databaseClient.db
@@ -133,16 +118,13 @@ describe('POST /api/recommendations/add-email', () => {
       .returning();
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${recommendation.id}`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${recommendation.id}`,
+      })
     );
 
     expect(response.status).toBe(400);
@@ -174,16 +156,13 @@ describe('POST /api/recommendations/add-email', () => {
       .returning();
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${recommendation.id}`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${recommendation.id}`,
+      })
     );
 
     expect(response.status).toBe(200);
@@ -210,10 +189,7 @@ describe('POST /api/recommendations/add-email', () => {
     const newEmail = 'newemail@example.com';
 
     // Create a request without email
-    const [request] = await databaseClient.db
-      .insert(requests)
-      .values({})
-      .returning();
+    const [request] = await databaseClient.db.insert(requests).values({}).returning();
 
     // Create a recommendation without processed data
     const [recommendation] = await databaseClient.db
@@ -226,16 +202,13 @@ describe('POST /api/recommendations/add-email', () => {
       .returning();
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${recommendation.id}&email=${newEmail}`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${recommendation.id}&email=${newEmail}`,
+      })
     );
 
     expect(response.status).toBe(200);
@@ -275,27 +248,26 @@ describe('POST /api/recommendations/add-email', () => {
       .values({
         requestId: request.id,
         processedUtc: new Date(),
-        recommendations: [{
-          name: 'Test Book',
-          author: 'Test Author',
-          description: 'A test book',
-          reason: 'Testing',
-          amazonLink: 'https://amazon.com/test',
-        }],
+        recommendations: [
+          {
+            name: 'Test Book',
+            author: 'Test Author',
+            description: 'A test book',
+            reason: 'Testing',
+            amazonLink: 'https://amazon.com/test',
+          },
+        ],
       })
       .returning();
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${recommendation.id}&recurring=false`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${recommendation.id}&recurring=false`,
+      })
     );
 
     expect(response.status).toBe(200);
@@ -331,7 +303,9 @@ describe('POST /api/recommendations/add-email', () => {
     const encryptedEmail = encryption.encrypt(testEmail);
 
     // Mock email client to throw error
-    vi.mocked(emailClient.sendRecommendationsEmail).mockRejectedValueOnce(new Error('Email service error'));
+    vi.mocked(emailClient.sendRecommendationsEmail).mockRejectedValueOnce(
+      new Error('Email service error')
+    );
 
     // Create a request with email
     const [request] = await databaseClient.db
@@ -347,28 +321,27 @@ describe('POST /api/recommendations/add-email', () => {
       .values({
         requestId: request.id,
         processedUtc: new Date(),
-        recommendations: [{
-          name: 'Test Book',
-          author: 'Test Author',
-          description: 'A test book',
-          reason: 'Testing',
-          amazonLink: 'https://amazon.com/test',
-        }],
+        recommendations: [
+          {
+            name: 'Test Book',
+            author: 'Test Author',
+            description: 'A test book',
+            reason: 'Testing',
+            amazonLink: 'https://amazon.com/test',
+          },
+        ],
       })
       .returning();
 
     // Should still return success even if email fails
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${recommendation.id}`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${recommendation.id}`,
+      })
     );
 
     expect(response.status).toBe(200);
@@ -398,29 +371,28 @@ describe('POST /api/recommendations/add-email', () => {
       .values({
         requestId: request.id,
         processedUtc: new Date(),
-        recommendations: [{
-          name: 'Test Book',
-          author: 'Test Author',
-          description: 'A test book',
-          reason: 'Testing',
-          amazonLink: 'https://amazon.com/test',
-        }],
+        recommendations: [
+          {
+            name: 'Test Book',
+            author: 'Test Author',
+            description: 'A test book',
+            reason: 'Testing',
+            amazonLink: 'https://amazon.com/test',
+          },
+        ],
       })
       .returning();
 
     const beforeRequest = Date.now();
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${recommendation.id}&recurring=true`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${recommendation.id}&recurring=true`,
+      })
     );
 
     expect(response.status).toBe(200);
@@ -464,10 +436,7 @@ describe('POST /api/recommendations/add-email', () => {
     const testEmail = 'newrecurring@example.com';
 
     // Create a request without email
-    const [request] = await databaseClient.db
-      .insert(requests)
-      .values({})
-      .returning();
+    const [request] = await databaseClient.db.insert(requests).values({}).returning();
 
     // Create a recommendation without processed data
     const [recommendation] = await databaseClient.db
@@ -482,16 +451,13 @@ describe('POST /api/recommendations/add-email', () => {
     const beforeRequest = Date.now();
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${recommendation.id}&email=${testEmail}&recurring=true`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${recommendation.id}&email=${testEmail}&recurring=true`,
+      })
     );
 
     expect(response.status).toBe(200);
@@ -525,10 +491,7 @@ describe('POST /api/recommendations/add-email', () => {
     const testEmail = 'test@example.com';
 
     // Create a request
-    const [request] = await databaseClient.db
-      .insert(requests)
-      .values({})
-      .returning();
+    const [request] = await databaseClient.db.insert(requests).values({}).returning();
 
     // Create a recommendation
     const [recommendation] = await databaseClient.db
@@ -539,22 +502,19 @@ describe('POST /api/recommendations/add-email', () => {
       .returning();
 
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${recommendation.id}&email=${testEmail}`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${recommendation.id}&email=${testEmail}`,
+      })
     );
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('application/json');
 
-    const body = await response.json() as { success: boolean };
+    const body = (await response.json()) as { success: boolean };
     expect(body).toStrictEqual({ success: true });
     expect(typeof body).toBe('object');
     expect(body).toHaveProperty('success');
@@ -584,16 +544,13 @@ describe('POST /api/recommendations/add-email', () => {
 
     // Call endpoint without providing email - should use encrypted email from request
     const response = await app.request(
-      new Request(
-        'http://localhost/api/recommendations/add-email',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `id=${recommendation.id}`,
-        }
-      )
+      new Request('http://localhost/api/recommendations/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${recommendation.id}`,
+      })
     );
 
     expect(response.status).toBe(200);

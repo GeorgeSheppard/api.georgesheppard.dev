@@ -1,4 +1,13 @@
-import { pgTable, uuid, text, timestamp, jsonb, serial, varchar, customType } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  jsonb,
+  serial,
+  varchar,
+  customType,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { Recommendation, BooksProcessed } from '@core/types/index.js';
 
@@ -27,7 +36,9 @@ export const requests = pgTable('requests', {
 // images table (BookcaseImage)
 export const images = pgTable('images', {
   id: serial('id').primaryKey(),
-  requestId: uuid('request_id').notNull().references(() => requests.id, { onDelete: 'cascade' }),
+  requestId: uuid('request_id')
+    .notNull()
+    .references(() => requests.id, { onDelete: 'cascade' }),
   image: bytea('image').notNull(),
   contentType: text('content_type').notNull(),
 });
@@ -35,7 +46,9 @@ export const images = pgTable('images', {
 // recommendations table (BookRecommendations)
 export const recommendations = pgTable('recommendations', {
   id: uuid('id').primaryKey().defaultRandom(),
-  requestId: uuid('request_id').notNull().references(() => requests.id, { onDelete: 'cascade' }),
+  requestId: uuid('request_id')
+    .notNull()
+    .references(() => requests.id, { onDelete: 'cascade' }),
   recommendations: jsonb('recommendations').$type<Recommendation[]>(),
   processedUtc: timestamp('processed_utc', { mode: 'date', withTimezone: true }),
 });

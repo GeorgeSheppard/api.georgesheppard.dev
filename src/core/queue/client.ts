@@ -36,7 +36,7 @@ export async function createQueueClient(url: string): Promise<QueueClient> {
     recommendationQueue,
     close: async () => {
       await channel.close();
-      await connection.close()
+      await connection.close();
     },
   };
 
