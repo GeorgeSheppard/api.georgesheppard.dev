@@ -4,9 +4,6 @@ description: Common setup steps for Node.js, pnpm, dependencies, and environment
 runs:
   using: composite
   steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:

@@ -11,6 +11,9 @@ jobs:
   generate-openapi:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
       - name: Setup Environment
         uses: ./.github/actions/setup-env
 
@@ -22,10 +25,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if [ -z "$(git status --quiet generated/openapi/)" ]; then
-            echo "No changes to OpenAPI spec"
-          else
-            git add generated/openapi/
+          git add generated/openapi/
+          if ! git diff --cached --quiet generated/openapi/; then
             git commit -m "Generate OpenAPI spec"
             git push
           fi
@@ -33,6 +34,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
       - name: Setup Environment
         uses: ./.github/actions/setup-env
 
@@ -42,6 +46,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
       - name: Setup Environment
         uses: ./.github/actions/setup-env
 
