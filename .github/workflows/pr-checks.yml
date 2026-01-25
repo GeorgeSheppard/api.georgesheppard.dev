@@ -4,8 +4,68 @@ on:
   pull_request:
     branches: ['master']
 
+permissions:
+  contents: write
+
 jobs:
-  lint-and-test:
+  generate-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.22.0
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate OpenAPI Spec
+        run: pnpm generate:openapi
+
+      - name: Commit OpenAPI Spec if Changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain generated/openapi/)" ]; then
+            echo "No changes to OpenAPI spec"
+          else
+            git add generated/openapi/
+            git commit -m "Generate OpenAPI spec"
+            git push
+          fi
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.22.0
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -26,25 +86,6 @@ jobs:
 
       - name: Load environment variables
         run: grep -v '^#' .env.test | grep -v '^$' >> $GITHUB_ENV
-
-      - name: Generate OpenAPI Spec
-        run: pnpm generate:openapi
-
-      - name: Commit OpenAPI Spec if Changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          if git diff --quiet generated/openapi/; then
-            echo "No changes to OpenAPI spec"
-          else
-            git add generated/openapi/
-            git commit -m "Generate OpenAPI spec"
-            git push
-          fi
-
-      - name: Lint
-        run: pnpm lint
 
       - name: Run Integration Tests
         run: pnpm test:integration
