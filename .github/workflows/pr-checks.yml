@@ -4,9 +4,6 @@ on:
   pull_request:
     branches: ['master']
 
-permissions:
-  contents: write
-
 jobs:
   generate-openapi:
     runs-on: ubuntu-latest
