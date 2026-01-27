@@ -27,6 +27,12 @@ const envSchema = z.object({
   // Encryption (must be exact lengths)
   ENCRYPTION_KEY: z.string().length(32),
   ENCRYPTION_IV: z.string().length(16),
+
+  // AWS DynamoDB
+  AWS_DYNAMO_REGION: z.string(),
+  AWS_DYNAMO_TABLE_NAME: z.string(),
+  AWS_DYNAMO_ACCESS_KEY_ID: z.string(),
+  AWS_DYNAMO_SECRET_ACCESS_KEY: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;
