@@ -26,6 +26,8 @@
   "license": "ISC",
   "packageManager": "pnpm@10.22.0",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.975.0",
+    "@aws-sdk/lib-dynamodb": "^3.975.0",
     "@hono/node-server": "^1.19.7",
     "@hono/swagger-ui": "^0.5.3",
     "@hono/zod-openapi": "^1.2.0",
