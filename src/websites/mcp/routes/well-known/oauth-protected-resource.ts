@@ -33,11 +33,12 @@ const route = createRoute({
 export function registerOAuthProtectedResourceRoute(app: OpenAPIHono) {
   app.openapi(route, async (c) => {
     try {
-      const authorizationServer = `https://cognito-idp.${config.AWS_COGNITO_REGION}.amazonaws.com/${config.AWS_COGNITO_USER_POOL_ID}`;
+      const fullPoolId = `${config.AWS_COGNITO_REGION}_${config.AWS_COGNITO_USER_POOL_ID}`;
+      const authorizationServer = `https://cognito-idp.${config.AWS_COGNITO_REGION}.amazonaws.com/${fullPoolId}`;
 
       return c.json(
         {
-          resource: `${config.MCP_SERVER_BASE_URL}/mcp`,
+          resource: config.MCP_SERVER_BASE_URL,
           authorization_servers: [authorizationServer],
           scopes_supported: ['mcp:tools', 'mcp:resources'],
         },

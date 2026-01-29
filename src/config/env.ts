@@ -38,6 +38,8 @@ const envSchema = z.object({
   MCP_SERVER_BASE_URL: z.string().url(),
   AWS_COGNITO_USER_POOL_ID: z.string(),
   AWS_COGNITO_REGION: z.string(),
+  AWS_COGNITO_CLIENT_ID: z.string(),
+  AWS_COGNITO_CLIENT_SECRET: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;
