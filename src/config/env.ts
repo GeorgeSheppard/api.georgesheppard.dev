@@ -33,6 +33,11 @@ const envSchema = z.object({
   AWS_DYNAMO_TABLE_NAME: z.string(),
   AWS_DYNAMO_ACCESS_KEY_ID: z.string(),
   AWS_DYNAMO_SECRET_ACCESS_KEY: z.string(),
+
+  // MCP OAuth
+  MCP_SERVER_BASE_URL: z.string().url(),
+  AWS_COGNITO_USER_POOL_ID: z.string(),
+  AWS_COGNITO_REGION: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;

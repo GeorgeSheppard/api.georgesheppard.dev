@@ -8,6 +8,7 @@ import { QueueClient } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
 import { registerShelfieRoutes } from '@websites/shelfie/routes/index.js';
 import { registerKitchenCalmRoutes } from '@websites/kitchencalm/routes/index.js';
+import { registerMcpRoutes } from '@websites/mcp/routes/index.js';
 import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
@@ -50,6 +51,7 @@ export async function createApp(dependencies: AppDependencies) {
   // Register routes
   registerShelfieRoutes(app);
   registerKitchenCalmRoutes(app);
+  registerMcpRoutes(app);
 
   // Register Swagger UI
   if (config.NODE_ENV === 'development') {
