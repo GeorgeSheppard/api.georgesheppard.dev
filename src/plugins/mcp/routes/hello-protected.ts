@@ -2,16 +2,8 @@ import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { jwtAuthMiddleware } from '../middleware/jwt-auth.js';
 import { ROUTES } from './paths.js';
-
-const ResponseSchema = z.object({
-  message: z.string(),
-  userId: z.string().uuid(),
-  timestamp: z.string(),
-});
-
-const ErrorSchema = z.object({
-  error: z.string(),
-});
+import { handleProtectedHello } from './handlers.js';
+import { ProtectedHelloResponseSchema, ErrorResponseSchema } from './schemas.js';
 
 const route = createRoute({
   method: 'get',
@@ -19,11 +11,16 @@ const route = createRoute({
   tags: ['mcp'],
   security: [{ bearerAuth: [] }],
   middleware: jwtAuthMiddleware,
+  request: {
+    headers: z.object({
+      Authorization: z.string().describe('Bearer token for authentication'),
+    }),
+  },
   responses: {
     200: {
       content: {
         'application/json': {
-          schema: ResponseSchema,
+          schema: ProtectedHelloResponseSchema,
         },
       },
       description: 'Protected hello endpoint with user ID',
@@ -31,7 +28,7 @@ const route = createRoute({
     401: {
       content: {
         'application/json': {
-          schema: ErrorSchema,
+          schema: ErrorResponseSchema,
         },
       },
       description: 'Unauthorized - invalid or missing JWT',
@@ -40,16 +37,5 @@ const route = createRoute({
 });
 
 export function registerHelloProtectedRoute(app: OpenAPIHono) {
-  app.openapi(route, async (c) => {
-    const userId = c.get('userId') as string;
-
-    return c.json(
-      {
-        message: 'Hello from MCP protected endpoint!',
-        userId,
-        timestamp: new Date().toISOString(),
-      },
-      200
-    );
-  });
+  app.openapi(route, handleProtectedHello);
 }

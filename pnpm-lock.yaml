@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@hono/mcp':
+        specifier: ^0.2.3
+        version: 0.2.3(@modelcontextprotocol/sdk@1.25.3(hono@4.11.3)(zod@4.2.1))(hono-rate-limiter@0.4.2(hono@4.11.3))(hono@4.11.3)(zod@4.2.1)
       '@hono/node-server':
         specifier: ^1.19.7
         version: 1.19.7(hono@4.11.3)
@@ -554,6 +557,14 @@ packages:
     resolution: {integrity: sha512-rc1hOQtjIWGxcxpb9aHAfLpIctjEnsDehj0DAiVfBlmT84uvR0uUtN2hEi/ecvWVjXUGf5qPF4qEgiLOx1YIMQ==}
     engines: {node: '>=6'}
     hasBin: true
+
+  '@hono/mcp@0.2.3':
+    resolution: {integrity: sha512-wrYKVQSjnBg4/ZinnnP/1t3jlvP3Z9fqZv8OzuhLXV4gVTLOHOHDhnXsIwD0nFVKk2pMOvA+sDfrKyRzw4yUPg==}
+    peerDependencies:
+      '@modelcontextprotocol/sdk': ^1.25.1
+      hono: '*'
+      hono-rate-limiter: ^0.4.2
+      zod: ^3.25.0 || ^4.0.0
 
   '@hono/node-server@1.19.7':
     resolution: {integrity: sha512-vUcD0uauS7EU2caukW8z5lJKtoGMokxNbJtBiwHgpqxEXokaHCBkQUmCHhjFB1VUTWdqj25QoMkMKzgjq+uhrw==}
@@ -1509,6 +1520,11 @@ packages:
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
+
+  hono-rate-limiter@0.4.2:
+    resolution: {integrity: sha512-AAtFqgADyrmbDijcRTT/HJfwqfvhalya2Zo+MgfdrMPas3zSMD8SU03cv+ZsYwRU1swv7zgVt0shwN059yzhjw==}
+    peerDependencies:
+      hono: ^4.1.1
 
   hono@4.11.3:
     resolution: {integrity: sha512-PmQi306+M/ct/m5s66Hrg+adPnkD5jiO6IjA7WhWw0gSBSo1EcRegwuI1deZ+wd5pzCGynCcn2DprnE4/yEV4w==}
@@ -2621,6 +2637,14 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
 
+  '@hono/mcp@0.2.3(@modelcontextprotocol/sdk@1.25.3(hono@4.11.3)(zod@4.2.1))(hono-rate-limiter@0.4.2(hono@4.11.3))(hono@4.11.3)(zod@4.2.1)':
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.25.3(hono@4.11.3)(zod@4.2.1)
+      hono: 4.11.3
+      hono-rate-limiter: 0.4.2(hono@4.11.3)
+      pkce-challenge: 5.0.1
+      zod: 4.2.1
+
   '@hono/node-server@1.19.7(hono@4.11.3)':
     dependencies:
       hono: 4.11.3
@@ -3587,6 +3611,10 @@ snapshots:
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
+
+  hono-rate-limiter@0.4.2(hono@4.11.3):
+    dependencies:
+      hono: 4.11.3
 
   hono@4.11.3: {}
 
