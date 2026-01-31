@@ -7,7 +7,8 @@ import { errorHandler } from '@core/middleware/error-handler.js';
 import { QueueClient } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
 import { registerShelfieRoutes } from '@websites/shelfie/routes/index.js';
-import { registerMcpRoutes } from '@plugins/mcp/routes/index.js';
+import { registerRoutes as registerKitchenCalmRoutes, tools as kitchenCalmTools } from '@websites/kitchencalm/index.js';
+import { registerMcpSseRoute } from '@core/mcp/routes/sse.js';
 import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
@@ -47,9 +48,13 @@ export async function createApp(dependencies: AppDependencies) {
     return c.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // Register routes
+  // Register website routes
   registerShelfieRoutes(app);
-  registerMcpRoutes(app);
+  registerKitchenCalmRoutes(app);
+
+  // Register MCP with all tools from all websites
+  const allMcpTools = [...kitchenCalmTools];
+  registerMcpSseRoute(app, allMcpTools);
 
   // Register Swagger UI and OpenAPI spec
   if (config.NODE_ENV === 'development') {
