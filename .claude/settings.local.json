@@ -18,7 +18,10 @@
       "Skill(update-pr-from-branch)",
       "Bash(git rev-parse:*)",
       "mcp__github__list_pull_requests",
-      "mcp__github__update_pull_request"
+      "mcp__github__update_pull_request",
+      "Bash(tree:*)",
+      "Skill(endpoint-creation)",
+      "Bash(pnpm test:*)"
     ]
   }
 }

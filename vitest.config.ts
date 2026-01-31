@@ -22,9 +22,18 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          name: 'integration',
-          include: ['test/integration/**/*.test.ts'],
+          name: 'integration:mcp',
+          include: ['test/integration/mcp-*.test.ts'],
+          setupFiles: ['./test/setup-mcp.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration:db',
+          include: ['test/integration/**/*.test.ts', '!test/integration/mcp-*.test.ts'],
           setupFiles: ['./test/setup.ts'],
+          testTimeout: 60000,
         },
       },
     ],
