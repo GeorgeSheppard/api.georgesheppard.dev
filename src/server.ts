@@ -51,8 +51,20 @@ export async function createApp(dependencies: AppDependencies) {
   registerShelfieRoutes(app);
   registerMcpRoutes(app);
 
-  // Register Swagger UI
+  // Register Swagger UI and OpenAPI spec
   if (config.NODE_ENV === 'development') {
+    app.doc('/swagger/json', {
+      openapi: '3.0.0',
+      info: {
+        title: 'Shelfie API',
+        description: 'Book recommendation API for Shelfie',
+        version: '2.0.0',
+      },
+      servers: [
+        { url: `http://localhost:${config.PORT}`, description: 'Development' },
+        { url: 'https://api.georgesheppard.dev', description: 'Production' },
+      ],
+    });
     app.get('/swagger', swaggerUI({ url: '/swagger/json' }));
   }
 
