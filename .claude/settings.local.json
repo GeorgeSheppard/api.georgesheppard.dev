@@ -34,7 +34,9 @@
       "Bash(pnpm test:integration:db:*)",
       "WebFetch(domain:vitest.dev)",
       "Bash(pnpm lint:fix:*)",
-      "Bash(pnpm format:*)"
+      "Bash(pnpm format:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git config:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -52,6 +52,7 @@
     "@types/amqplib": "^0.10.8",
     "@types/node": "^22.7.5",
     "@types/pg": "^8.11.10",
+    "@typescript-eslint/parser": "^8.54.0",
     "drizzle-kit": "^0.24.2",
     "eslint": "^9.39.2",
     "eslint-plugin-unused-imports": "^4.3.0",
