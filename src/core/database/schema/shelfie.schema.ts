@@ -9,7 +9,7 @@ import {
   customType,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import type { Recommendation, BooksProcessed } from '@core/types/index.js';
+import type { Recommendation, BooksProcessed } from '@core/types/recommendation.js';
 
 // Custom bytea type for binary data
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({

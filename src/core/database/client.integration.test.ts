@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createDatabaseClient } from '../../src/core/database/client.js';
-import { requests, images, recommendations } from '../../src/core/database/schema/index.js';
+import { createDatabaseClient } from './client.js';
+import { requests, images, recommendations } from './schema/index.js';
 import { eq } from 'drizzle-orm';
 import { config } from '@config/index.js';
 

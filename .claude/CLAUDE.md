@@ -26,3 +26,4 @@ Basic unit tests can be run using:
 3. Ask clarifications if specifications are unclear.
 4. Use `pnpm`.
 5. Use `.js` extensions in all import statements, even though this is a TypeScript project. This is necessary for ESM compatibility and matches the project's build output.
+6. Verify your work by using `pnpm lint`

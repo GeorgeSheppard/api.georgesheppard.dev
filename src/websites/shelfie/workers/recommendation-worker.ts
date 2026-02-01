@@ -5,7 +5,7 @@ import { EmailClient } from '@core/utils/mailgun.js';
 import { encryption } from '@core/utils/encryption.js';
 import { RecommendationJob } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
-import { Location } from '@core/types/index.js';
+import { Location } from '@core/types/location.js';
 
 export async function processRecommendationJob(
   job: RecommendationJob,

@@ -6,7 +6,9 @@ import { securityHeaders } from '@core/middleware/security.js';
 import { errorHandler } from '@core/middleware/error-handler.js';
 import { QueueClient } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
-import { registerShelfieRoutes } from '@websites/shelfie/routes/index.js';
+import { registerShelfieRoutes } from '@websites/shelfie/index.js';
+import { registerRoutes as registerKitchenCalmRoutes, tools as kitchenCalmTools } from '@websites/kitchencalm/index.js';
+import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
@@ -46,11 +48,28 @@ export async function createApp(dependencies: AppDependencies) {
     return c.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // Register routes
+  // Register website routes
   registerShelfieRoutes(app);
+  registerKitchenCalmRoutes(app);
 
-  // Register Swagger UI
+  // Register MCP with all tools from all websites
+  const allMcpTools = [...kitchenCalmTools];
+  registerMcpSseRoute(app, allMcpTools);
+
+  // Register Swagger UI and OpenAPI spec
   if (config.NODE_ENV === 'development') {
+    app.doc('/swagger/json', {
+      openapi: '3.0.0',
+      info: {
+        title: 'Shelfie API',
+        description: 'Book recommendation API for Shelfie',
+        version: '2.0.0',
+      },
+      servers: [
+        { url: `http://localhost:${config.PORT}`, description: 'Development' },
+        { url: 'https://api.georgesheppard.dev', description: 'Production' },
+      ],
+    });
     app.get('/swagger', swaggerUI({ url: '/swagger/json' }));
   }
 

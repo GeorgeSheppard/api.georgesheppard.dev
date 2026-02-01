@@ -2,10 +2,10 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
 import { requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
-import { App } from '../../src/server.js';
+import { App } from '../../../../server.js';
 import { config } from '@config/index.js';
 import { createQueueClient, QueueClient } from '@core/queue/client.js';
-import { createTestApp } from '../utils/app.js';
+import { createTestApp } from '../../../../../test/utils/app.js';
 
 let app: App;
 let databaseClient: DatabaseClient;

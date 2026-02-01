@@ -24,6 +24,9 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string(),
   TEXT_EXTRACTOR_URL: z.string().url(),
 
+  // JWT
+  JWT_SECRET: z.string().min(32).describe('Secret for signing JWTs (min 32 chars)'),
+
   // Encryption (must be exact lengths)
   ENCRYPTION_KEY: z.string().length(32),
   ENCRYPTION_IV: z.string().length(16),

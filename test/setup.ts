@@ -12,16 +12,14 @@ let rabbitmqContainer: StartedRabbitMQContainer | null = null;
  * All environment variables come from .env.test (loaded by vitest.config.ts)
  */
 beforeAll(async () => {
-  postgresContainer = await new PostgreSqlContainer('postgres:16-alpine')
+  [postgresContainer, rabbitmqContainer] = await Promise.all([new PostgreSqlContainer('postgres:16-alpine')
     .withTmpFs({ '/var/lib/postgresql/data': 'rw' })
-    .start();
+    .start(), new RabbitMQContainer('rabbitmq:4.0.5-management').start()]);
+
   config.DATABASE_URL = postgresContainer.getConnectionUri();
-
-  console.log('✅ PostgreSQL container started');
-
-  rabbitmqContainer = await new RabbitMQContainer('rabbitmq:4.0.5-management').start();
   config.RABBITMQ_URL = rabbitmqContainer.getAmqpUrl();
 
+  console.log('✅ PostgreSQL container started');
   console.log('✅ RabbitMQ container started');
 }, 120000);
 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Location } from '@core/types/index.js';
+import { Location } from '@core/types/location.js';
 
 interface CountryIpResponse {
   ip: string;

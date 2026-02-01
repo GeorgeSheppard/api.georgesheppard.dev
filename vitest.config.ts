@@ -16,15 +16,24 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          include: ['test/**/*.test.ts', '!test/integration/**'],
+          include: ['src/**/*.test.ts', '!src/**/*.integration.test.ts'],
         },
       },
       {
         extends: true,
         test: {
-          name: 'integration',
-          include: ['test/integration/**/*.test.ts'],
+          name: 'integration:mcp',
+          include: ['src/websites/kitchencalm/**/*.integration.test.ts'],
+          setupFiles: ['./test/setup-mcp.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration:db',
+          include: ['src/**/*.integration.test.ts', '!src/websites/kitchencalm/**'],
           setupFiles: ['./test/setup.ts'],
+          testTimeout: 60000,
         },
       },
     ],

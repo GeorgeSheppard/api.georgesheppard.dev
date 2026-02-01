@@ -18,7 +18,24 @@
       "Skill(update-pr-from-branch)",
       "Bash(git rev-parse:*)",
       "mcp__github__list_pull_requests",
-      "mcp__github__update_pull_request"
+      "mcp__github__update_pull_request",
+      "Bash(tree:*)",
+      "Skill(endpoint-creation)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm test:integration:mcp:*)",
+      "WebFetch(domain:honohub.dev)",
+      "WebFetch(domain:jsr.io)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:github.com)",
+      "mcp__api-georgesheppard__hello-world",
+      "mcp__api-georgesheppard__hello_public",
+      "mcp__api-georgesheppard__hello_protected",
+      "Bash(dir \"C:\\\\Users\\\\georg\\\\Documents\\\\api.georgesheppard.dev\\\\src\\\\core\\\\mcp\")",
+      "Bash(pnpm test:integration:db:*)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "api-georgesheppard"
+  ]
 }

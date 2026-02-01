@@ -2,12 +2,12 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
 import { requests, recommendations } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
-import { App } from '../../src/server.js';
+import { App } from '../../../../server.js';
 import { config } from '@config/index.js';
 import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { EmailClient } from '@core/utils/mailgun.js';
-import { createMockEmailClient } from '../mocks/email.js';
-import { createTestApp } from '../utils/app.js';
+import { createMockEmailClient } from '../../../../../test/mocks/email.js';
+import { createTestApp } from '../../../../../test/utils/app.js';
 import { encryption } from '@core/utils/encryption.js';
 
 let app: App;
