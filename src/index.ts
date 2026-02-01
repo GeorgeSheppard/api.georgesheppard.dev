@@ -18,7 +18,13 @@ async function main() {
   );
   const emailClient = new MailgunClient();
   const ipLocator = new CountryIsIpLocator();
-  const app = await createApp({ databaseClient, queueClient, dynamoClient, emailClient, ipLocator });
+  const app = await createApp({
+    databaseClient,
+    queueClient,
+    dynamoClient,
+    emailClient,
+    ipLocator,
+  });
 
   const server = serve({
     fetch: app.fetch,

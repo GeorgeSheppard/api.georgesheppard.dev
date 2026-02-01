@@ -1,4 +1,4 @@
-import { OpenAPIHono, z } from '@hono/zod-openapi';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { McpTool } from '@core/mcp/sse.js';
 import { ContextWithUserId } from '@core/types/context.js';
 import {
@@ -7,7 +7,7 @@ import {
 } from './endpoints/hello-protected/hello-protected.js';
 import { authToken } from './endpoints/auth-token/auth-token.js';
 import { authTokenRoute } from './endpoints/auth-token/auth-token-definition.js';
-import { getRecipes, GetRecipesResponseSchema } from './endpoints/get-recipes/get-recipes.js';
+import { getRecipes } from './endpoints/get-recipes/get-recipes.js';
 import { getRecipesRoute } from './endpoints/get-recipes/get-recipes-definition.js';
 
 /**

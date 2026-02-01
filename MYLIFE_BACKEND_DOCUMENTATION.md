@@ -10,6 +10,7 @@
 ---
 
 ## Table of Contents
+
 1. [Project Structure](#project-structure)
 2. [Environment Variables](#environment-variables)
 3. [tRPC API Endpoints](#trpc-api-endpoints)
@@ -94,59 +95,67 @@ MyLife/
 ### Required Environment Variables
 
 #### **AWS DynamoDB**
-| Variable | Type | Description | Example |
-|----------|------|-------------|---------|
-| `ENV_AWS_DYNAMO_REGION` | string | AWS region for DynamoDB | `eu-west-2` |
-| `ENV_AWS_DYNAMO_NAME` | string | DynamoDB table name (dev) | `lifesitetable` |
-| `ENV_AWS_DYNAMO_NAME_PROD` | string | DynamoDB table name (production) | `lifesitetableproduction` |
-| `ENV_AWS_DYNAMO_ACCESS_KEY` | string | AWS access key ID | (AWS generated) |
-| `ENV_AWS_DYNAMO_SECRET_ACCESS_KEY` | string | AWS secret access key | (AWS generated) |
+
+| Variable                           | Type   | Description                      | Example                   |
+| ---------------------------------- | ------ | -------------------------------- | ------------------------- |
+| `ENV_AWS_DYNAMO_REGION`            | string | AWS region for DynamoDB          | `eu-west-2`               |
+| `ENV_AWS_DYNAMO_NAME`              | string | DynamoDB table name (dev)        | `lifesitetable`           |
+| `ENV_AWS_DYNAMO_NAME_PROD`         | string | DynamoDB table name (production) | `lifesitetableproduction` |
+| `ENV_AWS_DYNAMO_ACCESS_KEY`        | string | AWS access key ID                | (AWS generated)           |
+| `ENV_AWS_DYNAMO_SECRET_ACCESS_KEY` | string | AWS secret access key            | (AWS generated)           |
 
 #### **AWS S3**
-| Variable | Type | Description | Example |
-|----------|------|-------------|---------|
-| `ENV_AWS_S3_REGION` | string | AWS region for S3 | `eu-west-2` |
-| `ENV_AWS_S3_BUCKET_NAME` | string | S3 bucket name (dev) | `mylifebucket` |
-| `ENV_AWS_S3_BUCKET_NAME_PROD` | string | S3 bucket name (production) | `mylifebucketproduction` |
-| `ENV_AWS_S3_ACCESS_KEY` | string | AWS access key ID | (AWS generated) |
-| `ENV_AWS_S3_SECRET_ACCESS_KEY` | string | AWS secret access key | (AWS generated) |
+
+| Variable                       | Type   | Description                 | Example                  |
+| ------------------------------ | ------ | --------------------------- | ------------------------ |
+| `ENV_AWS_S3_REGION`            | string | AWS region for S3           | `eu-west-2`              |
+| `ENV_AWS_S3_BUCKET_NAME`       | string | S3 bucket name (dev)        | `mylifebucket`           |
+| `ENV_AWS_S3_BUCKET_NAME_PROD`  | string | S3 bucket name (production) | `mylifebucketproduction` |
+| `ENV_AWS_S3_ACCESS_KEY`        | string | AWS access key ID           | (AWS generated)          |
+| `ENV_AWS_S3_SECRET_ACCESS_KEY` | string | AWS secret access key       | (AWS generated)          |
 
 #### **AWS Cognito**
-| Variable | Type | Description | Example |
-|----------|------|-------------|---------|
-| `ENV_AWS_COGNITO_REGION` | string | AWS region for Cognito | `us-east-1` |
-| `ENV_AWS_COGNITO_USER_POOL_NAME` | string | Cognito user pool name | `mylifeuserpool` |
-| `ENV_AWS_COGNITO_CLIENT_ID` | string | Cognito app client ID | `5a3siv7gvjhboglusenau7ro9d` |
-| `ENV_AWS_COGNITO_CLIENT_SECRET` | string | Cognito app client secret | (AWS generated) |
-| `ENV_AWS_COGNITO_CLIENT_ISSUER` | string | Cognito OAuth issuer URL | `https://cognito-idp.us-east-1.amazonaws.com/us-east-1_SgWpLDwvx` |
-| `ENV_AWS_COGNITO_DOMAIN_URL` | string | Cognito domain for OAuth | `https://mylifeuserpooldomain.auth.us-east-1.amazoncognito.com` |
+
+| Variable                         | Type   | Description               | Example                                                           |
+| -------------------------------- | ------ | ------------------------- | ----------------------------------------------------------------- |
+| `ENV_AWS_COGNITO_REGION`         | string | AWS region for Cognito    | `us-east-1`                                                       |
+| `ENV_AWS_COGNITO_USER_POOL_NAME` | string | Cognito user pool name    | `mylifeuserpool`                                                  |
+| `ENV_AWS_COGNITO_CLIENT_ID`      | string | Cognito app client ID     | `5a3siv7gvjhboglusenau7ro9d`                                      |
+| `ENV_AWS_COGNITO_CLIENT_SECRET`  | string | Cognito app client secret | (AWS generated)                                                   |
+| `ENV_AWS_COGNITO_CLIENT_ISSUER`  | string | Cognito OAuth issuer URL  | `https://cognito-idp.us-east-1.amazonaws.com/us-east-1_SgWpLDwvx` |
+| `ENV_AWS_COGNITO_DOMAIN_URL`     | string | Cognito domain for OAuth  | `https://mylifeuserpooldomain.auth.us-east-1.amazoncognito.com`   |
 
 #### **Google OAuth** (Optional)
-| Variable | Type | Description | Example |
-|----------|------|-------------|---------|
-| `GOOGLE_ID` | string | Google OAuth app ID | `297433794614-l11qgfas48b59mc0902bh9kqohesendo.apps.googleusercontent.com` |
-| `GOOGLE_SECRET` | string | Google OAuth app secret | (Google generated) |
+
+| Variable        | Type   | Description             | Example                                                                    |
+| --------------- | ------ | ----------------------- | -------------------------------------------------------------------------- |
+| `GOOGLE_ID`     | string | Google OAuth app ID     | `297433794614-l11qgfas48b59mc0902bh9kqohesendo.apps.googleusercontent.com` |
+| `GOOGLE_SECRET` | string | Google OAuth app secret | (Google generated)                                                         |
 
 #### **NextAuth.js**
-| Variable | Type | Description | Example |
-|----------|------|-------------|---------|
-| `NEXTAUTH_SECRET` | string | Secret for NextAuth session encryption | (random 32+ char string) |
-| `NEXTAUTH_URL` | string | Application URL (auto-detected in production) | `http://localhost:3000` |
+
+| Variable          | Type   | Description                                   | Example                  |
+| ----------------- | ------ | --------------------------------------------- | ------------------------ |
+| `NEXTAUTH_SECRET` | string | Secret for NextAuth session encryption        | (random 32+ char string) |
+| `NEXTAUTH_URL`    | string | Application URL (auto-detected in production) | `http://localhost:3000`  |
 
 #### **OpenAI**
-| Variable | Type | Description | Example |
-|----------|------|-------------|---------|
+
+| Variable                       | Type   | Description    | Example  |
+| ------------------------------ | ------ | -------------- | -------- |
 | `ENV_OPENAI_SECRET_ACCESS_KEY` | string | OpenAI API key | `sk-...` |
 
 #### **Redirect URLs**
-| Variable | Type | Description | Example |
-|----------|------|-------------|---------|
-| `ENV_LOGIN_LOGOUT_REDIRECT_URL` | string | Redirect URL after login/logout (dev) | `http://localhost:3000` |
-| `ENV_LOGIN_LOGOUT_REDIRECT_URL_PROD` | string | Redirect URL (production) | `https://my-life-nu.vercel.app` |
+
+| Variable                             | Type   | Description                           | Example                         |
+| ------------------------------------ | ------ | ------------------------------------- | ------------------------------- |
+| `ENV_LOGIN_LOGOUT_REDIRECT_URL`      | string | Redirect URL after login/logout (dev) | `http://localhost:3000`         |
+| `ENV_LOGIN_LOGOUT_REDIRECT_URL_PROD` | string | Redirect URL (production)             | `https://my-life-nu.vercel.app` |
 
 #### **Optional**
-| Variable | Type | Description | Example |
-|----------|------|-------------|---------|
+
+| Variable       | Type   | Description                         | Example                                                     |
+| -------------- | ------ | ----------------------------------- | ----------------------------------------------------------- |
 | `DATABASE_URL` | string | PostgreSQL URL (noted but not used) | `postgresql://postgres:password@localhost:5432/kitchencalm` |
 
 ---
@@ -168,11 +177,13 @@ Get all recipes for authenticated user.
 **Input:** None
 
 **Output:**
+
 ```typescript
-Map<RecipeUuid, IRecipe>
+Map<RecipeUuid, IRecipe>;
 ```
 
 **Response Example:**
+
 ```json
 {
   "550e8400-e29b-41d4-a716-446655440000": {
@@ -211,6 +222,7 @@ Map<RecipeUuid, IRecipe>
 ```
 
 **Services Used:**
+
 - DynamoDB (query user recipes)
 
 ---
@@ -222,18 +234,21 @@ Delete a recipe.
 **Authentication:** Required
 
 **Input:**
+
 ```typescript
 {
-  uuid: RecipeUuid
+  uuid: RecipeUuid;
 }
 ```
 
 **Output:**
+
 ```typescript
 void
 ```
 
 **Services Used:**
+
 - DynamoDB (delete item)
 
 ---
@@ -245,6 +260,7 @@ Create or update a recipe for authenticated user.
 **Authentication:** Required
 
 **Input:**
+
 ```typescript
 {
   uuid?: RecipeUuid,        // Omit for create, include for update
@@ -275,16 +291,19 @@ Create or update a recipe for authenticated user.
 ```
 
 **Output:**
+
 ```typescript
 void
 ```
 
 **Services Used:**
+
 - DynamoDB (put/update item)
 
 **Validation:** Zod schema in `server/routers/recipes/validators/recipe.ts`
 
 **Notes:**
+
 - Generates new UUID if not provided (create mode)
 - Images must already exist in S3 (get signed URL from `s3.put`)
 - Stores items with sort key: `R-{recipeUuid}`
@@ -298,23 +317,27 @@ Create a shareable recipe with public access (no authentication required).
 **Authentication:** Not required (public)
 
 **Input:**
+
 ```typescript
 {
-  recipe: IRecipe          // Full recipe object
+  recipe: IRecipe; // Full recipe object
 }
 ```
 
 **Output:**
+
 ```typescript
 {
-  shareId: string          // Unique share ID (UUID)
+  shareId: string; // Unique share ID (UUID)
 }
 ```
 
 **Services Used:**
+
 - DynamoDB (put shared recipe with special UserId)
 
 **Notes:**
+
 - Creates new UUID for shareId
 - Stores with special UserId (the shareId itself)
 - User ID: actual user ID → Sort key: `S` (shared marker)
@@ -329,20 +352,23 @@ Get a shared recipe by ID (public, no authentication).
 **Authentication:** Not required
 
 **Input:**
+
 ```typescript
 {
-  shareId: string
+  shareId: string;
 }
 ```
 
 **Output:**
+
 ```typescript
-IRecipe | null
+IRecipe | null;
 ```
 
 **Response Example:** (Same structure as `getRecipes` single recipe)
 
 **Services Used:**
+
 - DynamoDB (get item with shareId as UserId)
 
 ---
@@ -360,6 +386,7 @@ Get meal plan for authenticated user (14 days past + 14 days future).
 **Input:** None
 
 **Output:**
+
 ```typescript
 {
   [dateString: string]: {
@@ -372,6 +399,7 @@ Get meal plan for authenticated user (14 days past + 14 days future).
 ```
 
 **Response Example:**
+
 ```json
 {
   "Monday - 01/08/2024": {
@@ -394,9 +422,11 @@ Get meal plan for authenticated user (14 days past + 14 days future).
 ```
 
 **Services Used:**
+
 - DynamoDB (get meal plan item with sort key `MP`)
 
 **Notes:**
+
 - Returns empty object `{}` if meal plan doesn't exist yet
 - Date format: `"DayName - MM/DD/YYYY"` (e.g., `"Monday - 01/08/2024"`)
 - Span: 14 days before today through 14 days after today
@@ -411,6 +441,7 @@ Update/save meal plan for authenticated user.
 **Authentication:** Required
 
 **Input:**
+
 ```typescript
 {
   mealPlan: {
@@ -425,16 +456,19 @@ Update/save meal plan for authenticated user.
 ```
 
 **Output:**
+
 ```typescript
 void
 ```
 
 **Services Used:**
+
 - DynamoDB (put item with sort key `MP`)
 
 **Validation:** Zod schema in `server/routers/mealPlan/validators/mealPlan.ts`
 
 **Notes:**
+
 - Replaces entire meal plan with provided data
 - Validates meal plan structure before saving
 - Special handling: `shared` user write operations silently fail (returns empty array)
@@ -452,23 +486,27 @@ Get signed URL for downloading file from S3.
 **Authentication:** Not required
 
 **Input:**
+
 ```typescript
 {
-  key: string              // S3 object key
+  key: string; // S3 object key
 }
 ```
 
 **Output:**
+
 ```typescript
 {
-  signedUrl: string        // Signed GET URL (valid for limited time)
+  signedUrl: string; // Signed GET URL (valid for limited time)
 }
 ```
 
 **Services Used:**
+
 - S3 (generate signed GET URL)
 
 **Notes:**
+
 - Returns URL valid for read access
 - No authentication required (endpoint is public)
 
@@ -481,21 +519,25 @@ Delete file from S3.
 **Authentication:** Not required (publicly callable)
 
 **Input:**
+
 ```typescript
 {
-  key: string              // S3 object key
+  key: string; // S3 object key
 }
 ```
 
 **Output:**
+
 ```typescript
 void
 ```
 
 **Services Used:**
+
 - S3 (delete object)
 
 **Notes:**
+
 - No user validation - any key can be deleted
 - Use with caution in production
 
@@ -508,6 +550,7 @@ Get signed URL for uploading file to S3.
 **Authentication:** Required
 
 **Input:**
+
 ```typescript
 {
   fileName: string,        // Original filename (used for S3 key)
@@ -516,16 +559,19 @@ Get signed URL for uploading file to S3.
 ```
 
 **Output:**
+
 ```typescript
 {
-  signedUrl: string        // Signed PUT URL (valid for limited time)
+  signedUrl: string; // Signed PUT URL (valid for limited time)
 }
 ```
 
 **Services Used:**
+
 - S3 (generate signed PUT URL)
 
 **Flow:**
+
 1. Client calls `s3.put` with filename and content type
 2. Server generates signed PUT URL scoped to user (key: `<UserId>/fileName`)
 3. Client uploads file directly to S3 using signed URL
@@ -538,12 +584,14 @@ Get signed URL for uploading file to S3.
 ### DynamoDB
 
 **Table Name:**
+
 - Development: `lifesitetable`
 - Production: `lifesitetableproduction`
 
 **Region:** `eu-west-2`
 
 **Schema:**
+
 ```typescript
 {
   AttributeDefinitions: [
@@ -562,6 +610,7 @@ Get signed URL for uploading file to S3.
 ```
 
 **Access Pattern:**
+
 - `UserId` = AWS Cognito `sub` (unique user identifier)
 - `Item` = Sort key with type prefix:
   - Recipes: `R-{recipeUuid}`
@@ -569,6 +618,7 @@ Get signed URL for uploading file to S3.
   - Shared recipes: `S-{sharedRecipeId}` (UserId also set to shareId)
 
 **Item Storage:**
+
 - Recipe items stored as JSON with all nested components and ingredients
 - Meal plan stored as nested date → recipe → components mapping
 - Shared recipes accessible via special UserId = shareId
@@ -578,17 +628,20 @@ Get signed URL for uploading file to S3.
 ### S3
 
 **Bucket Name:**
+
 - Development: `mylifebucket`
 - Production: `mylifebucketproduction`
 
 **Region:** `eu-west-2`
 
 **Configuration:**
+
 - CORS enabled (allow image uploads from browser)
 - Versioning enabled (production only)
 - Signed URL expiration: Default AWS SDK settings
 
 **Object Structure:**
+
 ```
 {BucketName}/
 ├── {UserId}/
@@ -599,6 +652,7 @@ Get signed URL for uploading file to S3.
 ```
 
 **Features:**
+
 - User-scoped folders for private images
 - Signed URLs for secure browser uploads/downloads
 - Public read access via signed URLs
@@ -608,25 +662,30 @@ Get signed URL for uploading file to S3.
 ### Cognito
 
 **User Pool ID:**
+
 - Development: `us-east-1_SgWpLDwvx`
 - Production: `us-east-1_LuP7rq1j2`
 
 **Region:** `us-east-1`
 
 **OAuth Providers:**
+
 1. **Cognito Native** - Email/password authentication
 2. **Google** - OAuth 2.0 via Google provider
 
 **Domain:**
+
 - Development: `mylifeuserpooldomain.auth.us-east-1.amazoncognito.com`
 
 **NextAuth Configuration:**
+
 - Provider: AWS Cognito via NextAuth.js v4.3.1
 - Session type: JWT-based sessions
 - Secret: `NEXTAUTH_SECRET` environment variable
 - Callback: `/pages/api/auth/[...nextauth].ts`
 
 **Session Object:**
+
 ```typescript
 {
   user: {
@@ -660,6 +719,7 @@ Get signed URL for uploading file to S3.
 ### Item Structure: Recipe
 
 **DynamoDB Item:**
+
 ```json
 {
   "UserId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
@@ -726,14 +786,15 @@ Get signed URL for uploading file to S3.
 ```
 
 **TypeScript Interface:**
+
 ```typescript
 interface IRecipe {
   uuid: RecipeUuid;
   name: string;
   description: string;
   images: Array<{
-    timestamp: number;     // Unix timestamp
-    key: string;           // S3 object key
+    timestamp: number; // Unix timestamp
+    key: string; // S3 object key
   }>;
   components: Array<{
     name: string;
@@ -749,7 +810,7 @@ interface IRecipe {
       text: string;
       optional?: boolean;
     }>;
-    storeable?: boolean;   // Can be stored/made in advance
+    storeable?: boolean; // Can be stored/made in advance
     servings?: number;
   }>;
 }
@@ -760,6 +821,7 @@ interface IRecipe {
 ### Item Structure: Meal Plan
 
 **DynamoDB Item:**
+
 ```json
 {
   "UserId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
@@ -790,6 +852,7 @@ interface IRecipe {
 ```
 
 **TypeScript Type:**
+
 ```typescript
 interface IMealPlan {
   [dateString: string]: {
@@ -810,17 +873,18 @@ interface IMealPlan {
 ### Ingredient Units
 
 **Available Units:** (`core/recipes/units.ts`)
+
 ```typescript
 enum Unit {
-  NO_UNIT = "NO_UNIT",
-  MILLILITER = "MILLILITER",
-  LITER = "LITER",
-  GRAM = "GRAM",
-  KILOGRAM = "KILOGRAM",
-  CUP = "CUP",
-  TEASPOON = "TEASPOON",
-  TABLESPOON = "TABLESPOON",
-  NUMBER = "NUMBER"
+  NO_UNIT = 'NO_UNIT',
+  MILLILITER = 'MILLILITER',
+  LITER = 'LITER',
+  GRAM = 'GRAM',
+  KILOGRAM = 'KILOGRAM',
+  CUP = 'CUP',
+  TEASPOON = 'TEASPOON',
+  TABLESPOON = 'TABLESPOON',
+  NUMBER = 'NUMBER',
 }
 ```
 
@@ -860,6 +924,7 @@ enum Unit {
    - Returns: `Promise<void>`
 
 **Special User Handling:**
+
 - `shared` user can read recipes but write operations silently fail
 - Used for public/demo access without authentication
 
@@ -921,6 +986,7 @@ enum Unit {
 #### Key Function:
 
 **convertUploadToRecipe(fileContent, fileName)**
+
 - Takes uploaded file content (text or image description)
 - Calls GPT-3.5-turbo with recipe extraction prompt
 - Returns: `Promise<IRecipe>`
@@ -928,6 +994,7 @@ enum Unit {
 **System Prompt:** Extracts structured recipe from free-form text/image
 
 **Response Format:**
+
 ```json
 {
   "uuid": "generated-uuid",
@@ -982,6 +1049,7 @@ enum Unit {
 **File:** `pages/api/auth/[...nextauth].ts`
 
 **Configuration:**
+
 ```typescript
 {
   providers: [
@@ -1028,19 +1096,18 @@ enum Unit {
 **File:** `server/middleware.ts`
 
 ```typescript
-export const authedProcedure = t.procedure
-  .use(async (opts) => {
-    const session = await getServerSession();
-    if (!session?.id) {
-      throw new TRPCError({ code: "UNAUTHORIZED" });
-    }
-    return opts.next({
-      ctx: {
-        userId: session.id,  // Cognito sub
-        session
-      }
-    });
+export const authedProcedure = t.procedure.use(async (opts) => {
+  const session = await getServerSession();
+  if (!session?.id) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+  return opts.next({
+    ctx: {
+      userId: session.id, // Cognito sub
+      session,
+    },
   });
+});
 ```
 
 ---
@@ -1133,27 +1200,27 @@ export const authedProcedure = t.procedure
 
 ## File Structure Reference
 
-| Component | File Path |
-|-----------|-----------|
-| tRPC Router | `server/index.ts` |
-| Recipes Router | `server/routers/recipes/index.ts` |
-| Meal Plan Router | `server/routers/mealPlan/index.ts` |
-| S3 Router | `server/routers/s3/index.ts` |
-| tRPC Handler | `pages/api/trpc/[trpc].ts` |
-| NextAuth Config | `pages/api/auth/[...nextauth].ts` |
-| Logout Handler | `pages/api/auth/logout.ts` |
-| DynamoDB Utils | `core/dynamo/dynamo_utilities.ts` |
-| S3 Utils | `core/s3/s3_utilities.ts` |
-| Meal Plan Utils | `core/meal_plan/meal_plan_utilities.ts` |
-| OpenAI Integration | `core/openai/recipe_uploader.ts` |
-| Recipe Types | `core/types/recipes.ts` |
-| Meal Plan Types | `core/types/meal_plan.ts` |
-| Units Definition | `core/recipes/units.ts` |
-| Recipe Validator | `server/routers/recipes/validators/recipe.ts` |
+| Component           | File Path                                        |
+| ------------------- | ------------------------------------------------ |
+| tRPC Router         | `server/index.ts`                                |
+| Recipes Router      | `server/routers/recipes/index.ts`                |
+| Meal Plan Router    | `server/routers/mealPlan/index.ts`               |
+| S3 Router           | `server/routers/s3/index.ts`                     |
+| tRPC Handler        | `pages/api/trpc/[trpc].ts`                       |
+| NextAuth Config     | `pages/api/auth/[...nextauth].ts`                |
+| Logout Handler      | `pages/api/auth/logout.ts`                       |
+| DynamoDB Utils      | `core/dynamo/dynamo_utilities.ts`                |
+| S3 Utils            | `core/s3/s3_utilities.ts`                        |
+| Meal Plan Utils     | `core/meal_plan/meal_plan_utilities.ts`          |
+| OpenAI Integration  | `core/openai/recipe_uploader.ts`                 |
+| Recipe Types        | `core/types/recipes.ts`                          |
+| Meal Plan Types     | `core/types/meal_plan.ts`                        |
+| Units Definition    | `core/recipes/units.ts`                          |
+| Recipe Validator    | `server/routers/recipes/validators/recipe.ts`    |
 | Meal Plan Validator | `server/routers/mealPlan/validators/mealPlan.ts` |
-| DynamoDB Setup | `aws/scripts/createDynamoDB.js` |
-| S3 Setup | `aws/scripts/createS3Bucket.js` |
-| Cognito Setup | `aws/scripts/createCognitoUserPool.js` |
+| DynamoDB Setup      | `aws/scripts/createDynamoDB.js`                  |
+| S3 Setup            | `aws/scripts/createS3Bucket.js`                  |
+| Cognito Setup       | `aws/scripts/createCognitoUserPool.js`           |
 
 ---
 
