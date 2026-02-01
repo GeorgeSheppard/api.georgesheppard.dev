@@ -1,6 +1,5 @@
-import { test, describe, expect, afterEach } from '@test/fixtures.js';
+import { test, describe, expect } from '@test/fixtures.js';
 import { recommendations, requests } from '@core/database/schema/index.js';
-import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
 import { createTestApp } from '@test/utils/app.js';
 import type { Recommendation } from '@core/types/recommendation.js';

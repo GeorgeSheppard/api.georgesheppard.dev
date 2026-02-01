@@ -1,10 +1,8 @@
-import { test, describe, expect, afterEach } from '@test/fixtures.js';
+import { test, describe, expect } from '@test/fixtures.js';
 import { requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
 import { createTestApp } from '@test/utils/app.js';
-import { DatabaseClient } from '@core/database/client.js';
-import { QueueClient } from '@core/queue/client.js';
 
 describe('DELETE /api/recommendations/delete-email', () => {
   let app: App;

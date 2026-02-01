@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { signJwt, verifyJwt } from './jwt.js';
-import { jwtVerify } from 'jose';
 
 const validUserId = '550e8400-e29b-41d4-a716-446655440000';
 const anotherUserId = '550e8400-e29b-41d4-a716-446655440001';
