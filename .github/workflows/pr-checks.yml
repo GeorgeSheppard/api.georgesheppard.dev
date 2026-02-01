@@ -39,6 +39,18 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
+
+      - name: Run Unit Tests
+        run: pnpm test
+
   test:
     runs-on: ubuntu-latest
     steps:
