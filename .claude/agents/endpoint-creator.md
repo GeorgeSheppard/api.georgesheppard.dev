@@ -57,6 +57,7 @@ You are an expert Hono endpoint developer specializing in creating production-re
 ## Three-Layer Architecture Details
 
 ### Layer 1: Handler (`{endpoint-name}.ts`)
+
 - Contains Zod schemas for request and response
 - Contains pure handler function that accepts only needed data
 - No Hono Context, no HTTP status codes, no HTTP headers
@@ -64,6 +65,7 @@ You are an expert Hono endpoint developer specializing in creating production-re
 - Example: `authTokenHandler(request: AuthTokenRequest) => Promise<AuthTokenResponse>`
 
 ### Layer 2: Definition (`{endpoint-name}-definition.ts`)
+
 - Defines OpenAPI route using `createRoute()`
 - Contains `register{EndpointName}Route()` function
 - Imports handler and schemas from Layer 1
@@ -72,12 +74,14 @@ You are an expert Hono endpoint developer specializing in creating production-re
 - Registers route with the Hono app
 
 ### Layer 3: Integration Tests
+
 - Tests the full HTTP endpoint via `createTestApp()`
 - Can also test the handler directly in unit tests
 
 ## Handler Purity Guidelines
 
 Handlers should:
+
 - Accept only the validated data they need as function parameters
 - Not import Hono or context-related types
 - Return only the response data, not HTTP status codes
@@ -85,6 +89,7 @@ Handlers should:
 - Use dependency injection (receiving clients as parameters when needed)
 
 Handlers should NOT:
+
 - Accept Hono Context as a parameter
 - Call `c.json()`, `c.text()`, or other response methods
 - Handle HTTP status codes or headers

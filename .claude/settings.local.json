@@ -41,7 +41,5 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "api-georgesheppard"
-  ]
+  "enabledMcpjsonServers": ["api-georgesheppard"]
 }

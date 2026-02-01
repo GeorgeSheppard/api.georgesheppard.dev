@@ -98,11 +98,7 @@ import { createRoute } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { authMiddleware } from '@core/middleware/auth.js';
-import {
-  AuthTokenRequestSchema,
-  AuthTokenResponseSchema,
-  authTokenHandler,
-} from './auth-token.js';
+import { AuthTokenRequestSchema, AuthTokenResponseSchema, authTokenHandler } from './auth-token.js';
 
 export const authTokenRoute = createRoute({
   method: 'post',

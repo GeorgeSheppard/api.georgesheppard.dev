@@ -17,6 +17,7 @@ The project uses **custom Vitest fixtures** (`test/fixtures.ts`) that provide:
 - **Dependency injection**: Only provide the dependencies your test needs
 
 This approach ensures:
+
 - Each test starts with a clean database
 - Containers are efficiently reused across tests in the same worker
 - No manual connection management needed
@@ -170,7 +171,9 @@ Write tests for each code path in your endpoint implementation.
 **Example - Endpoint that does nothing if record doesn't exist**:
 
 ```typescript
-test('should return 200 and not modify anything if requestId does not exist in DB', async ({ dbClient }) => {
+test('should return 200 and not modify anything if requestId does not exist in DB', async ({
+  dbClient,
+}) => {
   const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
   const response = await app.request(
@@ -189,10 +192,7 @@ test('should return 200 and not modify anything if requestId does not exist in D
   expect(responseBody).toEqual({});
 
   // Verify no record was created
-  const records = await dbClient.db
-    .select()
-    .from(requests)
-    .where(eq(requests.id, nonExistentId));
+  const records = await dbClient.db.select().from(requests).where(eq(requests.id, nonExistentId));
 
   expect(records).toHaveLength(0);
 });
@@ -462,10 +462,10 @@ test.afterEach(async ({ dbClient, queueClient }) => {
 import { createTestApp } from '@test/utils/app.js';
 
 const app = await createTestApp({
-  databaseClient: dbClient,      // Required: use fixture
-  queueClient: queueClient,      // Required: use fixture
-  emailClient: createMockEmailClient(),  // Optional: inject mocks
-  ipLocator: createMockIpLocator(),      // Optional: inject mocks
+  databaseClient: dbClient, // Required: use fixture
+  queueClient: queueClient, // Required: use fixture
+  emailClient: createMockEmailClient(), // Optional: inject mocks
+  ipLocator: createMockIpLocator(), // Optional: inject mocks
 });
 ```
 
@@ -570,12 +570,14 @@ The project uses **Vitest fixtures** (`@test/fixtures.ts`) to manage test infras
 ### Fixture Scopes
 
 **Worker-Scoped** (started once per test worker, automatically managed):
+
 - `postgresContainer` - PostgreSQL container for the entire test worker
 - `rabbitmqContainer` - RabbitMQ container for the entire test worker
 - Automatically started and stopped by Vitest
 - Containers are reused across all tests in the worker
 
 **Test-Scoped** (fresh instance for each test):
+
 - `dbClient` - Database client (depends on `postgresContainer`)
 - `queueClient` - Queue client (depends on `rabbitmqContainer`)
 - Fresh instance created before each test
@@ -620,11 +622,13 @@ Containers Stopped
 ### When to Use Mocks vs Real Fixtures
 
 **Use Real Fixtures** (`dbClient`, `queueClient`):
+
 - Testing database interactions and persistence
 - Testing message queue operations
 - Testing side effects that must be verified in database
 
 **Use Mocks** (email, IP locator, external APIs):
+
 - Services outside your control (email providers, external APIs)
 - Services you want to spy on without side effects
 - Dependencies that are slow or have external requirements
@@ -645,8 +649,8 @@ describe('POST /api/recommendations/add-email', () => {
   test.beforeEach(async ({ dbClient, queueClient }) => {
     // Create fresh app with fixtures and mocks for each test
     app = await createTestApp({
-      databaseClient: dbClient,           // Use fixture
-      queueClient: queueClient,           // Use fixture
+      databaseClient: dbClient, // Use fixture
+      queueClient: queueClient, // Use fixture
       emailClient: createMockEmailClient(), // Mock external service
     });
   });
@@ -677,10 +681,7 @@ describe('POST /api/recommendations/add-email', () => {
     expect(response.status).toBe(200);
 
     // Verify database was updated (use fixture)
-    const [updated] = await dbClient.db
-      .select()
-      .from(requests)
-      .where(eq(requests.id, request.id));
+    const [updated] = await dbClient.db.select().from(requests).where(eq(requests.id, request.id));
 
     expect(updated.email).toBe('new@example.com');
   });
@@ -688,6 +689,7 @@ describe('POST /api/recommendations/add-email', () => {
 ```
 
 This example shows:
+
 - Fresh `dbClient` and `queueClient` per test
 - Creating test data via `dbClient.db.insert()`
 - Making HTTP requests to test app
