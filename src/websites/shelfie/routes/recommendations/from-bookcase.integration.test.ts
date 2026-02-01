@@ -1,35 +1,23 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
+import { test, describe, expect } from '../../../../../test/fixtures.js';
 import { recommendations, requests, images } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
-import { config } from '@config/index.js';
-import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { createMockIpLocator } from '../../../../../test/mocks/ip-locator.js';
 import { createTestApp } from '../../../../../test/utils/app.js';
 
-let app: App;
-let databaseClient: DatabaseClient;
-let queueClient: QueueClient;
-
-beforeAll(async () => {
-  databaseClient = await createDatabaseClient(config.DATABASE_URL);
-  queueClient = await createQueueClient(config.RABBITMQ_URL);
-  app = await createTestApp({ databaseClient, queueClient, ipLocator: createMockIpLocator() });
-});
-
-afterAll(async () => {
-  queueClient.close();
-  databaseClient.close();
-});
-
-afterEach(async () => {
-  await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
-  await databaseClient.db.delete(requests);
-});
-
 describe('POST /api/recommendations/from-bookcase', () => {
-  it('should return 400 error when no files are provided', async () => {
+  let app: App;
+
+  test.beforeEach(async ({ dbClient, queueClient }) => {
+    app = await createTestApp({ databaseClient: dbClient, queueClient: queueClient, ipLocator: createMockIpLocator() });
+  });
+
+  test.afterEach(async ({ dbClient, queueClient }) => {
+    await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
+    await dbClient.db.delete(requests);
+  });
+
+  test('should return 400 error when no files are provided', async () => {
     const formData = new FormData();
 
     const response = await app.request(
@@ -45,7 +33,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(body).toHaveProperty('error', 'No files uploaded');
   });
 
-  it('should successfully process a single image file', async () => {
+  test('should successfully process a single image file', async ({ dbClient, queueClient }) => {
     // Create a test image file
     const testImageData = Buffer.from('fake-image-data-1');
     const blob = new Blob([testImageData], { type: 'image/jpeg' });
@@ -70,7 +58,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(body.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
     // Verify recommendation was created
-    const recommendation = await databaseClient.db
+    const recommendation = await dbClient.db
       .select()
       .from(recommendations)
       .where(eq(recommendations.id, body.id))
@@ -82,7 +70,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     const requestId = recommendation[0].requestId;
 
     // Verify request was created with correct data
-    const request = await databaseClient.db
+    const request = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, requestId))
@@ -94,7 +82,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(request[0].location).toBe('Us'); // Default fallback for invalid IP
 
     // Verify image was stored
-    const storedImages = await databaseClient.db
+    const storedImages = await dbClient.db
       .select()
       .from(images)
       .where(eq(images.requestId, requestId));
@@ -105,7 +93,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(storedImages[0].image.toString()).toContain('fake-image-data-1');
   });
 
-  it('should successfully process multiple image files', async () => {
+  test('should successfully process multiple image files', async ({ dbClient, queueClient }) => {
     // Create multiple test image files
     const testImageData1 = Buffer.from('fake-image-data-1');
     const testImageData2 = Buffer.from('fake-image-data-2');
@@ -136,7 +124,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(body).toHaveProperty('id');
 
     // Verify recommendation was created
-    const recommendation = await databaseClient.db
+    const recommendation = await dbClient.db
       .select()
       .from(recommendations)
       .where(eq(recommendations.id, body.id))
@@ -146,7 +134,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     const requestId = recommendation[0].requestId;
 
     // Verify all images were stored
-    const storedImages = await databaseClient.db
+    const storedImages = await dbClient.db
       .select()
       .from(images)
       .where(eq(images.requestId, requestId));
@@ -163,7 +151,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(imageContents).toContain('fake-image-data-3');
   });
 
-  it('should create request record with correct location from x-forwarded-for header', async () => {
+  test('should create request record with correct location from x-forwarded-for header', async ({ dbClient, queueClient }) => {
     const testImageData = Buffer.from('fake-image-data');
     const blob = new Blob([testImageData], { type: 'image/jpeg' });
 
@@ -184,13 +172,13 @@ describe('POST /api/recommendations/from-bookcase', () => {
     const body = (await response.json()) as any;
 
     // Get the request to verify location
-    const recommendation = await databaseClient.db
+    const recommendation = await dbClient.db
       .select()
       .from(recommendations)
       .where(eq(recommendations.id, body.id))
       .limit(1);
 
-    const request = await databaseClient.db
+    const request = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, recommendation[0].requestId))
@@ -200,7 +188,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(typeof request[0].location).toBe('string');
   });
 
-  it('should create request record with default location when no x-forwarded-for header', async () => {
+  test('should create request record with default location when no x-forwarded-for header', async ({ dbClient, queueClient }) => {
     const testImageData = Buffer.from('fake-image-data');
     const blob = new Blob([testImageData], { type: 'image/jpeg' });
 
@@ -218,13 +206,13 @@ describe('POST /api/recommendations/from-bookcase', () => {
     const body = (await response.json()) as any;
 
     // Get the request to verify location
-    const recommendation = await databaseClient.db
+    const recommendation = await dbClient.db
       .select()
       .from(recommendations)
       .where(eq(recommendations.id, body.id))
       .limit(1);
 
-    const request = await databaseClient.db
+    const request = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, recommendation[0].requestId))
@@ -233,7 +221,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(request[0].location).toBe('Us'); // Default location
   });
 
-  it('should create recommendation linked to the request', async () => {
+  test('should create recommendation linked to the request', async ({ dbClient, queueClient }) => {
     const testImageData = Buffer.from('fake-image-data');
     const blob = new Blob([testImageData], { type: 'image/jpeg' });
 
@@ -251,7 +239,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     const body = (await response.json()) as any;
 
     // Verify recommendation is linked to request
-    const recommendation = await databaseClient.db
+    const recommendation = await dbClient.db
       .select()
       .from(recommendations)
       .where(eq(recommendations.id, body.id))
@@ -263,7 +251,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(recommendation[0].processedUtc).toBeNull(); // Not processed yet
 
     // Verify the request exists
-    const request = await databaseClient.db
+    const request = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, recommendation[0].requestId))
@@ -272,7 +260,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(request).toHaveLength(1);
   });
 
-  it('should send message to text extraction queue with correct data', async () => {
+  test('should send message to text extraction queue with correct data', async ({ dbClient, queueClient }) => {
     // First, consume any existing messages from the queue to clear it
     await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
 
@@ -293,7 +281,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     const body = (await response.json()) as any;
 
     // Get the recommendation to verify IDs
-    const recommendation = await databaseClient.db
+    const recommendation = await dbClient.db
       .select()
       .from(recommendations)
       .where(eq(recommendations.id, body.id))
@@ -315,7 +303,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     }
   });
 
-  it('should handle files with different content types', async () => {
+  test('should handle files with different content types', async ({ dbClient, queueClient }) => {
     const jpegData = Buffer.from('jpeg-data');
     const pngData = Buffer.from('png-data');
 
@@ -336,13 +324,13 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as any;
 
-    const recommendation = await databaseClient.db
+    const recommendation = await dbClient.db
       .select()
       .from(recommendations)
       .where(eq(recommendations.id, body.id))
       .limit(1);
 
-    const storedImages = await databaseClient.db
+    const storedImages = await dbClient.db
       .select()
       .from(images)
       .where(eq(images.requestId, recommendation[0].requestId));
@@ -353,7 +341,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(contentTypes).toEqual(['image/jpeg', 'image/png']);
   });
 
-  it('should return recommendation ID in the expected UUID format', async () => {
+  test('should return recommendation ID in the expected UUID format', async ({ dbClient, queueClient }) => {
     const testImageData = Buffer.from('fake-image-data');
     const blob = new Blob([testImageData], { type: 'image/jpeg' });
 
@@ -377,7 +365,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     );
   });
 
-  it('should create request with current timestamp', async () => {
+  test('should create request with current timestamp', async ({ dbClient, queueClient }) => {
     const beforeRequest = new Date();
 
     const testImageData = Buffer.from('fake-image-data');
@@ -398,13 +386,13 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as any;
 
-    const recommendation = await databaseClient.db
+    const recommendation = await dbClient.db
       .select()
       .from(recommendations)
       .where(eq(recommendations.id, body.id))
       .limit(1);
 
-    const request = await databaseClient.db
+    const request = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, recommendation[0].requestId))

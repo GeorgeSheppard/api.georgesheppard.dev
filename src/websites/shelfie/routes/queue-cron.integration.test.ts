@@ -1,37 +1,26 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
-import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
+import { test, describe, expect } from '../../../../test/fixtures.js';
+import { config } from '@config/index.js';
+import { vi } from 'vitest';
 import { requests, recommendations } from '@core/database/schema/index.js';
 import { eq, count } from 'drizzle-orm';
 import { App } from '../../../server.js';
-import { config } from '@config/index.js';
-import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { createTestApp } from '../../../../test/utils/app.js';
 
-let app: App;
-let databaseClient: DatabaseClient;
-let queueClient: QueueClient;
-
-beforeAll(async () => {
-  databaseClient = await createDatabaseClient(config.DATABASE_URL);
-  queueClient = await createQueueClient(config.RABBITMQ_URL);
-  app = await createTestApp({ databaseClient, queueClient });
-});
-
-afterAll(async () => {
-  queueClient.close();
-  databaseClient.close();
-});
-
-afterEach(async () => {
-  await queueClient.channel.purgeQueue(queueClient.recommendationQueue);
-  await databaseClient.db.delete(recommendations);
-  await databaseClient.db.delete(requests);
-  vi.clearAllMocks();
-});
-
 describe('GET /api/queue-due-recommendations', () => {
+  let app: App;
+
+  test.beforeEach(async ({ dbClient, queueClient }) => {
+    app = await createTestApp({ databaseClient: dbClient, queueClient: queueClient });
+  });
+
+  test.afterEach(async ({ dbClient, queueClient }) => {
+    await queueClient.channel.purgeQueue(queueClient.recommendationQueue);
+    await dbClient.db.delete(recommendations);
+    await dbClient.db.delete(requests);
+    vi.clearAllMocks();
+  });
   describe('No due recommendations', () => {
-    it('should return 204 when there are no due recommendations', async () => {
+    test('should return 204 when there are no due recommendations', async ({ dbClient, queueClient }) => {
       const response = await app.request(
         new Request('http://localhost/api/queue-due-recommendations', {
           method: 'GET',
@@ -45,9 +34,9 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(await response.text()).toBe('');
     });
 
-    it('should return 204 when users have no frequency (not recurring)', async () => {
+    test('should return 204 when users have no frequency (not recurring)', async ({ dbClient, queueClient }) => {
       // Create request without frequency (non-recurring)
-      await databaseClient.db.insert(requests).values({
+      await dbClient.db.insert(requests).values({
         nextRecommendationUtc: new Date(Date.now() - 1000),
         frequency: null,
       });
@@ -64,13 +53,13 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(response.status).toBe(204);
 
       // Verify no recommendations were created
-      const [result] = await databaseClient.db.select({ count: count() }).from(recommendations);
+      const [result] = await dbClient.db.select({ count: count() }).from(recommendations);
       expect(result.count).toBe(0);
     });
 
-    it('should return 204 when nextRecommendationUtc is in the future', async () => {
+    test('should return 204 when nextRecommendationUtc is in the future', async ({ dbClient, queueClient }) => {
       // Create request with future nextRecommendationUtc
-      await databaseClient.db.insert(requests).values({
+      await dbClient.db.insert(requests).values({
         nextRecommendationUtc: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day from now
         frequency: 'M',
       });
@@ -87,14 +76,14 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(response.status).toBe(204);
 
       // Verify no recommendations were created
-      const [result] = await databaseClient.db.select({ count: count() }).from(recommendations);
+      const [result] = await dbClient.db.select({ count: count() }).from(recommendations);
       expect(result.count).toBe(0);
     });
   });
 
   describe('Single user with due recommendation', () => {
-    it('should create a recommendation and queue it for a single due user', async () => {
-      const [request] = await databaseClient.db
+    test('should create a recommendation and queue it for a single due user', async ({ dbClient, queueClient }) => {
+      const [request] = await dbClient.db
         .insert(requests)
         .values({
           nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -116,7 +105,7 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(response.status).toBe(204);
 
       // Verify recommendation was created
-      const recs = await databaseClient.db
+      const recs = await dbClient.db
         .select()
         .from(recommendations)
         .where(eq(recommendations.requestId, request.id));
@@ -124,7 +113,7 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(recs[0].requestId).toBe(request.id);
 
       // Verify nextRecommendationUtc was updated to ~30 days from now
-      const [updatedRequest] = await databaseClient.db
+      const [updatedRequest] = await dbClient.db
         .select()
         .from(requests)
         .where(eq(requests.id, request.id));
@@ -148,8 +137,8 @@ describe('GET /api/queue-due-recommendations', () => {
       }
     });
 
-    it('should update multiple fields atomically within a transaction', async () => {
-      const [request] = await databaseClient.db
+    test('should update multiple fields atomically within a transaction', async ({ dbClient, queueClient }) => {
+      const [request] = await dbClient.db
         .insert(requests)
         .values({
           nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -167,12 +156,12 @@ describe('GET /api/queue-due-recommendations', () => {
       );
 
       // Verify the transaction ensured both operations completed
-      const [recs] = await databaseClient.db
+      const [recs] = await dbClient.db
         .select({ count: count() })
         .from(recommendations)
         .where(eq(recommendations.requestId, request.id));
 
-      const [updatedRequest] = await databaseClient.db
+      const [updatedRequest] = await dbClient.db
         .select()
         .from(requests)
         .where(eq(requests.id, request.id));
@@ -185,13 +174,13 @@ describe('GET /api/queue-due-recommendations', () => {
   });
 
   describe('Multiple users with due recommendations', () => {
-    it('should process small batch of due users (5 users)', async () => {
+    test('should process small batch of due users (5 users)', async ({ dbClient, queueClient }) => {
       const userIds: string[] = [];
       const count = 5;
 
       // Create multiple due requests
       for (let i = 0; i < count; i++) {
-        const [request] = await databaseClient.db
+        const [request] = await dbClient.db
           .insert(requests)
           .values({
             nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -214,13 +203,13 @@ describe('GET /api/queue-due-recommendations', () => {
 
       // Verify all users got recommendations and updates
       for (const userId of userIds) {
-        const recs = await databaseClient.db
+        const recs = await dbClient.db
           .select()
           .from(recommendations)
           .where(eq(recommendations.requestId, userId));
         expect(recs).toHaveLength(1);
 
-        const [request] = await databaseClient.db
+        const [request] = await dbClient.db
           .select()
           .from(requests)
           .where(eq(requests.id, userId));
@@ -243,13 +232,13 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(messageCount).toBe(count);
     });
 
-    it('should process medium batch of due users (50 users)', async () => {
+    test('should process medium batch of due users (50 users)', async ({ dbClient, queueClient }) => {
       const userIds: string[] = [];
       const batchCount = 50;
 
       // Create multiple due requests
       for (let i = 0; i < batchCount; i++) {
-        const [request] = await databaseClient.db
+        const [request] = await dbClient.db
           .insert(requests)
           .values({
             nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -271,7 +260,7 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(response.status).toBe(204);
 
       // Verify all recommendations were created
-      const [result] = await databaseClient.db.select({ count: count() }).from(recommendations);
+      const [result] = await dbClient.db.select({ count: count() }).from(recommendations);
       expect(result.count).toBe(batchCount);
 
       // Verify message count
@@ -289,7 +278,7 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(messageCount).toBe(batchCount);
     });
 
-    it('should process large batch of due users (200 users)', async () => {
+    test('should process large batch of due users (200 users)', async ({ dbClient, queueClient }) => {
       const count = 200;
 
       // Create multiple due requests efficiently
@@ -298,7 +287,7 @@ describe('GET /api/queue-due-recommendations', () => {
         frequency: 'M' as const,
       }));
 
-      await databaseClient.db.insert(requests).values(requests_list);
+      await dbClient.db.insert(requests).values(requests_list);
 
       const response = await app.request(
         new Request('http://localhost/api/queue-due-recommendations', {
@@ -326,12 +315,12 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(messageCount).toBe(count);
     });
 
-    it('should handle mixed batch with some due and some not due', async () => {
+    test('should handle mixed batch with some due and some not due', async ({ dbClient, queueClient }) => {
       // Create due requests
       const dueCount = 3;
       const dueIds: string[] = [];
       for (let i = 0; i < dueCount; i++) {
-        const [request] = await databaseClient.db
+        const [request] = await dbClient.db
           .insert(requests)
           .values({
             nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -344,7 +333,7 @@ describe('GET /api/queue-due-recommendations', () => {
       // Create future requests (not due)
       const notDueCount = 2;
       for (let i = 0; i < notDueCount; i++) {
-        await databaseClient.db.insert(requests).values({
+        await dbClient.db.insert(requests).values({
           nextRecommendationUtc: new Date(Date.now() + 1000 * 60 * 60 * 24),
           frequency: 'M',
         });
@@ -378,9 +367,9 @@ describe('GET /api/queue-due-recommendations', () => {
   });
 
   describe('Error handling', () => {
-    it('should continue processing if one user transaction fails', async () => {
+    test('should continue processing if one user transaction fails', async ({ dbClient, queueClient }) => {
       // Create first due request
-      const [request1] = await databaseClient.db
+      const [request1] = await dbClient.db
         .insert(requests)
         .values({
           nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -389,7 +378,7 @@ describe('GET /api/queue-due-recommendations', () => {
         .returning();
 
       // Create second due request
-      const [request2] = await databaseClient.db
+      const [request2] = await dbClient.db
         .insert(requests)
         .values({
           nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -424,8 +413,8 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(messageCount).toBeGreaterThanOrEqual(1);
     });
 
-    it('should handle all valid recommendations even if queue is unavailable', async () => {
-      const [request] = await databaseClient.db
+    test('should handle all valid recommendations even if queue is unavailable', async ({ dbClient, queueClient }) => {
+      const [request] = await dbClient.db
         .insert(requests)
         .values({
           nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -452,14 +441,14 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(response.status).toBe(204);
 
       // But the recommendation should still have been created
-      const recs = await databaseClient.db
+      const recs = await dbClient.db
         .select()
         .from(recommendations)
         .where(eq(recommendations.requestId, request.id));
       expect(recs).toHaveLength(1);
 
       // And nextRecommendationUtc should have been updated
-      const [updatedRequest] = await databaseClient.db
+      const [updatedRequest] = await dbClient.db
         .select()
         .from(requests)
         .where(eq(requests.id, request.id));
@@ -472,8 +461,8 @@ describe('GET /api/queue-due-recommendations', () => {
   });
 
   describe('Transactional behavior', () => {
-    it('should maintain consistent state even with concurrent-like operations', async () => {
-      const [request] = await databaseClient.db
+    test('should maintain consistent state even with concurrent-like operations', async ({ dbClient, queueClient }) => {
+      const [request] = await dbClient.db
         .insert(requests)
         .values({
           nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -491,13 +480,13 @@ describe('GET /api/queue-due-recommendations', () => {
       );
 
       // Get the updated request
-      const [updatedRequest] = await databaseClient.db
+      const [updatedRequest] = await dbClient.db
         .select()
         .from(requests)
         .where(eq(requests.id, request.id));
 
       // Verify both DB operations succeeded (atomicity)
-      const [recommendationCount] = await databaseClient.db
+      const [recommendationCount] = await dbClient.db
         .select({ count: count() })
         .from(recommendations)
         .where(eq(recommendations.requestId, request.id));
@@ -507,8 +496,8 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(updatedRequest.nextRecommendationUtc!.getTime()).toBeGreaterThan(Date.now());
     });
 
-    it('should not process same user multiple times in single request', async () => {
-      const [request] = await databaseClient.db
+    test('should not process same user multiple times in single request', async ({ dbClient, queueClient }) => {
+      const [request] = await dbClient.db
         .insert(requests)
         .values({
           nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -526,7 +515,7 @@ describe('GET /api/queue-due-recommendations', () => {
       );
 
       // Verify only one recommendation was created
-      const [result] = await databaseClient.db
+      const [result] = await dbClient.db
         .select({ count: count() })
         .from(recommendations)
         .where(eq(recommendations.requestId, request.id));
@@ -535,8 +524,8 @@ describe('GET /api/queue-due-recommendations', () => {
   });
 
   describe('Response validation', () => {
-    it('should return 204 No Content status', async () => {
-      const [request] = await databaseClient.db
+    test('should return 204 No Content status', async ({ dbClient, queueClient }) => {
+      const [request] = await dbClient.db
         .insert(requests)
         .values({
           nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -557,7 +546,7 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(await response.text()).toBe('');
     });
 
-    it('should accept GET request', async () => {
+    test('should accept GET request', async ({ dbClient, queueClient }) => {
       const response = await app.request(
         new Request('http://localhost/api/queue-due-recommendations', {
           method: 'GET',

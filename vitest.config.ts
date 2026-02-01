@@ -32,8 +32,8 @@ export default defineConfig({
         test: {
           name: 'integration:db',
           include: ['src/**/*.integration.test.ts', '!src/websites/kitchencalm/**'],
-          setupFiles: ['./test/setup.ts'],
           testTimeout: 60000,
+          hookTimeout: 120000,
         },
       },
     ],

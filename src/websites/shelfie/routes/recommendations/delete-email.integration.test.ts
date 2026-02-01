@@ -1,34 +1,24 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
+import { test, describe, expect, afterEach } from '../../../../../test/fixtures.js';
 import { requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
-import { config } from '@config/index.js';
-import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { createTestApp } from '../../../../../test/utils/app.js';
-
-let app: App;
-let databaseClient: DatabaseClient;
-let queueClient: QueueClient;
-
-beforeAll(async () => {
-  databaseClient = await createDatabaseClient(config.DATABASE_URL);
-  queueClient = await createQueueClient(config.RABBITMQ_URL);
-  app = await createTestApp({ databaseClient, queueClient });
-});
-
-afterAll(async () => {
-  queueClient.close();
-  databaseClient.close();
-});
-
-afterEach(async () => {
-  await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
-  await databaseClient.db.delete(requests);
-});
+import { DatabaseClient } from '@core/database/client.js';
+import { QueueClient } from '@core/queue/client.js';
 
 describe('DELETE /api/recommendations/delete-email', () => {
-  it('should return an error if requestId is not a valid UUID', async () => {
+  let app: App;
+
+  test.beforeEach(async ({ dbClient, queueClient }) => {
+    app = await createTestApp({ databaseClient: dbClient, queueClient: queueClient });
+  });
+
+  test.afterEach(async ({ dbClient, queueClient }) => {
+    await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
+    await dbClient.db.delete(requests);
+  });
+
+  test('should return an error if requestId is not a valid UUID', async () => {
     const response = await app.request(
       new Request('http://localhost/api/recommendations/delete-email', {
         method: 'POST',
@@ -44,7 +34,7 @@ describe('DELETE /api/recommendations/delete-email', () => {
     expect(body).toHaveProperty('error');
   });
 
-  it('should return 200 and not modify anything if requestId does not exist in DB', async () => {
+  test('should return 200 and not modify anything if requestId does not exist in DB', async ({ dbClient }) => {
     const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
     const response = await app.request(
@@ -62,20 +52,20 @@ describe('DELETE /api/recommendations/delete-email', () => {
     expect(responseBody).toEqual({});
 
     // Verify no request was created or modified
-    const requestCount = await databaseClient.db
+    const requestCount = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, nonExistentId));
     expect(requestCount).toHaveLength(0);
   });
 
-  it('should delete email and related fields if requestId exists in DB', async () => {
+  test('should delete email and related fields if requestId exists in DB', async ({ dbClient }) => {
     // Create a request with email and frequency
     const testEmail = 'test@example.com';
     const testFrequency = 'week';
     const testDate = new Date('2025-02-15T10:00:00Z');
 
-    const result = await databaseClient.db
+    const result = await dbClient.db
       .insert(requests)
       .values({
         email: testEmail,
@@ -87,7 +77,7 @@ describe('DELETE /api/recommendations/delete-email', () => {
     const requestId = result[0].id;
 
     // Verify request was created with email
-    let dbRequest = await databaseClient.db
+    let dbRequest = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, requestId));
@@ -112,15 +102,15 @@ describe('DELETE /api/recommendations/delete-email', () => {
     expect(responseBody).toEqual({});
 
     // Verify email and related fields were deleted
-    dbRequest = await databaseClient.db.select().from(requests).where(eq(requests.id, requestId));
+    dbRequest = await dbClient.db.select().from(requests).where(eq(requests.id, requestId));
 
     expect(dbRequest[0].email).toBeNull();
     expect(dbRequest[0].frequency).toBeNull();
     expect(dbRequest[0].nextRecommendationUtc).toBeNull();
   });
 
-  it('should return correct response object on successful validation', async () => {
-    const result = await databaseClient.db
+  test('should return correct response object on successful validation', async ({ dbClient }) => {
+    const result = await dbClient.db
       .insert(requests)
       .values({
         email: 'test2@example.com',
@@ -147,7 +137,7 @@ describe('DELETE /api/recommendations/delete-email', () => {
     expect(typeof responseBody).toBe('object');
   });
 
-  it('should return an error if requestId is missing from request', async () => {
+  test('should return an error if requestId is missing from request', async () => {
     const response = await app.request(
       new Request('http://localhost/api/recommendations/delete-email', {
         method: 'POST',

@@ -1,41 +1,28 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
-import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
+import { test, describe, expect } from '../../../../../test/fixtures.js';
+import { vi } from 'vitest';
 import { requests, recommendations } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
-import { config } from '@config/index.js';
-import { createQueueClient, QueueClient } from '@core/queue/client.js';
-import { EmailClient } from '@core/utils/mailgun.js';
 import { createMockEmailClient } from '../../../../../test/mocks/email.js';
 import { createTestApp } from '../../../../../test/utils/app.js';
 import { encryption } from '@core/utils/encryption.js';
 
-let app: App;
-let databaseClient: DatabaseClient;
-let queueClient: QueueClient;
-let emailClient: EmailClient;
-
-beforeAll(async () => {
-  databaseClient = await createDatabaseClient(config.DATABASE_URL);
-  queueClient = await createQueueClient(config.RABBITMQ_URL);
-  emailClient = createMockEmailClient();
-  app = await createTestApp({ databaseClient, queueClient, emailClient });
-});
-
-afterAll(async () => {
-  queueClient.close();
-  databaseClient.close();
-});
-
-afterEach(async () => {
-  await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
-  await databaseClient.db.delete(requests);
-  vi.clearAllMocks();
-});
-
 describe('POST /api/recommendations/add-email', () => {
+  let app: App;
+  let emailClient = createMockEmailClient();
+
+  test.beforeEach(async ({ dbClient, queueClient }) => {
+    emailClient = createMockEmailClient();
+    app = await createTestApp({ databaseClient: dbClient, queueClient: queueClient, emailClient });
+  });
+
+  test.afterEach(async ({ dbClient, queueClient }) => {
+    await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
+    await dbClient.db.delete(requests);
+    vi.clearAllMocks();
+  });
   // Validation tests
-  it('should return an error if id is not a valid UUID', async () => {
+  test('should return an error if id is not a valid UUID', async ({ dbClient, queueClient }) => {
     const response = await app.request(
       new Request('http://localhost/api/recommendations/add-email', {
         method: 'POST',
@@ -51,7 +38,7 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toHaveProperty('error');
   });
 
-  it('should return an error if id is missing from request', async () => {
+  test('should return an error if id is missing from request', async ({ dbClient, queueClient }) => {
     const response = await app.request(
       new Request('http://localhost/api/recommendations/add-email', {
         method: 'POST',
@@ -67,7 +54,7 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toHaveProperty('error');
   });
 
-  it('should return an error if email is provided but not valid', async () => {
+  test('should return an error if email is provided but not valid', async ({ dbClient, queueClient }) => {
     const response = await app.request(
       new Request('http://localhost/api/recommendations/add-email', {
         method: 'POST',
@@ -84,7 +71,7 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Edge case tests
-  it('should return 404 if recommendation does not exist', async () => {
+  test('should return 404 if recommendation does not exist', async ({ dbClient, queueClient }) => {
     const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
     const response = await app.request(
@@ -102,12 +89,12 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toEqual({ error: 'Recommendation not found', success: false });
   });
 
-  it('should return 400 if no email provided and request has no email', async () => {
+  test('should return 400 if no email provided and request has no email', async ({ dbClient, queueClient }) => {
     // Create a request without email
-    const [request] = await databaseClient.db.insert(requests).values({}).returning();
+    const [request] = await dbClient.db.insert(requests).values({}).returning();
 
     // Create a recommendation
-    const [recommendation] = await databaseClient.db
+    const [recommendation] = await dbClient.db
       .insert(recommendations)
       .values({
         requestId: request.id,
@@ -130,12 +117,12 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Success tests - recommendations not done yet
-  it('should store encrypted email when recommendations are not done and no email provided', async () => {
+  test('should store encrypted email when recommendations are not done and no email provided', async ({ dbClient, queueClient }) => {
     const testEmail = 'existing@example.com';
     const encryptedEmail = encryption.encrypt(testEmail);
 
     // Create a request with encrypted email
-    const [request] = await databaseClient.db
+    const [request] = await dbClient.db
       .insert(requests)
       .values({
         email: encryptedEmail,
@@ -143,7 +130,7 @@ describe('POST /api/recommendations/add-email', () => {
       .returning();
 
     // Create a recommendation without processed data
-    const [recommendation] = await databaseClient.db
+    const [recommendation] = await dbClient.db
       .insert(recommendations)
       .values({
         requestId: request.id,
@@ -167,7 +154,7 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toEqual({ success: true });
 
     // Verify email was stored (encrypted)
-    const [updatedRequest] = await databaseClient.db
+    const [updatedRequest] = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, request.id));
@@ -182,14 +169,14 @@ describe('POST /api/recommendations/add-email', () => {
     expect(emailClient.sendRecommendationsEmail).not.toHaveBeenCalled();
   });
 
-  it('should store new encrypted email when provided and recommendations are not done', async () => {
+  test('should store new encrypted email when provided and recommendations are not done', async ({ dbClient, queueClient }) => {
     const newEmail = 'newemail@example.com';
 
     // Create a request without email
-    const [request] = await databaseClient.db.insert(requests).values({}).returning();
+    const [request] = await dbClient.db.insert(requests).values({}).returning();
 
     // Create a recommendation without processed data
-    const [recommendation] = await databaseClient.db
+    const [recommendation] = await dbClient.db
       .insert(recommendations)
       .values({
         requestId: request.id,
@@ -213,7 +200,7 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toEqual({ success: true });
 
     // Verify email was stored (encrypted)
-    const [updatedRequest] = await databaseClient.db
+    const [updatedRequest] = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, request.id));
@@ -227,12 +214,12 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Success tests - recommendations already done, no recurring
-  it('should not store email when recommendations are done and recurring is false', async () => {
+  test('should not store email when recommendations are done and recurring is false', async ({ dbClient, queueClient }) => {
     const testEmail = 'test@example.com';
     const encryptedEmail = encryption.encrypt(testEmail);
 
     // Create a request with email
-    const [request] = await databaseClient.db
+    const [request] = await dbClient.db
       .insert(requests)
       .values({
         email: encryptedEmail,
@@ -240,7 +227,7 @@ describe('POST /api/recommendations/add-email', () => {
       .returning();
 
     // Create a recommendation WITH processed data
-    const [recommendation] = await databaseClient.db
+    const [recommendation] = await dbClient.db
       .insert(recommendations)
       .values({
         requestId: request.id,
@@ -272,7 +259,7 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toEqual({ success: true });
 
     // Verify email was NOT stored (set to null)
-    const [updatedRequest] = await databaseClient.db
+    const [updatedRequest] = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, request.id));
@@ -295,7 +282,7 @@ describe('POST /api/recommendations/add-email', () => {
     });
   });
 
-  it('should send email immediately when recommendations are done even if email sending fails', async () => {
+  test('should send email immediately when recommendations are done even if email sending fails', async ({ dbClient, queueClient }) => {
     const testEmail = 'test@example.com';
     const encryptedEmail = encryption.encrypt(testEmail);
 
@@ -305,7 +292,7 @@ describe('POST /api/recommendations/add-email', () => {
     );
 
     // Create a request with email
-    const [request] = await databaseClient.db
+    const [request] = await dbClient.db
       .insert(requests)
       .values({
         email: encryptedEmail,
@@ -313,7 +300,7 @@ describe('POST /api/recommendations/add-email', () => {
       .returning();
 
     // Create a recommendation WITH processed data
-    const [recommendation] = await databaseClient.db
+    const [recommendation] = await dbClient.db
       .insert(recommendations)
       .values({
         requestId: request.id,
@@ -350,12 +337,12 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Success tests - recommendations already done, with recurring
-  it('should store email and set recurring when recommendations are done and recurring is true', async () => {
+  test('should store email and set recurring when recommendations are done and recurring is true', async ({ dbClient, queueClient }) => {
     const testEmail = 'recurring@example.com';
     const encryptedEmail = encryption.encrypt(testEmail);
 
     // Create a request with email
-    const [request] = await databaseClient.db
+    const [request] = await dbClient.db
       .insert(requests)
       .values({
         email: encryptedEmail,
@@ -363,7 +350,7 @@ describe('POST /api/recommendations/add-email', () => {
       .returning();
 
     // Create a recommendation WITH processed data
-    const [recommendation] = await databaseClient.db
+    const [recommendation] = await dbClient.db
       .insert(recommendations)
       .values({
         requestId: request.id,
@@ -397,7 +384,7 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toEqual({ success: true });
 
     // Verify email was stored (encrypted)
-    const [updatedRequest] = await databaseClient.db
+    const [updatedRequest] = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, request.id));
@@ -429,14 +416,14 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Success tests - recommendations not done, with recurring
-  it('should store email and set recurring when recommendations are not done and recurring is true', async () => {
+  test('should store email and set recurring when recommendations are not done and recurring is true', async ({ dbClient, queueClient }) => {
     const testEmail = 'newrecurring@example.com';
 
     // Create a request without email
-    const [request] = await databaseClient.db.insert(requests).values({}).returning();
+    const [request] = await dbClient.db.insert(requests).values({}).returning();
 
     // Create a recommendation without processed data
-    const [recommendation] = await databaseClient.db
+    const [recommendation] = await dbClient.db
       .insert(recommendations)
       .values({
         requestId: request.id,
@@ -462,7 +449,7 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toEqual({ success: true });
 
     // Verify email was stored (encrypted) and recurring fields set
-    const [updatedRequest] = await databaseClient.db
+    const [updatedRequest] = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, request.id));
@@ -484,14 +471,14 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Response shape tests
-  it('should return correct response shape and headers', async () => {
+  test('should return correct response shape and headers', async ({ dbClient, queueClient }) => {
     const testEmail = 'test@example.com';
 
     // Create a request
-    const [request] = await databaseClient.db.insert(requests).values({}).returning();
+    const [request] = await dbClient.db.insert(requests).values({}).returning();
 
     // Create a recommendation
-    const [recommendation] = await databaseClient.db
+    const [recommendation] = await dbClient.db
       .insert(recommendations)
       .values({
         requestId: request.id,
@@ -519,12 +506,12 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Test encryption/decryption flow
-  it('should properly encrypt and decrypt email from request', async () => {
+  test('should properly encrypt and decrypt email from request', async ({ dbClient, queueClient }) => {
     const originalEmail = 'encrypted@example.com';
     const encryptedEmail = encryption.encrypt(originalEmail);
 
     // Create a request with encrypted email
-    const [request] = await databaseClient.db
+    const [request] = await dbClient.db
       .insert(requests)
       .values({
         email: encryptedEmail,
@@ -532,7 +519,7 @@ describe('POST /api/recommendations/add-email', () => {
       .returning();
 
     // Create a recommendation
-    const [recommendation] = await databaseClient.db
+    const [recommendation] = await dbClient.db
       .insert(recommendations)
       .values({
         requestId: request.id,
@@ -553,7 +540,7 @@ describe('POST /api/recommendations/add-email', () => {
     expect(response.status).toBe(200);
 
     // Verify the email was decrypted and re-encrypted properly
-    const [updatedRequest] = await databaseClient.db
+    const [updatedRequest] = await dbClient.db
       .select()
       .from(requests)
       .where(eq(requests.id, request.id));
