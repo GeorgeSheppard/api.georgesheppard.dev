@@ -14,6 +14,9 @@ export const authTokenRoute = createRoute({
   security: [{ apiKey: [] }],
   middleware: authMiddleware,
   request: {
+    headers: z.object({
+      'x-api-key': z.string().describe('API key for authentication'),
+    }),
     body: {
       content: {
         'application/json': {
