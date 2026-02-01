@@ -16,7 +16,8 @@
     "test:integration": "vitest --project integration:mcp --project integration:db",
     "test:integration:mcp": "vitest --project integration:mcp",
     "test:integration:db": "vitest --project integration:db",
-    "lint": "tsc --noEmit",
+    "lint": "tsc --noEmit && eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write ."
   },
   "keywords": [
@@ -52,6 +53,8 @@
     "@types/node": "^22.7.5",
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.24.2",
+    "eslint": "^9.39.2",
+    "eslint-plugin-unused-imports": "^4.3.0",
     "prettier": "^3.8.1",
     "testcontainers": "^11.11.0",
     "tsc-alias": "^1.8.16",

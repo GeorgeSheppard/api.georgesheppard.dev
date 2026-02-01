@@ -1,10 +1,10 @@
-import { test, describe, expect } from '../../../../test/fixtures.js';
+import { test, describe, expect } from '@test/fixtures.js';
 import { config } from '@config/index.js';
 import { vi } from 'vitest';
 import { requests, recommendations } from '@core/database/schema/index.js';
 import { eq, count } from 'drizzle-orm';
 import { App } from '../../../server.js';
-import { createTestApp } from '../../../../test/utils/app.js';
+import { createTestApp } from '@test/utils/app.js';
 
 describe('GET /api/queue-due-recommendations', () => {
   let app: App;
@@ -20,7 +20,10 @@ describe('GET /api/queue-due-recommendations', () => {
     vi.clearAllMocks();
   });
   describe('No due recommendations', () => {
-    test('should return 204 when there are no due recommendations', async ({ dbClient, queueClient }) => {
+    test('should return 204 when there are no due recommendations', async ({
+      dbClient,
+      queueClient,
+    }) => {
       const response = await app.request(
         new Request('http://localhost/api/queue-due-recommendations', {
           method: 'GET',
@@ -34,7 +37,10 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(await response.text()).toBe('');
     });
 
-    test('should return 204 when users have no frequency (not recurring)', async ({ dbClient, queueClient }) => {
+    test('should return 204 when users have no frequency (not recurring)', async ({
+      dbClient,
+      queueClient,
+    }) => {
       // Create request without frequency (non-recurring)
       await dbClient.db.insert(requests).values({
         nextRecommendationUtc: new Date(Date.now() - 1000),
@@ -57,7 +63,10 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(result.count).toBe(0);
     });
 
-    test('should return 204 when nextRecommendationUtc is in the future', async ({ dbClient, queueClient }) => {
+    test('should return 204 when nextRecommendationUtc is in the future', async ({
+      dbClient,
+      queueClient,
+    }) => {
       // Create request with future nextRecommendationUtc
       await dbClient.db.insert(requests).values({
         nextRecommendationUtc: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day from now
@@ -82,7 +91,10 @@ describe('GET /api/queue-due-recommendations', () => {
   });
 
   describe('Single user with due recommendation', () => {
-    test('should create a recommendation and queue it for a single due user', async ({ dbClient, queueClient }) => {
+    test('should create a recommendation and queue it for a single due user', async ({
+      dbClient,
+      queueClient,
+    }) => {
       const [request] = await dbClient.db
         .insert(requests)
         .values({
@@ -137,7 +149,10 @@ describe('GET /api/queue-due-recommendations', () => {
       }
     });
 
-    test('should update multiple fields atomically within a transaction', async ({ dbClient, queueClient }) => {
+    test('should update multiple fields atomically within a transaction', async ({
+      dbClient,
+      queueClient,
+    }) => {
       const [request] = await dbClient.db
         .insert(requests)
         .values({
@@ -209,10 +224,7 @@ describe('GET /api/queue-due-recommendations', () => {
           .where(eq(recommendations.requestId, userId));
         expect(recs).toHaveLength(1);
 
-        const [request] = await dbClient.db
-          .select()
-          .from(requests)
-          .where(eq(requests.id, userId));
+        const [request] = await dbClient.db.select().from(requests).where(eq(requests.id, userId));
         expect(request.nextRecommendationUtc).toBeTruthy();
         expect(request.nextRecommendationUtc!.getTime()).toBeGreaterThan(Date.now());
       }
@@ -232,7 +244,10 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(messageCount).toBe(count);
     });
 
-    test('should process medium batch of due users (50 users)', async ({ dbClient, queueClient }) => {
+    test('should process medium batch of due users (50 users)', async ({
+      dbClient,
+      queueClient,
+    }) => {
       const userIds: string[] = [];
       const batchCount = 50;
 
@@ -278,7 +293,10 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(messageCount).toBe(batchCount);
     });
 
-    test('should process large batch of due users (200 users)', async ({ dbClient, queueClient }) => {
+    test('should process large batch of due users (200 users)', async ({
+      dbClient,
+      queueClient,
+    }) => {
       const count = 200;
 
       // Create multiple due requests efficiently
@@ -315,7 +333,10 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(messageCount).toBe(count);
     });
 
-    test('should handle mixed batch with some due and some not due', async ({ dbClient, queueClient }) => {
+    test('should handle mixed batch with some due and some not due', async ({
+      dbClient,
+      queueClient,
+    }) => {
       // Create due requests
       const dueCount = 3;
       const dueIds: string[] = [];
@@ -367,7 +388,10 @@ describe('GET /api/queue-due-recommendations', () => {
   });
 
   describe('Error handling', () => {
-    test('should continue processing if one user transaction fails', async ({ dbClient, queueClient }) => {
+    test('should continue processing if one user transaction fails', async ({
+      dbClient,
+      queueClient,
+    }) => {
       // Create first due request
       const [request1] = await dbClient.db
         .insert(requests)
@@ -413,7 +437,10 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(messageCount).toBeGreaterThanOrEqual(1);
     });
 
-    test('should handle all valid recommendations even if queue is unavailable', async ({ dbClient, queueClient }) => {
+    test('should handle all valid recommendations even if queue is unavailable', async ({
+      dbClient,
+      queueClient,
+    }) => {
       const [request] = await dbClient.db
         .insert(requests)
         .values({
@@ -461,7 +488,10 @@ describe('GET /api/queue-due-recommendations', () => {
   });
 
   describe('Transactional behavior', () => {
-    test('should maintain consistent state even with concurrent-like operations', async ({ dbClient, queueClient }) => {
+    test('should maintain consistent state even with concurrent-like operations', async ({
+      dbClient,
+      queueClient,
+    }) => {
       const [request] = await dbClient.db
         .insert(requests)
         .values({
@@ -496,7 +526,10 @@ describe('GET /api/queue-due-recommendations', () => {
       expect(updatedRequest.nextRecommendationUtc!.getTime()).toBeGreaterThan(Date.now());
     });
 
-    test('should not process same user multiple times in single request', async ({ dbClient, queueClient }) => {
+    test('should not process same user multiple times in single request', async ({
+      dbClient,
+      queueClient,
+    }) => {
       const [request] = await dbClient.db
         .insert(requests)
         .values({

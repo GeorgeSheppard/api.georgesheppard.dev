@@ -7,7 +7,10 @@ import { errorHandler } from '@core/middleware/error-handler.js';
 import { QueueClient } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
 import { registerShelfieRoutes } from '@websites/shelfie/index.js';
-import { registerRoutes as registerKitchenCalmRoutes, tools as kitchenCalmTools } from '@websites/kitchencalm/index.js';
+import {
+  registerRoutes as registerKitchenCalmRoutes,
+  tools as kitchenCalmTools,
+} from '@websites/kitchencalm/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { config } from './config';
 import { Env } from 'hono/types';

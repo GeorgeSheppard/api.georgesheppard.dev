@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { App } from '../../../../server.js';
 import { config } from '@config/index.js';
 import { verifyJwt } from '@core/utils/jwt.js';
-import { createTestApp } from '../../../../../test/utils/app.js';
+import { createTestApp } from '@test/utils/app.js';
 
 let app: App;
 const validUserId = '550e8400-e29b-41d4-a716-446655440000';

@@ -1,8 +1,8 @@
-import { test, describe, expect, afterEach } from '../../../../../test/fixtures.js';
+import { test, describe, expect, afterEach } from '@test/fixtures.js';
 import { requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
-import { createTestApp } from '../../../../../test/utils/app.js';
+import { createTestApp } from '@test/utils/app.js';
 import { DatabaseClient } from '@core/database/client.js';
 import { QueueClient } from '@core/queue/client.js';
 
@@ -34,7 +34,9 @@ describe('DELETE /api/recommendations/delete-email', () => {
     expect(body).toHaveProperty('error');
   });
 
-  test('should return 200 and not modify anything if requestId does not exist in DB', async ({ dbClient }) => {
+  test('should return 200 and not modify anything if requestId does not exist in DB', async ({
+    dbClient,
+  }) => {
     const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
     const response = await app.request(
@@ -77,10 +79,7 @@ describe('DELETE /api/recommendations/delete-email', () => {
     const requestId = result[0].id;
 
     // Verify request was created with email
-    let dbRequest = await dbClient.db
-      .select()
-      .from(requests)
-      .where(eq(requests.id, requestId));
+    let dbRequest = await dbClient.db.select().from(requests).where(eq(requests.id, requestId));
 
     expect(dbRequest[0].email).toBe(testEmail);
     expect(dbRequest[0].frequency).toBe(testFrequency);

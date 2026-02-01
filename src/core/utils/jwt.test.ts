@@ -161,9 +161,7 @@ describe('JWT utility functions', () => {
     it('should use HS256 algorithm in token header', async () => {
       const token = await signJwt(validUserId);
       const parts = token.split('.');
-      const header = JSON.parse(
-        Buffer.from(parts[0], 'base64url').toString('utf-8')
-      );
+      const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf-8'));
 
       expect(header.alg).toBe('HS256');
     });

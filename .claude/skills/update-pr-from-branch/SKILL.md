@@ -28,6 +28,7 @@ When you want to update your PR based on the changes you've made, invoke the ski
 ```
 
 The skill will:
+
 - Detect your current branch
 - Find the associated PR
 - Generate title and description using git commands
@@ -37,6 +38,7 @@ The skill will:
 ## What Gets Generated
 
 The skill generates:
+
 1. **Title**: Following the pattern `[Action]: [Description]`
    - Examples: `Add: OpenAPI spec generation`, `Update: authentication flow`, `Fix: database query`
 2. **Summary**: Key bullet points describing the changes made

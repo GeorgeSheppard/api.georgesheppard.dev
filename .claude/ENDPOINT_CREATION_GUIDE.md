@@ -19,12 +19,14 @@ src/websites/{website}/endpoints/{endpoint-name}/
 This file contains the OpenAPI route definition and request schema. It imports the response schema from the handler file to avoid circular dependencies.
 
 **Contents:**
+
 - Request schema (Zod object)
 - OpenAPI route definition (created with `createRoute`)
 - Request type (inferred from request schema)
 - Any middleware configuration
 
 **Example:**
+
 ```typescript
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
@@ -71,11 +73,13 @@ export const myEndpointRoute = createRoute({
 This file contains the handler function and response schema. This file should be kept focused on business logic.
 
 **Contents:**
+
 - Response schema (Zod object)
 - Response type (inferred from response schema)
 - Handler function
 
 **Example:**
+
 ```typescript
 import { Context } from 'hono';
 import { z } from 'zod';
@@ -142,6 +146,7 @@ export async function protectedEndpoint(c: ContextWithUserId): Promise<MyRespons
 ## Response Validation
 
 Always validate responses using Zod schemas. This ensures:
+
 - Runtime type checking
 - OpenAPI documentation accuracy
 - Consistent error handling

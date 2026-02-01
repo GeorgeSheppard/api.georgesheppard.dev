@@ -1,8 +1,7 @@
 import OpenAI from 'openai';
 import { config } from '@config/index.js';
 import { Location, toAffiliateTag, toAmazonDomain } from '@core/types/location.js';
-import { Recommendation} from '@core/types/recommendation.js';
-
+import { Recommendation } from '@core/types/recommendation.js';
 
 export abstract class Recommender {
   abstract getRecommendations(

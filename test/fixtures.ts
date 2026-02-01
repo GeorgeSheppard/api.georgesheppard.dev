@@ -1,8 +1,5 @@
 import { test as base } from 'vitest';
-import {
-  PostgreSqlContainer,
-  StartedPostgreSqlContainer
-} from '@testcontainers/postgresql';
+import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
 import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
 import { createQueueClient, QueueClient } from '@core/queue/client.js';
@@ -35,7 +32,7 @@ export const test = base.extend<{
       console.log('🛑 Stopping PostgreSQL container');
       await container.stop();
     },
-    { scope: 'worker', auto: false }
+    { scope: 'worker', auto: false },
   ],
 
   // Worker-scoped RabbitMQ container (started once per worker)
@@ -50,7 +47,7 @@ export const test = base.extend<{
       console.log('🛑 Stopping RabbitMQ container');
       await container.stop();
     },
-    { scope: 'worker', auto: false }
+    { scope: 'worker', auto: false },
   ],
 
   // Test-scoped database client (fresh per test)
@@ -65,7 +62,7 @@ export const test = base.extend<{
     const client = await createQueueClient(rabbitmqContainer.getAmqpUrl());
     await use(client);
     await client.close();
-  }
+  },
 });
 
 // Re-export vitest utilities for convenience

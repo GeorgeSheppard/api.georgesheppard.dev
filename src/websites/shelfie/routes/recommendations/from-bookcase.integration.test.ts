@@ -1,15 +1,19 @@
-import { test, describe, expect } from '../../../../../test/fixtures.js';
+import { test, describe, expect } from '@test/fixtures.js';
 import { recommendations, requests, images } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
-import { createMockIpLocator } from '../../../../../test/mocks/ip-locator.js';
-import { createTestApp } from '../../../../../test/utils/app.js';
+import { createMockIpLocator } from '@test/mocks/ip-locator.js';
+import { createTestApp } from '@test/utils/app.js';
 
 describe('POST /api/recommendations/from-bookcase', () => {
   let app: App;
 
   test.beforeEach(async ({ dbClient, queueClient }) => {
-    app = await createTestApp({ databaseClient: dbClient, queueClient: queueClient, ipLocator: createMockIpLocator() });
+    app = await createTestApp({
+      databaseClient: dbClient,
+      queueClient: queueClient,
+      ipLocator: createMockIpLocator(),
+    });
   });
 
   test.afterEach(async ({ dbClient, queueClient }) => {
@@ -151,7 +155,10 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(imageContents).toContain('fake-image-data-3');
   });
 
-  test('should create request record with correct location from x-forwarded-for header', async ({ dbClient, queueClient }) => {
+  test('should create request record with correct location from x-forwarded-for header', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const testImageData = Buffer.from('fake-image-data');
     const blob = new Blob([testImageData], { type: 'image/jpeg' });
 
@@ -188,7 +195,10 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(typeof request[0].location).toBe('string');
   });
 
-  test('should create request record with default location when no x-forwarded-for header', async ({ dbClient, queueClient }) => {
+  test('should create request record with default location when no x-forwarded-for header', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const testImageData = Buffer.from('fake-image-data');
     const blob = new Blob([testImageData], { type: 'image/jpeg' });
 
@@ -260,7 +270,10 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(request).toHaveLength(1);
   });
 
-  test('should send message to text extraction queue with correct data', async ({ dbClient, queueClient }) => {
+  test('should send message to text extraction queue with correct data', async ({
+    dbClient,
+    queueClient,
+  }) => {
     // First, consume any existing messages from the queue to clear it
     await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
 
@@ -341,7 +354,10 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(contentTypes).toEqual(['image/jpeg', 'image/png']);
   });
 
-  test('should return recommendation ID in the expected UUID format', async ({ dbClient, queueClient }) => {
+  test('should return recommendation ID in the expected UUID format', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const testImageData = Buffer.from('fake-image-data');
     const blob = new Blob([testImageData], { type: 'image/jpeg' });
 

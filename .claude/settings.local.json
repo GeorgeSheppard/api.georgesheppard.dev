@@ -32,11 +32,11 @@
       "mcp__api-georgesheppard__hello_protected",
       "Bash(dir \"C:\\\\Users\\\\georg\\\\Documents\\\\api.georgesheppard.dev\\\\src\\\\core\\\\mcp\")",
       "Bash(pnpm test:integration:db:*)",
-      "WebFetch(domain:vitest.dev)"
+      "WebFetch(domain:vitest.dev)",
+      "Bash(pnpm lint:fix:*)",
+      "Bash(pnpm format:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "api-georgesheppard"
-  ]
+  "enabledMcpjsonServers": ["api-georgesheppard"]
 }
