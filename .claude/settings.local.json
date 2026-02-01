@@ -37,7 +37,9 @@
       "Bash(pnpm format:*)",
       "Bash(npx eslint:*)",
       "Bash(git config:*)",
-      "mcp__production-api__hello_protected"
+      "mcp__production-api__hello_protected",
+      "Bash(pnpm exec eslint:*)",
+      "mcp__api-georgesheppard__get_recipes"
     ]
   },
   "enableAllProjectMcpServers": true,
