@@ -1,36 +1,24 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { createDatabaseClient, DatabaseClient } from '@core/database/client.js';
+import { test, describe, expect, afterEach } from '../../../../../test/fixtures.js';
 import { recommendations, requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
-import { config } from '@config/index.js';
-import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { createTestApp } from '../../../../../test/utils/app.js';
 import type { Recommendation } from '@core/types/recommendation.js';
 
-let app: App;
-let databaseClient: DatabaseClient;
-let queueClient: QueueClient;
-
-beforeAll(async () => {
-  databaseClient = await createDatabaseClient(config.DATABASE_URL);
-  queueClient = await createQueueClient(config.RABBITMQ_URL);
-  app = await createTestApp({ databaseClient, queueClient });
-});
-
-afterAll(async () => {
-  queueClient.close();
-  databaseClient.close();
-});
-
-afterEach(async () => {
-  await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
-  await databaseClient.db.delete(requests);
-});
-
 describe('GET /api/recommendations/{id}', () => {
+  let app: App;
+
+  test.beforeEach(async ({ dbClient, queueClient }) => {
+    app = await createTestApp({ databaseClient: dbClient, queueClient: queueClient });
+  });
+
+  test.afterEach(async ({ dbClient, queueClient }) => {
+    await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
+    await dbClient.db.delete(requests);
+  });
+
   // Validation tests
-  it('should return an error if id is not a valid UUID', async () => {
+  test('should return an error if id is not a valid UUID', async () => {
     const response = await app.request(
       new Request('http://localhost/api/recommendations/not-a-uuid', {
         method: 'GET',
@@ -43,7 +31,7 @@ describe('GET /api/recommendations/{id}', () => {
   });
 
   // 404 scenario: recommendation doesn't exist
-  it('should return 404 if recommendation does not exist in DB', async () => {
+  test('should return 404 if recommendation does not exist in DB', async () => {
     const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
     const response = await app.request(
@@ -59,9 +47,9 @@ describe('GET /api/recommendations/{id}', () => {
   });
 
   // 422 scenario: processedUtc exists but recommendations is null
-  it('should return 422 if processedUtc exists but recommendations is null', async () => {
+  test('should return 422 if processedUtc exists but recommendations is null', async ({ dbClient }) => {
     // Create a request
-    const requestResult = await databaseClient.db
+    const requestResult = await dbClient.db
       .insert(requests)
       .values({
         email: 'test@example.com',
@@ -71,7 +59,7 @@ describe('GET /api/recommendations/{id}', () => {
     const requestId = requestResult[0].id;
 
     // Create a recommendation with processedUtc but null recommendations
-    const recommendationResult = await databaseClient.db
+    const recommendationResult = await dbClient.db
       .insert(recommendations)
       .values({
         requestId,
@@ -95,16 +83,12 @@ describe('GET /api/recommendations/{id}', () => {
       "We couldn't create any recommendations for you. Please make sure your bookshelf is readable."
     );
     expect(body).toHaveProperty('success', false);
-
-    // Cleanup
-    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
-    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 
   // 422 scenario: processedUtc exists but recommendations is empty array
-  it('should return 422 if processedUtc exists but recommendations is empty array', async () => {
+  test('should return 422 if processedUtc exists but recommendations is empty array', async ({ dbClient }) => {
     // Create a request
-    const requestResult = await databaseClient.db
+    const requestResult = await dbClient.db
       .insert(requests)
       .values({
         email: 'test2@example.com',
@@ -114,7 +98,7 @@ describe('GET /api/recommendations/{id}', () => {
     const requestId = requestResult[0].id;
 
     // Create a recommendation with processedUtc but empty recommendations array
-    const recommendationResult = await databaseClient.db
+    const recommendationResult = await dbClient.db
       .insert(recommendations)
       .values({
         requestId,
@@ -138,16 +122,12 @@ describe('GET /api/recommendations/{id}', () => {
       "We couldn't create any recommendations for you. Please make sure your bookshelf is readable."
     );
     expect(body).toHaveProperty('success', false);
-
-    // Cleanup
-    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
-    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 
   // 200 scenario: successful retrieval with email and no frequency
-  it('should return 200 with recommendations, hasEmail=true, isRecurringMonthly=false when request has email but no frequency', async () => {
+  test('should return 200 with recommendations, hasEmail=true, isRecurringMonthly=false when request has email but no frequency', async ({ dbClient }) => {
     // Create a request with email but no frequency
-    const requestResult = await databaseClient.db
+    const requestResult = await dbClient.db
       .insert(requests)
       .values({
         email: 'test3@example.com',
@@ -168,7 +148,7 @@ describe('GET /api/recommendations/{id}', () => {
       },
     ];
 
-    const recommendationResult = await databaseClient.db
+    const recommendationResult = await dbClient.db
       .insert(recommendations)
       .values({
         requestId,
@@ -193,16 +173,12 @@ describe('GET /api/recommendations/{id}', () => {
     expect(body).toHaveProperty('recommendations');
     expect(body.recommendations).toHaveLength(1);
     expect(body.recommendations[0]).toMatchObject(testRecommendations[0]);
-
-    // Cleanup
-    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
-    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 
   // 200 scenario: successful retrieval with email and monthly frequency
-  it('should return 200 with recommendations, hasEmail=true, isRecurringMonthly=true when request has monthly frequency', async () => {
+  test('should return 200 with recommendations, hasEmail=true, isRecurringMonthly=true when request has monthly frequency', async ({ dbClient }) => {
     // Create a request with email and monthly frequency
-    const requestResult = await databaseClient.db
+    const requestResult = await dbClient.db
       .insert(requests)
       .values({
         email: 'test4@example.com',
@@ -223,7 +199,7 @@ describe('GET /api/recommendations/{id}', () => {
       },
     ];
 
-    const recommendationResult = await databaseClient.db
+    const recommendationResult = await dbClient.db
       .insert(recommendations)
       .values({
         requestId,
@@ -248,16 +224,12 @@ describe('GET /api/recommendations/{id}', () => {
     expect(body).toHaveProperty('recommendations');
     expect(body.recommendations).toHaveLength(1);
     expect(body.recommendations[0]).toMatchObject(testRecommendations[0]);
-
-    // Cleanup
-    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
-    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 
   // 200 scenario: successful retrieval without email
-  it('should return 200 with recommendations, hasEmail=false, isRecurringMonthly=false when request has no email', async () => {
+  test('should return 200 with recommendations, hasEmail=false, isRecurringMonthly=false when request has no email', async ({ dbClient }) => {
     // Create a request without email
-    const requestResult = await databaseClient.db
+    const requestResult = await dbClient.db
       .insert(requests)
       .values({
         email: null,
@@ -277,7 +249,7 @@ describe('GET /api/recommendations/{id}', () => {
       },
     ];
 
-    const recommendationResult = await databaseClient.db
+    const recommendationResult = await dbClient.db
       .insert(recommendations)
       .values({
         requestId,
@@ -302,9 +274,5 @@ describe('GET /api/recommendations/{id}', () => {
     expect(body).toHaveProperty('recommendations');
     expect(body.recommendations).toHaveLength(1);
     expect(body.recommendations[0]).toMatchObject(testRecommendations[0]);
-
-    // Cleanup
-    await databaseClient.db.delete(recommendations).where(eq(recommendations.id, recommendationId));
-    await databaseClient.db.delete(requests).where(eq(requests.id, requestId));
   });
 });
