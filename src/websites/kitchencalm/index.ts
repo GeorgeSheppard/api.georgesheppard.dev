@@ -1,7 +1,8 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { McpTool } from '@core/mcp/routes/sse.js';
-import { helloProtected } from './endpoints/hello-protected/hello-protected.js';
-import { HelloProtectedResponseSchema } from './endpoints/hello-protected/hello-protected-definition.js';
+import { McpTool } from '@core/mcp/sse.js';
+import { helloProtected, HelloProtectedResponseSchema } from './endpoints/hello-protected/hello-protected.js';
+import { authToken } from './endpoints/auth-token/auth-token.js';
+import { authTokenRoute } from './endpoints/auth-token/auth-token-definition.js';
 
 /**
  * All MCP tools exposed by the KitchenCalm website
@@ -19,6 +20,9 @@ export const tools: McpTool[] = [
  * Register all kitchencalm routes with the application
  */
 export function registerRoutes(app: OpenAPIHono) {
-  // Website-specific HTTP routes would go here
-  // MCP tools are registered globally in server.ts
+  app.openapi(authTokenRoute, async (c) => {
+    const { userId } = c.req.valid('json');
+    const result = await authToken(c, userId);
+    return c.json(result, 200);
+  });
 }

@@ -1,6 +1,8 @@
 import { vi } from 'vitest';
 import { Recommender } from '@core/utils/openai-recommender.js';
-import { Recommendation, Location } from '@core/types/index.js';
+import { Location } from '@core/types/location.js';
+import { Recommendation } from '@core/types/recommendation.js';
+
 
 export function createMockRecommender(): Recommender {
   return {

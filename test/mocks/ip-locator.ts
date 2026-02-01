@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import { IpLocator } from '@core/utils/ip-locator.js';
-import { Location } from '@core/types/index.js';
+import { Location } from '@core/types/location.js';
 
 export function createMockIpLocator(defaultLocation: Location = Location.Us): IpLocator {
   return {

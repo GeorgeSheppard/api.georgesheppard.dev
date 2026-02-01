@@ -1,7 +1,8 @@
-import { Context, Next } from 'hono';
+import { createMiddleware } from 'hono/factory';
 import { verifyJwt } from '@core/utils/jwt.js';
+import { ProtectedEnv } from '@core/types/context.js';
 
-export async function jwtAuthMiddleware(c: Context, next: Next): Promise<Response | undefined> {
+export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) => {
   const authHeader = c.req.header('Authorization');
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -28,4 +29,4 @@ export async function jwtAuthMiddleware(c: Context, next: Next): Promise<Respons
       401
     );
   }
-}
+});

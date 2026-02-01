@@ -29,7 +29,8 @@
       "WebFetch(domain:github.com)",
       "mcp__api-georgesheppard__hello-world",
       "mcp__api-georgesheppard__hello_public",
-      "mcp__api-georgesheppard__hello_protected"
+      "mcp__api-georgesheppard__hello_protected",
+      "Bash(dir \"C:\\\\Users\\\\georg\\\\Documents\\\\api.georgesheppard.dev\\\\src\\\\core\\\\mcp\")"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -6,7 +6,7 @@ import { App } from '../../src/server.js';
 import { config } from '@config/index.js';
 import { createQueueClient, QueueClient } from '@core/queue/client.js';
 import { createTestApp } from '../utils/app.js';
-import type { Recommendation } from '@core/types/index.js';
+import type { Recommendation } from '@core/types/recommendation.js';
 
 let app: App;
 let databaseClient: DatabaseClient;

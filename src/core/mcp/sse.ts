@@ -1,15 +1,28 @@
+import { AsyncLocalStorage } from 'async_hooks';
+import { Context } from 'hono';
+import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPTransport } from '@hono/mcp';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { jwtAuthMiddleware } from '../middleware/jwt-auth.js';
-import { honoContextStorage } from '../context.js';
-import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from '../server.js';
+import { ContextWithUserId } from '../types/context.js';
 
-export interface McpTool {
+/**
+ * AsyncLocalStorage allows us to store the Hono context
+ * so that MCP tool handlers can access it.
+ */
+export const honoContextStorage = new AsyncLocalStorage<Context>();
+
+// MCP Server setup - stores tool definitions for documentation
+// The actual HTTP endpoints are exposed directly via routes
+export const MCP_SERVER_NAME = 'api.georgesheppard.dev';
+export const MCP_SERVER_VERSION = '1.0.0';
+
+export interface McpTool<T extends Record<string, unknown> = Record<string, unknown>> {
   name: string;
   description: string;
-  handler: (c: any) => Promise<any>;
-  outputSchema?: any;
+  handler: (c: ContextWithUserId) => Promise<T>;
+  outputSchema?: z.ZodSchema<T>;
 }
 
 /**

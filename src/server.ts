@@ -6,9 +6,9 @@ import { securityHeaders } from '@core/middleware/security.js';
 import { errorHandler } from '@core/middleware/error-handler.js';
 import { QueueClient } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
-import { registerShelfieRoutes } from '@websites/shelfie/routes/index.js';
+import { registerShelfieRoutes } from '@websites/shelfie/index.js';
 import { registerRoutes as registerKitchenCalmRoutes, tools as kitchenCalmTools } from '@websites/kitchencalm/index.js';
-import { registerMcpSseRoute } from '@core/mcp/routes/sse.js';
+import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
@@ -83,6 +83,5 @@ declare module 'hono' {
     databaseClient: DatabaseClient;
     emailClient: EmailClient;
     ipLocator: IpLocator;
-    userId?: string;
   }
 }
