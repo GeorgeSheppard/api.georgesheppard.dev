@@ -44,6 +44,7 @@ export default defineConfig({
       '@config': path.resolve(__dirname, './src/config'),
       '@websites': path.resolve(__dirname, './src/websites'),
       '@plugins': path.resolve(__dirname, './src/plugins'),
+      '@test': path.resolve(__dirname, './test'),
     },
   },
 });

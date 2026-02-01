@@ -1,6 +1,9 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { McpTool } from '@core/mcp/sse.js';
-import { helloProtected, HelloProtectedResponseSchema } from './endpoints/hello-protected/hello-protected.js';
+import {
+  helloProtected,
+  HelloProtectedResponseSchema,
+} from './endpoints/hello-protected/hello-protected.js';
 import { authToken } from './endpoints/auth-token/auth-token.js';
 import { authTokenRoute } from './endpoints/auth-token/auth-token-definition.js';
 

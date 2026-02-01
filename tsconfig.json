@@ -19,7 +19,8 @@
       "@core/*": ["src/core/*"],
       "@config/*": ["src/config/*"],
       "@websites/*": ["src/websites/*"],
-      "@plugins/*": ["src/plugins/*"]
+      "@plugins/*": ["src/plugins/*"],
+      "@test/*": ["test/*"]
     }
   },
   "include": ["src/**/*", "scripts/**/*", "test/**/*"],

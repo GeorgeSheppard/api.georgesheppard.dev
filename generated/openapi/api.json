@@ -18,9 +18,7 @@
   "paths": {
     "/api/recommendations/{id}": {
       "get": {
-        "tags": [
-          "recommendations"
-        ],
+        "tags": ["recommendations"],
         "parameters": [
           {
             "schema": {
@@ -62,13 +60,7 @@
                             "type": "string"
                           }
                         },
-                        "required": [
-                          "name",
-                          "author",
-                          "description",
-                          "reason",
-                          "amazonLink"
-                        ]
+                        "required": ["name", "author", "description", "reason", "amazonLink"]
                       }
                     },
                     "hasEmail": {
@@ -79,17 +71,10 @@
                     },
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "recommendations",
-                    "hasEmail",
-                    "isRecurringMonthly",
-                    "success"
-                  ]
+                  "required": ["recommendations", "hasEmail", "isRecurringMonthly", "success"]
                 }
               }
             }
@@ -106,15 +91,10 @@
                     },
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     }
                   },
-                  "required": [
-                    "error",
-                    "success"
-                  ]
+                  "required": ["error", "success"]
                 }
               }
             }
@@ -131,15 +111,10 @@
                     },
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     }
                   },
-                  "required": [
-                    "error",
-                    "success"
-                  ]
+                  "required": ["error", "success"]
                 }
               }
             }
@@ -149,9 +124,7 @@
     },
     "/api/recommendations/add-email": {
       "post": {
-        "tags": [
-          "recommendations"
-        ],
+        "tags": ["recommendations"],
         "requestBody": {
           "content": {
             "application/x-www-form-urlencoded": {
@@ -168,15 +141,10 @@
                   },
                   "recurring": {
                     "type": "string",
-                    "enum": [
-                      "true",
-                      "false"
-                    ]
+                    "enum": ["true", "false"]
                   }
                 },
-                "required": [
-                  "id"
-                ]
+                "required": ["id"]
               }
             }
           }
@@ -193,32 +161,23 @@
                       "properties": {
                         "success": {
                           "type": "boolean",
-                          "enum": [
-                            true
-                          ]
+                          "enum": [true]
                         }
                       },
-                      "required": [
-                        "success"
-                      ]
+                      "required": ["success"]
                     },
                     {
                       "type": "object",
                       "properties": {
                         "success": {
                           "type": "boolean",
-                          "enum": [
-                            false
-                          ]
+                          "enum": [false]
                         },
                         "error": {
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "success",
-                        "error"
-                      ]
+                      "required": ["success", "error"]
                     }
                   ]
                 }
@@ -236,32 +195,23 @@
                       "properties": {
                         "success": {
                           "type": "boolean",
-                          "enum": [
-                            true
-                          ]
+                          "enum": [true]
                         }
                       },
-                      "required": [
-                        "success"
-                      ]
+                      "required": ["success"]
                     },
                     {
                       "type": "object",
                       "properties": {
                         "success": {
                           "type": "boolean",
-                          "enum": [
-                            false
-                          ]
+                          "enum": [false]
                         },
                         "error": {
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "success",
-                        "error"
-                      ]
+                      "required": ["success", "error"]
                     }
                   ]
                 }
@@ -279,32 +229,23 @@
                       "properties": {
                         "success": {
                           "type": "boolean",
-                          "enum": [
-                            true
-                          ]
+                          "enum": [true]
                         }
                       },
-                      "required": [
-                        "success"
-                      ]
+                      "required": ["success"]
                     },
                     {
                       "type": "object",
                       "properties": {
                         "success": {
                           "type": "boolean",
-                          "enum": [
-                            false
-                          ]
+                          "enum": [false]
                         },
                         "error": {
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "success",
-                        "error"
-                      ]
+                      "required": ["success", "error"]
                     }
                   ]
                 }
@@ -316,9 +257,7 @@
     },
     "/api/recommendations/delete-email": {
       "post": {
-        "tags": [
-          "recommendations"
-        ],
+        "tags": ["recommendations"],
         "requestBody": {
           "required": true,
           "content": {
@@ -331,9 +270,7 @@
                     "format": "uuid"
                   }
                 },
-                "required": [
-                  "requestId"
-                ]
+                "required": ["requestId"]
               }
             }
           }
@@ -361,9 +298,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "error"
-                  ]
+                  "required": ["error"]
                 }
               }
             }
@@ -373,9 +308,7 @@
     },
     "/api/recommendations/from-bookcase": {
       "post": {
-        "tags": [
-          "recommendations"
-        ],
+        "tags": ["recommendations"],
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -406,15 +339,10 @@
                     },
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "id",
-                    "success"
-                  ]
+                  "required": ["id", "success"]
                 }
               }
             }
@@ -431,15 +359,10 @@
                     },
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     }
                   },
-                  "required": [
-                    "error",
-                    "success"
-                  ]
+                  "required": ["error", "success"]
                 }
               }
             }
@@ -456,15 +379,10 @@
                     },
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     }
                   },
-                  "required": [
-                    "error",
-                    "success"
-                  ]
+                  "required": ["error", "success"]
                 }
               }
             }
@@ -474,9 +392,7 @@
     },
     "/api/queue-due-recommendations": {
       "get": {
-        "tags": [
-          "cron"
-        ],
+        "tags": ["cron"],
         "security": [
           {
             "apiKey": []
@@ -509,9 +425,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "error"
-                  ]
+                  "required": ["error"]
                 }
               }
             }

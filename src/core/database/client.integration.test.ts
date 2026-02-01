@@ -1,4 +1,4 @@
-import { test, describe, expect } from '../../../test/fixtures.js';
+import { test, describe, expect } from '@test/fixtures.js';
 import { requests, images, recommendations } from './schema/index.js';
 import { eq } from 'drizzle-orm';
 

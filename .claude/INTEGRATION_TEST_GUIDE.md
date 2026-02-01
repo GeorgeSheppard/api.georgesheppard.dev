@@ -35,12 +35,16 @@ describe('ENDPOINT_METHOD /endpoint/path', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ /* request data */ }),
+          body: JSON.stringify({
+            /* request data */
+          }),
         })
       );
 
       expect(response.status).toBe(200);
-      const body = (await response.json()) as { /* expected response type */ };
+      const body = (await response.json()) as {
+        /* expected response type */
+      };
       expect(body).toHaveProperty('field');
       expect(body.field).toBe('expected value');
     });
@@ -54,7 +58,9 @@ describe('ENDPOINT_METHOD /endpoint/path', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ /* invalid data */ }),
+          body: JSON.stringify({
+            /* invalid data */
+          }),
         })
       );
 
@@ -70,7 +76,9 @@ describe('ENDPOINT_METHOD /endpoint/path', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ /* request data */ }),
+          body: JSON.stringify({
+            /* request data */
+          }),
         })
       );
 
@@ -101,6 +109,7 @@ beforeAll(async () => {
 ### Testing Success Cases
 
 Test the happy path first:
+
 - Verify correct HTTP status code
 - Verify response structure matches schema
 - Verify response data values are correct
@@ -115,6 +124,7 @@ expect(body.field).toBe(expectedValue);
 ### Testing Error Cases
 
 Test both validation errors and authentication errors:
+
 - Invalid input validation
 - Missing required fields
 - Authentication failures
@@ -216,20 +226,20 @@ Group tests by functionality:
 ```typescript
 describe('POST /api/endpoint', () => {
   describe('Success cases', () => {
-    it('should ...', () => { });
-    it('should ...', () => { });
+    it('should ...', () => {});
+    it('should ...', () => {});
   });
 
   describe('Validation errors', () => {
-    it('should ...', () => { });
+    it('should ...', () => {});
   });
 
   describe('Authentication', () => {
-    it('should ...', () => { });
+    it('should ...', () => {});
   });
 
   describe('Error handling', () => {
-    it('should ...', () => { });
+    it('should ...', () => {});
   });
 });
 ```

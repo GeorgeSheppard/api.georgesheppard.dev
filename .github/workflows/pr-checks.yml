@@ -39,6 +39,18 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
+
+      - name: Check Formatting with Prettier
+        run: pnpm prettier --check .
+
   unit-test:
     runs-on: ubuntu-latest
     steps:

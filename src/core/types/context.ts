@@ -14,4 +14,3 @@ export type ProtectedEnv = {
  * Context type for handlers that are protected by jwtAuthMiddleware
  */
 export type ContextWithUserId = Context<ProtectedEnv>;
-

@@ -1,10 +1,10 @@
-import { test, describe, expect } from '../../../../../test/fixtures.js';
+import { test, describe, expect } from '@test/fixtures.js';
 import { vi } from 'vitest';
 import { requests, recommendations } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
-import { createMockEmailClient } from '../../../../../test/mocks/email.js';
-import { createTestApp } from '../../../../../test/utils/app.js';
+import { createMockEmailClient } from '@test/mocks/email.js';
+import { createTestApp } from '@test/utils/app.js';
 import { encryption } from '@core/utils/encryption.js';
 
 describe('POST /api/recommendations/add-email', () => {
@@ -38,7 +38,10 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toHaveProperty('error');
   });
 
-  test('should return an error if id is missing from request', async ({ dbClient, queueClient }) => {
+  test('should return an error if id is missing from request', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const response = await app.request(
       new Request('http://localhost/api/recommendations/add-email', {
         method: 'POST',
@@ -54,7 +57,10 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toHaveProperty('error');
   });
 
-  test('should return an error if email is provided but not valid', async ({ dbClient, queueClient }) => {
+  test('should return an error if email is provided but not valid', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const response = await app.request(
       new Request('http://localhost/api/recommendations/add-email', {
         method: 'POST',
@@ -89,7 +95,10 @@ describe('POST /api/recommendations/add-email', () => {
     expect(body).toEqual({ error: 'Recommendation not found', success: false });
   });
 
-  test('should return 400 if no email provided and request has no email', async ({ dbClient, queueClient }) => {
+  test('should return 400 if no email provided and request has no email', async ({
+    dbClient,
+    queueClient,
+  }) => {
     // Create a request without email
     const [request] = await dbClient.db.insert(requests).values({}).returning();
 
@@ -117,7 +126,10 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Success tests - recommendations not done yet
-  test('should store encrypted email when recommendations are not done and no email provided', async ({ dbClient, queueClient }) => {
+  test('should store encrypted email when recommendations are not done and no email provided', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const testEmail = 'existing@example.com';
     const encryptedEmail = encryption.encrypt(testEmail);
 
@@ -169,7 +181,10 @@ describe('POST /api/recommendations/add-email', () => {
     expect(emailClient.sendRecommendationsEmail).not.toHaveBeenCalled();
   });
 
-  test('should store new encrypted email when provided and recommendations are not done', async ({ dbClient, queueClient }) => {
+  test('should store new encrypted email when provided and recommendations are not done', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const newEmail = 'newemail@example.com';
 
     // Create a request without email
@@ -214,7 +229,10 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Success tests - recommendations already done, no recurring
-  test('should not store email when recommendations are done and recurring is false', async ({ dbClient, queueClient }) => {
+  test('should not store email when recommendations are done and recurring is false', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const testEmail = 'test@example.com';
     const encryptedEmail = encryption.encrypt(testEmail);
 
@@ -282,7 +300,10 @@ describe('POST /api/recommendations/add-email', () => {
     });
   });
 
-  test('should send email immediately when recommendations are done even if email sending fails', async ({ dbClient, queueClient }) => {
+  test('should send email immediately when recommendations are done even if email sending fails', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const testEmail = 'test@example.com';
     const encryptedEmail = encryption.encrypt(testEmail);
 
@@ -337,7 +358,10 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Success tests - recommendations already done, with recurring
-  test('should store email and set recurring when recommendations are done and recurring is true', async ({ dbClient, queueClient }) => {
+  test('should store email and set recurring when recommendations are done and recurring is true', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const testEmail = 'recurring@example.com';
     const encryptedEmail = encryption.encrypt(testEmail);
 
@@ -416,7 +440,10 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Success tests - recommendations not done, with recurring
-  test('should store email and set recurring when recommendations are not done and recurring is true', async ({ dbClient, queueClient }) => {
+  test('should store email and set recurring when recommendations are not done and recurring is true', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const testEmail = 'newrecurring@example.com';
 
     // Create a request without email
@@ -506,7 +533,10 @@ describe('POST /api/recommendations/add-email', () => {
   });
 
   // Test encryption/decryption flow
-  test('should properly encrypt and decrypt email from request', async ({ dbClient, queueClient }) => {
+  test('should properly encrypt and decrypt email from request', async ({
+    dbClient,
+    queueClient,
+  }) => {
     const originalEmail = 'encrypted@example.com';
     const encryptedEmail = encryption.encrypt(originalEmail);
 

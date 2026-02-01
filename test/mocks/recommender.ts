@@ -3,7 +3,6 @@ import { Recommender } from '@core/utils/openai-recommender.js';
 import { Location } from '@core/types/location.js';
 import { Recommendation } from '@core/types/recommendation.js';
 
-
 export function createMockRecommender(): Recommender {
   return {
     getRecommendations: vi.fn(

@@ -1,8 +1,8 @@
-import { test, describe, expect, afterEach } from '../../../../../test/fixtures.js';
+import { test, describe, expect, afterEach } from '@test/fixtures.js';
 import { recommendations, requests } from '@core/database/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
-import { createTestApp } from '../../../../../test/utils/app.js';
+import { createTestApp } from '@test/utils/app.js';
 import type { Recommendation } from '@core/types/recommendation.js';
 
 describe('GET /api/recommendations/{id}', () => {
@@ -47,7 +47,9 @@ describe('GET /api/recommendations/{id}', () => {
   });
 
   // 422 scenario: processedUtc exists but recommendations is null
-  test('should return 422 if processedUtc exists but recommendations is null', async ({ dbClient }) => {
+  test('should return 422 if processedUtc exists but recommendations is null', async ({
+    dbClient,
+  }) => {
     // Create a request
     const requestResult = await dbClient.db
       .insert(requests)
@@ -86,7 +88,9 @@ describe('GET /api/recommendations/{id}', () => {
   });
 
   // 422 scenario: processedUtc exists but recommendations is empty array
-  test('should return 422 if processedUtc exists but recommendations is empty array', async ({ dbClient }) => {
+  test('should return 422 if processedUtc exists but recommendations is empty array', async ({
+    dbClient,
+  }) => {
     // Create a request
     const requestResult = await dbClient.db
       .insert(requests)
@@ -125,7 +129,9 @@ describe('GET /api/recommendations/{id}', () => {
   });
 
   // 200 scenario: successful retrieval with email and no frequency
-  test('should return 200 with recommendations, hasEmail=true, isRecurringMonthly=false when request has email but no frequency', async ({ dbClient }) => {
+  test('should return 200 with recommendations, hasEmail=true, isRecurringMonthly=false when request has email but no frequency', async ({
+    dbClient,
+  }) => {
     // Create a request with email but no frequency
     const requestResult = await dbClient.db
       .insert(requests)
@@ -176,7 +182,9 @@ describe('GET /api/recommendations/{id}', () => {
   });
 
   // 200 scenario: successful retrieval with email and monthly frequency
-  test('should return 200 with recommendations, hasEmail=true, isRecurringMonthly=true when request has monthly frequency', async ({ dbClient }) => {
+  test('should return 200 with recommendations, hasEmail=true, isRecurringMonthly=true when request has monthly frequency', async ({
+    dbClient,
+  }) => {
     // Create a request with email and monthly frequency
     const requestResult = await dbClient.db
       .insert(requests)
@@ -227,7 +235,9 @@ describe('GET /api/recommendations/{id}', () => {
   });
 
   // 200 scenario: successful retrieval without email
-  test('should return 200 with recommendations, hasEmail=false, isRecurringMonthly=false when request has no email', async ({ dbClient }) => {
+  test('should return 200 with recommendations, hasEmail=false, isRecurringMonthly=false when request has no email', async ({
+    dbClient,
+  }) => {
     // Create a request without email
     const requestResult = await dbClient.db
       .insert(requests)
