@@ -36,7 +36,8 @@
       "Bash(pnpm lint:fix:*)",
       "Bash(pnpm format:*)",
       "Bash(npx eslint:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "mcp__production-api__hello_protected"
     ]
   },
   "enableAllProjectMcpServers": true,
