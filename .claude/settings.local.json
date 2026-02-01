@@ -30,7 +30,8 @@
       "mcp__api-georgesheppard__hello-world",
       "mcp__api-georgesheppard__hello_public",
       "mcp__api-georgesheppard__hello_protected",
-      "Bash(dir \"C:\\\\Users\\\\georg\\\\Documents\\\\api.georgesheppard.dev\\\\src\\\\core\\\\mcp\")"
+      "Bash(dir \"C:\\\\Users\\\\georg\\\\Documents\\\\api.georgesheppard.dev\\\\src\\\\core\\\\mcp\")",
+      "Bash(pnpm test:integration:db:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
