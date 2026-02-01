@@ -35,11 +35,10 @@
       "WebFetch(domain:vitest.dev)",
       "Bash(pnpm lint:fix:*)",
       "Bash(pnpm format:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(git config:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "api-georgesheppard"
-  ]
+  "enabledMcpjsonServers": ["api-georgesheppard"]
 }
