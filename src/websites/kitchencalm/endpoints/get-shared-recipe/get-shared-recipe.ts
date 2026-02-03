@@ -8,32 +8,44 @@ export const GetSharedRecipeRequestSchema = z.object({
 
 export type GetSharedRecipeRequest = z.infer<typeof GetSharedRecipeRequestSchema>;
 
-export const GetSharedRecipeResponseSchema = z.object({
-  uuid: z.string().uuid().describe('Recipe UUID'),
-  name: z.string().describe('Recipe name'),
-  description: z.string().describe('Recipe description'),
-  images: z.array(z.object({
-    timestamp: z.number().describe('Image timestamp'),
-    key: z.string().describe('S3 object key'),
-  })),
-  components: z.array(z.object({
-    name: z.string().describe('Component name'),
-    uuid: z.string().uuid().describe('Component UUID'),
-    ingredients: z.array(z.object({
-      name: z.string().describe('Ingredient name'),
-      quantity: z.object({
-        unit: z.enum(['none', 'mL', 'L', 'g', 'kg', 'cup', 'tsp', 'tbsp', 'quantity']),
-        value: z.number().optional(),
-      }),
-    })),
-    instructions: z.array(z.object({
-      text: z.string().describe('Instruction text'),
-      optional: z.boolean().optional(),
-    })),
-    storeable: z.boolean().optional(),
-    servings: z.number().optional(),
-  })).describe('Recipe components'),
-}).nullable();
+export const GetSharedRecipeResponseSchema = z
+  .object({
+    uuid: z.string().uuid().describe('Recipe UUID'),
+    name: z.string().describe('Recipe name'),
+    description: z.string().describe('Recipe description'),
+    images: z.array(
+      z.object({
+        timestamp: z.number().describe('Image timestamp'),
+        key: z.string().describe('S3 object key'),
+      })
+    ),
+    components: z
+      .array(
+        z.object({
+          name: z.string().describe('Component name'),
+          uuid: z.string().uuid().describe('Component UUID'),
+          ingredients: z.array(
+            z.object({
+              name: z.string().describe('Ingredient name'),
+              quantity: z.object({
+                unit: z.enum(['none', 'mL', 'L', 'g', 'kg', 'cup', 'tsp', 'tbsp', 'quantity']),
+                value: z.number().optional(),
+              }),
+            })
+          ),
+          instructions: z.array(
+            z.object({
+              text: z.string().describe('Instruction text'),
+              optional: z.boolean().optional(),
+            })
+          ),
+          storeable: z.boolean().optional(),
+          servings: z.number().optional(),
+        })
+      )
+      .describe('Recipe components'),
+  })
+  .nullable();
 
 export type GetSharedRecipeResponse = z.infer<typeof GetSharedRecipeResponseSchema>;
 

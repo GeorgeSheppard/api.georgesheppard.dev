@@ -14,10 +14,7 @@ export const S3DeleteResponseSchema = z.object({
 
 export type S3DeleteResponse = z.infer<typeof S3DeleteResponseSchema>;
 
-export async function deleteFile(
-  c: ContextWithUserId,
-  key: string
-): Promise<S3DeleteResponse> {
+export async function deleteFile(c: ContextWithUserId, key: string): Promise<S3DeleteResponse> {
   const s3Client = c.get('s3Client');
 
   try {

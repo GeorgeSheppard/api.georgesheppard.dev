@@ -27,9 +27,7 @@ import { shareRecipe } from './endpoints/share-recipe/share-recipe.js';
 import { shareRecipeRoute } from './endpoints/share-recipe/share-recipe-definition.js';
 import { getSharedRecipe } from './endpoints/get-shared-recipe/get-shared-recipe.js';
 import { getSharedRecipeRoute } from './endpoints/get-shared-recipe/get-shared-recipe-definition.js';
-import {
-  GetMealPlanResponseSchema,
-} from './endpoints/get-meal-plan/get-meal-plan.js';
+import { GetMealPlanResponseSchema } from './endpoints/get-meal-plan/get-meal-plan.js';
 import {
   UpdateMealPlanRequestSchema,
   UpdateMealPlanResponseSchema,

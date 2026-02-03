@@ -22,11 +22,7 @@ export async function updateMealPlan(
   const dynamoClient = c.get('dynamoClient');
 
   try {
-    await putMealPlanForUser(
-      dynamoClient.client,
-      userId,
-      mealPlan as IMealPlan
-    );
+    await putMealPlanForUser(dynamoClient.client, userId, mealPlan as IMealPlan);
 
     return {
       success: true,
