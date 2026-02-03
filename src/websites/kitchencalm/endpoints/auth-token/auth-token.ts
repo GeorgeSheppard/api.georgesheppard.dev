@@ -9,10 +9,6 @@ export const AuthTokenResponseSchema = z.object({
 
 export type AuthTokenResponse = z.infer<typeof AuthTokenResponseSchema>;
 
-/**
- * Auth token endpoint handler
- * Receives the authenticated Hono context and returns a JWT token
- */
 export async function authToken(c: Context, userId: string): Promise<AuthTokenResponse> {
   const token = await signJwt(userId);
 

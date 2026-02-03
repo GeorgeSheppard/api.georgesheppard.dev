@@ -20,8 +20,8 @@ export enum Unit {
 /**
  * UUID types for type safety
  */
-export type RecipeUuid = string & { readonly __brand: 'RecipeUuid' };
-export type ComponentUuid = string & { readonly __brand: 'ComponentUuid' };
+export type RecipeUuid = string;
+export type ComponentUuid = string;
 
 /**
  * Recipe image stored in S3

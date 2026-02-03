@@ -39,9 +39,12 @@
       "Bash(git config:*)",
       "mcp__production-api__hello_protected",
       "Bash(pnpm exec eslint:*)",
-      "mcp__api-georgesheppard__get_recipes"
+      "mcp__api-georgesheppard__get_recipes",
+      "mcp__api-georgesheppard__update_recipe"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["api-georgesheppard"]
+  "enabledMcpjsonServers": [
+    "api-georgesheppard"
+  ]
 }

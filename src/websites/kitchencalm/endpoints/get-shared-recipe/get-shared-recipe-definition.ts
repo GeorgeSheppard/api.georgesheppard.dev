@@ -1,30 +1,27 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
-import { jwtAuthMiddleware } from '@core/middleware/jwt-auth.js';
-import { GetRecipesResponseSchema } from './get-recipes.js';
+import { GetSharedRecipeResponseSchema } from './get-shared-recipe.js';
 
-export const getRecipesRoute = createRoute({
+export const getSharedRecipeRoute = createRoute({
   method: 'get',
-  path: '/kitchencalm/recipes',
+  path: '/kitchencalm/recipes/shared/:shareId',
   tags: ['kitchencalm', 'recipes'],
-  description: 'Get all recipes for the authenticated user',
-  security: [{ bearerAuth: [] }],
-  middleware: [jwtAuthMiddleware],
+  description: 'Get a publicly shared recipe by share ID',
   request: {
-    headers: z.object({
-      authorization: z.string().describe('Bearer token with JWT'),
+    params: z.object({
+      shareId: z.string().uuid().describe('Share ID'),
     }),
   },
   responses: {
     200: {
       content: {
         'application/json': {
-          schema: GetRecipesResponseSchema,
+          schema: GetSharedRecipeResponseSchema,
         },
       },
-      description: 'Recipes retrieved successfully',
+      description: 'Shared recipe retrieved successfully',
     },
-    401: {
+    404: {
       content: {
         'application/json': {
           schema: z.object({
@@ -32,7 +29,7 @@ export const getRecipesRoute = createRoute({
           }),
         },
       },
-      description: 'Unauthorized - invalid or missing JWT token',
+      description: 'Shared recipe not found',
     },
     500: {
       content: {

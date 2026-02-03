@@ -18,11 +18,35 @@ export const honoContextStorage = new AsyncLocalStorage<Context>();
 export const MCP_SERVER_NAME = 'api.georgesheppard.dev';
 export const MCP_SERVER_VERSION = '1.0.0';
 
-export interface McpTool<T extends Record<string, unknown> = Record<string, unknown>> {
+export interface McpTool<TInput = unknown> {
   name: string;
   description: string;
-  handler: (c: ContextWithUserId) => Promise<T>;
-  outputSchema?: z.ZodSchema<T>;
+  handler: (c: ContextWithUserId, input?: TInput) => Promise<Record<string, unknown>>;
+  inputSchema?: z.ZodSchema;
+  outputSchema?: z.ZodSchema;
+}
+
+/**
+ * Helper function to create a typed MCP tool with automatic validation
+ * This eliminates the need to manually cast or validate input in handlers
+ */
+export function createMcpTool<TInput>(
+  name: string,
+  description: string,
+  schema: z.ZodSchema<TInput>,
+  handler: (c: ContextWithUserId, input: TInput) => Promise<Record<string, unknown>>,
+  outputSchema?: z.ZodSchema
+): McpTool<unknown> {
+  return {
+    name,
+    description,
+    inputSchema: schema,
+    outputSchema,
+    handler: async (c: ContextWithUserId, input?: unknown) => {
+      const validated = schema.parse(input);
+      return handler(c, validated);
+    },
+  };
 }
 
 /**
@@ -44,13 +68,14 @@ export function registerMcpSseRoute(app: OpenAPIHono, tools: McpTool[]) {
       tool.name,
       {
         description: tool.description,
+        ...(tool.inputSchema && { inputSchema: tool.inputSchema }),
         ...(tool.outputSchema && { outputSchema: tool.outputSchema }),
       },
-      async () => {
+      async (input) => {
         const c = honoContextStorage.getStore();
         if (!c) throw new Error('Hono context not available');
 
-        const result = await tool.handler(c);
+        const result = await tool.handler(c, input as any);
         return {
           structuredContent: result,
           content: [],

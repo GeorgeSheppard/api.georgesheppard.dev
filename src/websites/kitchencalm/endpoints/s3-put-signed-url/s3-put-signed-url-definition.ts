@@ -1,28 +1,46 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { jwtAuthMiddleware } from '@core/middleware/jwt-auth.js';
-import { GetRecipesResponseSchema } from './get-recipes.js';
+import { S3PutSignedUrlRequestSchema, S3PutSignedUrlResponseSchema } from './s3-put-signed-url.js';
 
-export const getRecipesRoute = createRoute({
-  method: 'get',
-  path: '/kitchencalm/recipes',
-  tags: ['kitchencalm', 'recipes'],
-  description: 'Get all recipes for the authenticated user',
+export const s3PutSignedUrlRoute = createRoute({
+  method: 'post',
+  path: '/kitchencalm/s3/upload',
+  tags: ['kitchencalm', 's3'],
+  description: 'Generate a signed PUT URL for uploading files to S3',
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
     headers: z.object({
       authorization: z.string().describe('Bearer token with JWT'),
     }),
+    body: {
+      content: {
+        'application/json': {
+          schema: S3PutSignedUrlRequestSchema,
+        },
+      },
+      required: true,
+    },
   },
   responses: {
     200: {
       content: {
         'application/json': {
-          schema: GetRecipesResponseSchema,
+          schema: S3PutSignedUrlResponseSchema,
         },
       },
-      description: 'Recipes retrieved successfully',
+      description: 'Signed PUT URL generated successfully',
+    },
+    400: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            error: z.string().describe('Error message'),
+          }),
+        },
+      },
+      description: 'Invalid request body',
     },
     401: {
       content: {

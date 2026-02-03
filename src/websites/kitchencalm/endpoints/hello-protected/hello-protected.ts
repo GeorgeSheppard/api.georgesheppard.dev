@@ -9,10 +9,6 @@ export const HelloProtectedResponseSchema = z.object({
 
 export type HelloProtectedResponse = z.infer<typeof HelloProtectedResponseSchema>;
 
-/**
- * Hello Protected endpoint handler
- * Receives the authenticated Hono context and returns a personalized message
- */
 export async function helloProtected(c: ContextWithUserId): Promise<HelloProtectedResponse> {
   const userId = c.get('userId');
 

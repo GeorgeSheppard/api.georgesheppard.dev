@@ -1,28 +1,46 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { jwtAuthMiddleware } from '@core/middleware/jwt-auth.js';
-import { GetRecipesResponseSchema } from './get-recipes.js';
+import { UpdateMealPlanRequestSchema, UpdateMealPlanResponseSchema } from './update-meal-plan.js';
 
-export const getRecipesRoute = createRoute({
-  method: 'get',
-  path: '/kitchencalm/recipes',
-  tags: ['kitchencalm', 'recipes'],
-  description: 'Get all recipes for the authenticated user',
+export const updateMealPlanRoute = createRoute({
+  method: 'put',
+  path: '/kitchencalm/meal-plan',
+  tags: ['kitchencalm', 'meal-plan'],
+  description: 'Update the meal plan for the authenticated user',
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
     headers: z.object({
       authorization: z.string().describe('Bearer token with JWT'),
     }),
+    body: {
+      content: {
+        'application/json': {
+          schema: UpdateMealPlanRequestSchema,
+        },
+      },
+      required: true,
+    },
   },
   responses: {
     200: {
       content: {
         'application/json': {
-          schema: GetRecipesResponseSchema,
+          schema: UpdateMealPlanResponseSchema,
         },
       },
-      description: 'Recipes retrieved successfully',
+      description: 'Meal plan updated successfully',
+    },
+    400: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            error: z.string().describe('Error message'),
+          }),
+        },
+      },
+      description: 'Invalid request body',
     },
     401: {
       content: {
