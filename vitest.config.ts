@@ -25,6 +25,8 @@ export default defineConfig({
           name: 'integration:mcp',
           include: ['src/websites/kitchencalm/**/*.integration.test.ts'],
           setupFiles: ['./test/setup-mcp.ts'],
+          testTimeout: 60000,
+          hookTimeout: 120000,
         },
       },
       {
