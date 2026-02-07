@@ -40,6 +40,8 @@ export async function createTestApp(dependencies: Partial<AppDependencies>): Pro
     queueClient: dependencies.queueClient ?? createMissingDependencyProxy('queueClient'),
     emailClient: dependencies.emailClient ?? createMissingDependencyProxy('emailClient'),
     ipLocator: dependencies.ipLocator ?? createMissingDependencyProxy('ipLocator'),
+    dynamoClient: dependencies.dynamoClient ?? createMissingDependencyProxy('dynamoClient'),
+    s3Client: dependencies.s3Client ?? createMissingDependencyProxy('s3Client'),
   };
 
   return createApp(fullDependencies);

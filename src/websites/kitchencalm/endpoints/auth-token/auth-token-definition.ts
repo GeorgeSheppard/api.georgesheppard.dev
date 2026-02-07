@@ -11,6 +11,7 @@ export const authTokenRoute = createRoute({
   method: 'post',
   path: '/mcp/auth/token',
   tags: ['mcp'],
+  description: 'Generate a JWT token for authenticated users',
   security: [{ apiKey: [] }],
   middleware: authMiddleware,
   request: {

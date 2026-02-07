@@ -30,6 +30,20 @@ const envSchema = z.object({
   // Encryption (must be exact lengths)
   ENCRYPTION_KEY: z.string().length(32),
   ENCRYPTION_IV: z.string().length(16),
+
+  // DynamoDB (KitchenCalm/MyLife)
+  DYNAMODB_REGION: z.string().default('eu-west-2'),
+  DYNAMODB_TABLE_NAME: z.string(),
+  DYNAMODB_ACCESS_KEY_ID: z.string(),
+  DYNAMODB_SECRET_ACCESS_KEY: z.string(),
+  DYNAMODB_ENDPOINT: z.string().url().optional(),
+
+  // S3 (KitchenCalm image storage)
+  S3_REGION: z.string().default('eu-west-2'),
+  S3_BUCKET_NAME: z.string(),
+  S3_ACCESS_KEY_ID: z.string(),
+  S3_SECRET_ACCESS_KEY: z.string(),
+  S3_ENDPOINT: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -1,11 +1,45 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { McpTool } from '@core/mcp/sse.js';
+import { McpTool, createMcpTool } from '@core/mcp/sse.js';
+import { ContextWithUserId } from '@core/types/context.js';
 import {
   helloProtected,
   HelloProtectedResponseSchema,
 } from './endpoints/hello-protected/hello-protected.js';
 import { authToken } from './endpoints/auth-token/auth-token.js';
 import { authTokenRoute } from './endpoints/auth-token/auth-token-definition.js';
+import { getRecipes } from './endpoints/get-recipes/get-recipes.js';
+import { getRecipesRoute } from './endpoints/get-recipes/get-recipes-definition.js';
+import { updateRecipe } from './endpoints/update-recipe/update-recipe.js';
+import { updateRecipeRoute } from './endpoints/update-recipe/update-recipe-definition.js';
+import { deleteRecipe } from './endpoints/delete-recipe/delete-recipe.js';
+import { deleteRecipeRoute } from './endpoints/delete-recipe/delete-recipe-definition.js';
+import { getMealPlan } from './endpoints/get-meal-plan/get-meal-plan.js';
+import { getMealPlanRoute } from './endpoints/get-meal-plan/get-meal-plan-definition.js';
+import { updateMealPlan } from './endpoints/update-meal-plan/update-meal-plan.js';
+import { updateMealPlanRoute } from './endpoints/update-meal-plan/update-meal-plan-definition.js';
+import { getSignedUrl } from './endpoints/s3-get-signed-url/s3-get-signed-url.js';
+import { s3GetSignedUrlRoute } from './endpoints/s3-get-signed-url/s3-get-signed-url-definition.js';
+import { putSignedUrl } from './endpoints/s3-put-signed-url/s3-put-signed-url.js';
+import { s3PutSignedUrlRoute } from './endpoints/s3-put-signed-url/s3-put-signed-url-definition.js';
+import { deleteFile } from './endpoints/s3-delete/s3-delete.js';
+import { s3DeleteRoute } from './endpoints/s3-delete/s3-delete-definition.js';
+import { shareRecipe } from './endpoints/share-recipe/share-recipe.js';
+import { shareRecipeRoute } from './endpoints/share-recipe/share-recipe-definition.js';
+import { getSharedRecipe } from './endpoints/get-shared-recipe/get-shared-recipe.js';
+import { getSharedRecipeRoute } from './endpoints/get-shared-recipe/get-shared-recipe-definition.js';
+import { GetMealPlanResponseSchema } from './endpoints/get-meal-plan/get-meal-plan.js';
+import {
+  UpdateMealPlanRequestSchema,
+  UpdateMealPlanResponseSchema,
+} from './endpoints/update-meal-plan/update-meal-plan.js';
+import {
+  UpdateRecipeRequestSchema,
+  UpdateRecipeResponseSchema,
+} from './endpoints/update-recipe/update-recipe.js';
+import {
+  DeleteRecipeRequestSchema,
+  DeleteRecipeResponseSchema,
+} from './endpoints/delete-recipe/delete-recipe.js';
 
 /**
  * All MCP tools exposed by the KitchenCalm website
@@ -17,6 +51,38 @@ export const tools: McpTool[] = [
     handler: helloProtected,
     outputSchema: HelloProtectedResponseSchema,
   },
+  {
+    name: 'get_recipes',
+    description: 'Get all recipes for the authenticated user',
+    handler: getRecipes,
+  },
+  {
+    name: 'get_meal_plan',
+    description: 'Get the meal plan for the authenticated user',
+    handler: getMealPlan,
+    outputSchema: GetMealPlanResponseSchema,
+  },
+  createMcpTool(
+    'update_meal_plan',
+    'Update the meal plan for the authenticated user',
+    UpdateMealPlanRequestSchema,
+    updateMealPlan,
+    UpdateMealPlanResponseSchema
+  ),
+  createMcpTool(
+    'update_recipe',
+    'Create or update a recipe for the authenticated user',
+    UpdateRecipeRequestSchema,
+    updateRecipe,
+    UpdateRecipeResponseSchema
+  ),
+  createMcpTool(
+    'delete_recipe',
+    'Delete a recipe for the authenticated user',
+    DeleteRecipeRequestSchema,
+    async (c, input) => deleteRecipe(c, input.uuid),
+    DeleteRecipeResponseSchema
+  ),
 ];
 
 /**
@@ -26,6 +92,67 @@ export function registerRoutes(app: OpenAPIHono) {
   app.openapi(authTokenRoute, async (c) => {
     const { userId } = c.req.valid('json');
     const result = await authToken(c, userId);
+    return c.json(result, 200);
+  });
+
+  app.openapi(getRecipesRoute, async (c) => {
+    const result = await getRecipes(c as ContextWithUserId);
+    return c.json(result, 200);
+  });
+
+  app.openapi(updateRecipeRoute, async (c) => {
+    const recipe = c.req.valid('json');
+    const result = await updateRecipe(c as ContextWithUserId, recipe);
+    return c.json(result, 200);
+  });
+
+  app.openapi(deleteRecipeRoute, async (c) => {
+    const { uuid } = c.req.valid('param');
+    const result = await deleteRecipe(c as ContextWithUserId, uuid);
+    return c.json(result, 200);
+  });
+
+  app.openapi(getMealPlanRoute, async (c) => {
+    const result = await getMealPlan(c as ContextWithUserId);
+    return c.json(result, 200);
+  });
+
+  app.openapi(updateMealPlanRoute, async (c) => {
+    const mealPlan = c.req.valid('json');
+    const result = await updateMealPlan(c as ContextWithUserId, mealPlan);
+    return c.json(result, 200);
+  });
+
+  app.openapi(s3GetSignedUrlRoute, async (c) => {
+    const { key } = c.req.valid('json');
+    const result = await getSignedUrl(c as ContextWithUserId, key);
+    return c.json(result, 200);
+  });
+
+  app.openapi(s3PutSignedUrlRoute, async (c) => {
+    const { fileName, contentType } = c.req.valid('json');
+    const result = await putSignedUrl(c as ContextWithUserId, fileName, contentType);
+    return c.json(result, 200);
+  });
+
+  app.openapi(s3DeleteRoute, async (c) => {
+    const { key } = c.req.valid('json');
+    const result = await deleteFile(c as ContextWithUserId, key);
+    return c.json(result, 200);
+  });
+
+  app.openapi(shareRecipeRoute, async (c) => {
+    const { recipe } = c.req.valid('json');
+    const result = await shareRecipe(c as ContextWithUserId, recipe as any);
+    return c.json(result, 200);
+  });
+
+  app.openapi(getSharedRecipeRoute, async (c) => {
+    const { shareId } = c.req.valid('param');
+    const result = await getSharedRecipe(c as ContextWithUserId, shareId);
+    if (!result) {
+      return c.json({ error: 'Recipe not found' }, 404);
+    }
     return c.json(result, 200);
   });
 }
