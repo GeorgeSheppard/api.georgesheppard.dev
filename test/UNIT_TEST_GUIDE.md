@@ -4,16 +4,16 @@ Unit tests validate handler business logic without external dependencies (no con
 
 ## When to Use Unit vs Integration Tests
 
-| Concern | Unit Test | Integration Test |
-|---|---|---|
-| Handler business logic | Yes | - |
-| Data transformations | Yes | - |
-| Branching / conditional paths | Yes | - |
-| Error propagation | Yes | - |
-| Database queries (SQL correctness) | - | Yes |
-| Middleware chain (auth, validation) | - | Yes |
-| Full HTTP request/response cycle | - | Yes |
-| Schema validation (Zod) | - | Yes |
+| Concern                             | Unit Test | Integration Test |
+| ----------------------------------- | --------- | ---------------- |
+| Handler business logic              | Yes       | -                |
+| Data transformations                | Yes       | -                |
+| Branching / conditional paths       | Yes       | -                |
+| Error propagation                   | Yes       | -                |
+| Database queries (SQL correctness)  | -         | Yes              |
+| Middleware chain (auth, validation) | -         | Yes              |
+| Full HTTP request/response cycle    | -         | Yes              |
+| Schema validation (Zod)             | -         | Yes              |
 
 ## File Naming
 
@@ -26,6 +26,7 @@ The vitest config automatically routes `*.test.ts` to the `unit` project and `*.
 ## Handler Pattern (Required for Unit Testability)
 
 Handlers must be **exported functions** that:
+
 1. Accept Hono `Context` (or `ContextWithUserId`) and validated inputs as parameters
 2. Access dependencies via `c.get()` (e.g., `c.get('databaseClient')`)
 3. Call **utility functions** for external operations (DB, S3, DynamoDB, etc.)
@@ -77,9 +78,12 @@ app.openapi(route, async (c) => {
   const { id } = c.req.valid('param');
   const result = await getById(c, id);
   switch (result.status) {
-    case 200: return c.json(result.body, 200);
-    case 404: return c.json(result.body, 404);
-    case 422: return c.json(result.body, 422);
+    case 200:
+      return c.json(result.body, 200);
+    case 404:
+      return c.json(result.body, 404);
+    case 422:
+      return c.json(result.body, 422);
   }
 });
 ```
@@ -235,15 +239,18 @@ it('should return 404 when not found', async () => {
 See these files for the canonical patterns:
 
 **KitchenCalm (utility function mocking):**
+
 - Handler: `src/websites/kitchencalm/endpoints/get-recipes/get-recipes.ts`
 - Test: `src/websites/kitchencalm/endpoints/get-recipes/get-recipes.test.ts`
 
 **Shelfie (refactored with query extraction):**
+
 - Query: `src/websites/shelfie/queries/recommendations.ts`
 - Handler + Route: `src/websites/shelfie/routes/recommendations/get-by-id.ts`
 - Test: `src/websites/shelfie/routes/recommendations/get-by-id.test.ts`
 
 **Test utility:**
+
 - Mock context: `test/utils/mock-context.ts`
 
 ## Checklist for New Endpoints

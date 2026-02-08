@@ -55,6 +55,10 @@ describe('deleteRecipe handler', () => {
     const result = await deleteRecipe(mockContext(differentUserId), recipeUuid);
 
     expect(result).toEqual({ success: true, uuid: recipeUuid });
-    expect(deleteRecipeFromDynamo).toHaveBeenCalledWith(expect.anything(), differentUserId, recipeUuid);
+    expect(deleteRecipeFromDynamo).toHaveBeenCalledWith(
+      expect.anything(),
+      differentUserId,
+      recipeUuid
+    );
   });
 });
