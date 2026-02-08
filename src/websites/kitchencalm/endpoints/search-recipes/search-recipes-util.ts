@@ -42,11 +42,7 @@ export function transformRecipeForSearch(recipe: IRecipe): SearchableRecipe {
  * @param fields - Optional array of fields to search (defaults to all)
  * @returns Array of matching recipe UUIDs
  */
-export function searchRecipes(
-  recipes: IRecipe[],
-  query: string,
-  fields?: string[]
-): RecipeUuid[] {
+export function searchRecipes(recipes: IRecipe[], query: string, fields?: string[]): RecipeUuid[] {
   if (!query.trim()) {
     return recipes.map((r) => r.uuid);
   }
@@ -56,7 +52,9 @@ export function searchRecipes(
 
   // Determine which fields to search
   const searchFields: (keyof SearchableRecipe)[] = fields
-    ? (fields.filter((f) => ['name', 'description', 'ingredients', 'instructions'].includes(f)) as (keyof SearchableRecipe)[])
+    ? (fields.filter((f) =>
+        ['name', 'description', 'ingredients', 'instructions'].includes(f)
+      ) as (keyof SearchableRecipe)[])
     : ['name', 'description', 'ingredients', 'instructions'];
 
   // Configure Fuse.js with options from MyLife implementation

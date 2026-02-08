@@ -487,7 +487,9 @@ describe('GET /kitchencalm/recipes/search', () => {
     const result = body.results[0];
 
     // Should only have uuid, name, description, and ingredients
-    expect(Object.keys(result).sort()).toEqual(['description', 'ingredients', 'name', 'uuid'].sort());
+    expect(Object.keys(result).sort()).toEqual(
+      ['description', 'ingredients', 'name', 'uuid'].sort()
+    );
     expect(typeof result.uuid).toBe('string');
     expect(typeof result.name).toBe('string');
     expect(typeof result.description).toBe('string');
