@@ -17,8 +17,9 @@
 4. [AWS Services](#aws-services)
 5. [Database Schema](#database-schema)
 6. [Core Business Logic](#core-business-logic)
-7. [Authentication Flow](#authentication-flow)
-8. [Data Flow Examples](#data-flow-examples)
+7. [Shopping List Utility](#shopping-list-utility)
+8. [Authentication Flow](#authentication-flow)
+9. [Data Flow Examples](#data-flow-examples)
 
 ---
 
@@ -1039,6 +1040,299 @@ enum Unit {
    - Creates shareable recipe with unique ID
    - Returns: `{ shareId: string }`
    - Stores with special UserId (the shareId)
+
+---
+
+## Shopping List Utility
+
+### Overview
+
+The shopping list utility aggregates ingredients from recipes in a user's meal plan into a consolidated shopping list. It works by:
+
+1. Fetching the user's meal plan for a specified date range
+2. Retrieving all recipes referenced in the meal plan
+3. Aggregating ingredient quantities across recipes, accounting for:
+   - Multiple servings per recipe component
+   - Duplicate ingredients across different recipes
+   - Proper unit scaling and conversions
+
+### How It Works
+
+The shopping list generation is a client-side operation (can also be server-side) that combines data from two tRPC endpoints:
+
+#### Step 1: Fetch Meal Plan
+
+```typescript
+const mealPlan = await trpc.mealPlan.getMealPlan();
+// Returns: IMealPlan
+// Format: { "Monday - 01/08/2024": { "recipeUuid": [{ componentId, servings }] } }
+```
+
+#### Step 2: Fetch All Recipes
+
+```typescript
+const recipes = await trpc.recipes.getRecipes();
+// Returns: Map<RecipeUuid, IRecipe>
+```
+
+#### Step 3: Aggregate Ingredients
+
+Iterate through the meal plan and combine ingredients:
+
+```typescript
+interface AggregatedIngredient {
+  name: string;
+  quantity: {
+    unit: Unit;
+    value: number;
+  };
+  dates: string[]; // Dates where this ingredient is needed
+  recipeNames: string[]; // Recipes using this ingredient
+}
+
+type ShoppingList = Map<string, AggregatedIngredient>;
+```
+
+### Data Structure Example
+
+**Input Meal Plan:**
+
+```json
+{
+  "Monday - 01/08/2024": {
+    "550e8400-e29b-41d4-a716-446655440000": [
+      {
+        "componentId": "component-uuid-1",
+        "servings": 2
+      }
+    ]
+  },
+  "Tuesday - 01/09/2024": {
+    "550e8400-e29b-41d4-a716-446655440000": [
+      {
+        "componentId": "component-uuid-1",
+        "servings": 1
+      }
+    ],
+    "550e8400-e29b-41d4-a716-446655440001": [
+      {
+        "componentId": "component-uuid-2",
+        "servings": 2
+      }
+    ]
+  }
+}
+```
+
+**Input Recipe Data:**
+
+```json
+{
+  "550e8400-e29b-41d4-a716-446655440000": {
+    "name": "Pasta Carbonara",
+    "components": [
+      {
+        "uuid": "component-uuid-1",
+        "name": "Main Pasta",
+        "servings": 2,
+        "ingredients": [
+          {
+            "name": "Spaghetti",
+            "quantity": { "unit": "GRAM", "value": 400 }
+          },
+          {
+            "name": "Eggs",
+            "quantity": { "unit": "NUMBER", "value": 3 }
+          }
+        ]
+      }
+    ]
+  },
+  "550e8400-e29b-41d4-a716-446655440001": {
+    "name": "Risotto",
+    "components": [
+      {
+        "uuid": "component-uuid-2",
+        "name": "Main Course",
+        "servings": 2,
+        "ingredients": [
+          {
+            "name": "Rice",
+            "quantity": { "unit": "GRAM", "value": 300 }
+          },
+          {
+            "name": "Eggs",
+            "quantity": { "unit": "NUMBER", "value": 2 }
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Output Shopping List:**
+
+```json
+{
+  "spaghetti": {
+    "name": "Spaghetti",
+    "quantity": { "unit": "GRAM", "value": 600 },
+    "dates": ["Monday - 01/08/2024", "Tuesday - 01/09/2024"],
+    "recipeNames": ["Pasta Carbonara"]
+  },
+  "eggs": {
+    "name": "Eggs",
+    "quantity": { "unit": "NUMBER", "value": 7 },
+    "dates": ["Monday - 01/08/2024", "Tuesday - 01/09/2024"],
+    "recipeNames": ["Pasta Carbonara", "Risotto"]
+  },
+  "rice": {
+    "name": "Rice",
+    "quantity": { "unit": "GRAM", "value": 300 },
+    "dates": ["Tuesday - 01/09/2024"],
+    "recipeNames": ["Risotto"]
+  }
+}
+```
+
+### Quantity Scaling Formula
+
+When a meal plan specifies servings different from the recipe's base servings, quantities must be scaled:
+
+```
+scaledQuantity = (ingredientQuantity / recipeServings) × mealPlanServings
+```
+
+**Example:**
+
+- Recipe "Pasta Carbonara" has 2 servings (base)
+- Ingredient: 400g spaghetti
+- Meal plan specifies: 2 servings
+- Scaled quantity: (400 / 2) × 2 = 400g
+
+- Same meal plan on another day: 1 serving
+- Scaled quantity: (400 / 2) × 1 = 200g
+
+### Supported Ingredient Units
+
+The shopping list utility works with all standard ingredient units defined in the system:
+
+```typescript
+enum Unit {
+  NO_UNIT = 'NO_UNIT', // For countable items without units
+  MILLILITER = 'MILLILITER', // Liquid volume
+  LITER = 'LITER', // Liquid volume
+  GRAM = 'GRAM', // Weight
+  KILOGRAM = 'KILOGRAM', // Weight
+  CUP = 'CUP', // Volume/weight (context-dependent)
+  TEASPOON = 'TEASPOON', // Volume
+  TABLESPOON = 'TABLESPOON', // Volume
+  NUMBER = 'NUMBER', // Quantity (eggs, items, etc.)
+}
+```
+
+### Implementation Considerations
+
+#### 1. Unit Conversions
+
+The current shopping list does **not** perform automatic unit conversions. Ingredients are aggregated only if they:
+
+- Have the same name (case-insensitive)
+- Have the same unit
+
+**Example:**
+
+- 500g flour + 1 cup flour = Listed separately (different units)
+- 500g flour + 300g flour = 800g flour (same unit, combined)
+
+#### 2. Duplicate Ingredient Handling
+
+Ingredients with identical names and units are automatically combined with their quantities summed.
+
+#### 3. Ingredient Matching
+
+Ingredient matching uses simple string comparison on names. Variations like "Spaghetti" vs "spaghetti" are normalized before comparison.
+
+#### 4. Date Range Filtering
+
+The shopping list can be generated for:
+
+- Full meal plan range (14 days past to 14 days future)
+- Custom date range (e.g., specific week)
+- Single date or date period
+
+### API Design (If Implemented as Endpoint)
+
+If you want to implement a dedicated shopping list endpoint in the Hono backend:
+
+```typescript
+// GET /kitchencalm/shopping-list?startDate=2024-01-08&endDate=2024-01-15
+interface ShoppingListRequest {
+  startDate?: string; // Optional: defaults to today
+  endDate?: string; // Optional: defaults to today + 7 days
+  groupBy?: 'ingredient' | 'date' | 'recipe'; // Optional grouping
+}
+
+interface ShoppingListResponse {
+  shoppingList: AggregatedIngredient[];
+  summary: {
+    totalItems: number;
+    dateRange: { start: string; end: string };
+    recipesIncluded: string[];
+  };
+}
+```
+
+### Usage Example (Frontend)
+
+```typescript
+// 1. Fetch data
+const [mealPlan, recipes] = await Promise.all([
+  trpc.mealPlan.getMealPlan(),
+  trpc.recipes.getRecipes()
+]);
+
+// 2. Generate shopping list
+const shoppingList = generateShoppingList(mealPlan, recipes);
+
+// 3. Group by category (optional)
+const groupedByCategory = groupIngredients(shoppingList);
+
+// 4. Display with checkboxes for checking off items
+return (
+  <div>
+    {groupedByCategory.map((category) => (
+      <section key={category.name}>
+        <h3>{category.name}</h3>
+        {category.ingredients.map((item) => (
+          <ShoppingListItem
+            key={item.name}
+            ingredient={item}
+            onCheck={markAsChecked}
+          />
+        ))}
+      </section>
+    ))}
+  </div>
+);
+```
+
+### Performance Notes
+
+- **Meal Plan Query:** O(1) - Single DynamoDB read
+- **Recipes Query:** O(1) - Query by partition key (all items with R-\* prefix)
+- **Aggregation:** O(n × m) where n = dates in meal plan, m = average recipes per date
+- **For typical usage (28 days, 2-3 recipes/day):** < 100ms total
+
+### Future Enhancements
+
+1. **Unit Conversions:** Implement smart conversions (g ↔ cup, mL ↔ tsp)
+2. **Ingredient Categorization:** Auto-group by category (produce, dairy, meat, etc.)
+3. **Quantity Rounding:** Smart rounding for shopping (e.g., 450g → 0.5kg)
+4. **Pantry Management:** Mark ingredients as "already have" to exclude from list
+5. **Price Integration:** Fetch prices and estimate total cost
+6. **Substitutions:** Support ingredient swaps while keeping quantity logic intact
 
 ---
 

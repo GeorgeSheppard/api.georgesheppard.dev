@@ -27,6 +27,13 @@ import { shareRecipe } from './endpoints/share-recipe/share-recipe.js';
 import { shareRecipeRoute } from './endpoints/share-recipe/share-recipe-definition.js';
 import { getSharedRecipe } from './endpoints/get-shared-recipe/get-shared-recipe.js';
 import { getSharedRecipeRoute } from './endpoints/get-shared-recipe/get-shared-recipe-definition.js';
+import {
+  getShoppingList,
+  getShoppingListMcp,
+  GetShoppingListRequestSchema,
+  GetShoppingListMcpSchema,
+} from './endpoints/get-shopping-list/get-shopping-list.js';
+import { getShoppingListRoute } from './endpoints/get-shopping-list/get-shopping-list-definition.js';
 import { GetMealPlanResponseSchema } from './endpoints/get-meal-plan/get-meal-plan.js';
 import {
   UpdateMealPlanRequestSchema,
@@ -41,9 +48,6 @@ import {
   DeleteRecipeResponseSchema,
 } from './endpoints/delete-recipe/delete-recipe.js';
 
-/**
- * All MCP tools exposed by the KitchenCalm website
- */
 export const tools: McpTool[] = [
   {
     name: 'hello_protected',
@@ -62,6 +66,13 @@ export const tools: McpTool[] = [
     handler: getMealPlan,
     outputSchema: GetMealPlanResponseSchema,
   },
+  createMcpTool(
+    'get_shopping_list',
+    'Get aggregated shopping list from recipes in the meal plan, optionally filtered by date range',
+    GetShoppingListRequestSchema,
+    getShoppingListMcp,
+    GetShoppingListMcpSchema
+  ),
   createMcpTool(
     'update_meal_plan',
     'Update the meal plan for the authenticated user',
@@ -85,9 +96,6 @@ export const tools: McpTool[] = [
   ),
 ];
 
-/**
- * Register all kitchencalm routes with the application
- */
 export function registerRoutes(app: OpenAPIHono) {
   app.openapi(authTokenRoute, async (c) => {
     const { userId } = c.req.valid('json');
@@ -115,6 +123,12 @@ export function registerRoutes(app: OpenAPIHono) {
   app.openapi(getMealPlanRoute, async (c) => {
     const result = await getMealPlan(c as ContextWithUserId);
     return c.json(result, 200);
+  });
+
+  app.openapi(getShoppingListRoute, async (c) => {
+    const { startDate, endDate } = c.req.valid('query');
+    const result = await getShoppingList(c as ContextWithUserId, { startDate, endDate });
+    return c.text(result, 200);
   });
 
   app.openapi(updateMealPlanRoute, async (c) => {
