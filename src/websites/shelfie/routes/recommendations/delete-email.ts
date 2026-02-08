@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { requests } from '@core/database/schema/index.js';
-import { eq } from 'drizzle-orm';
+import { Context } from 'hono';
+import { clearRequestEmailFields } from '../../queries/recommendations.js';
 import { ROUTES } from '../paths.js';
 
 const BodySchema = z.object({
@@ -34,20 +34,16 @@ const route = createRoute({
   },
 });
 
+export async function deleteEmail(c: Context, requestId: string): Promise<Record<string, never>> {
+  const { db } = c.get('databaseClient');
+  await clearRequestEmailFields(db, requestId);
+  return {};
+}
+
 export function registerDeleteEmailRoute(app: OpenAPIHono) {
   app.openapi(route, async (c) => {
     const { requestId } = c.req.valid('form');
-    const { db } = c.get('databaseClient');
-
-    await db
-      .update(requests)
-      .set({
-        email: null,
-        frequency: null,
-        nextRecommendationUtc: null,
-      })
-      .where(eq(requests.id, requestId));
-
-    return c.json({}, 200);
+    const result = await deleteEmail(c, requestId);
+    return c.json(result, 200);
   });
 }

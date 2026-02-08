@@ -1,7 +1,9 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { recommendations, requests, images } from '@core/database/schema/index.js';
+import { Context } from 'hono';
+import { createBookcaseRequest } from '../../queries/recommendations.js';
 import { parseMultipartFiles } from '@core/utils/multipart.js';
+import type { UploadedFile } from '@core/utils/multipart.js';
 import { ROUTES } from '../paths.js';
 
 const SuccessResponse = z.object({
@@ -50,61 +52,64 @@ const route = createRoute({
   },
 });
 
+export type FromBookcaseSuccess = { id: string; success: true };
+export type FromBookcaseError = { error: string; success: false };
+
+export type FromBookcaseResult =
+  | { status: 200; body: FromBookcaseSuccess }
+  | { status: 400; body: FromBookcaseError }
+  | { status: 500; body: FromBookcaseError };
+
+export async function fromBookcase(
+  c: Context,
+  files: UploadedFile[],
+  forwardedFor: string | undefined
+): Promise<FromBookcaseResult> {
+  if (files.length === 0) {
+    return { status: 400, body: { error: 'No files uploaded', success: false } };
+  }
+
+  const { db } = c.get('databaseClient');
+  const ipLocator = c.get('ipLocator');
+  const location = await ipLocator.getLocation(forwardedFor);
+
+  const { newRequest, recommendation } = await createBookcaseRequest(
+    db,
+    location.toString(),
+    files
+  );
+
+  const queueClient = c.get('queueClient');
+  try {
+    queueClient.channel.sendToQueue(
+      queueClient.textExtractionQueue,
+      Buffer.from(JSON.stringify({ userId: newRequest.id, recommendationId: recommendation.id })),
+      { persistent: true }
+    );
+  } catch (error) {
+    console.error('Failed to send queue message:', error);
+    return {
+      status: 500,
+      body: { error: 'Failed to queue recommendation processing', success: false },
+    };
+  }
+
+  return { status: 200, body: { id: recommendation.id, success: true } };
+}
+
 export function registerFromBookcaseRoute(app: OpenAPIHono) {
   app.openapi(route, async (c) => {
     const files = await parseMultipartFiles(c, 'bookcase');
-
-    if (files.length === 0) {
-      return c.json({ error: 'No files uploaded', success: false }, 400);
-    }
-
-    const { db } = c.get('databaseClient');
-    const ipLocator = c.get('ipLocator');
     const forwardedFor = c.req.header('x-forwarded-for');
-    const location = await ipLocator.getLocation(forwardedFor);
+    const result = await fromBookcase(c, files, forwardedFor);
 
-    const { newRequest, recommendation } = await db.transaction(async (tx) => {
-      const [newRequest] = await tx
-        .insert(requests)
-        .values({
-          createdUtc: new Date(),
-          location: location.toString(),
-        })
-        .returning();
-
-      const [recommendationResults] = await Promise.all([
-        tx
-          .insert(recommendations)
-          .values({
-            requestId: newRequest.id,
-          })
-          .returning(),
-        tx.insert(images).values(
-          files.map((file) => ({
-            requestId: newRequest.id,
-            image: file.data,
-            contentType: file.mimetype,
-          }))
-        ),
-      ]);
-
-      const [recommendation] = recommendationResults;
-
-      return { newRequest, recommendation };
-    });
-
-    const queueClient = c.get('queueClient');
-    try {
-      queueClient.channel.sendToQueue(
-        queueClient.textExtractionQueue,
-        Buffer.from(JSON.stringify({ userId: newRequest.id, recommendationId: recommendation.id })),
-        { persistent: true }
-      );
-    } catch (error) {
-      console.error('Failed to send queue message:', error);
-      return c.json({ error: 'Failed to queue recommendation processing', success: false }, 500);
+    switch (result.status) {
+      case 200:
+        return c.json(result.body, 200);
+      case 400:
+        return c.json(result.body, 400);
+      case 500:
+        return c.json(result.body, 500);
     }
-
-    return c.json({ id: recommendation.id, success: true }, 200);
   });
 }

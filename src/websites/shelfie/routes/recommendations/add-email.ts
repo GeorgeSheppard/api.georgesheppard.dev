@@ -1,7 +1,11 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { recommendations, requests } from '@core/database/schema/index.js';
-import { eq } from 'drizzle-orm';
+import { Context } from 'hono';
+import {
+  findRecommendationById,
+  findRequestById,
+  updateRequestEmailFields,
+} from '../../queries/recommendations.js';
 import { encryption } from '@core/utils/encryption.js';
 import { ROUTES } from '../paths.js';
 
@@ -54,82 +58,89 @@ const route = createRoute({
   },
 });
 
+export type AddEmailSuccess = { success: true };
+export type AddEmailError = { success: false; error: string };
+
+export type AddEmailResult =
+  | { status: 200; body: AddEmailSuccess }
+  | { status: 400; body: AddEmailError }
+  | { status: 404; body: AddEmailError };
+
+export interface AddEmailInput {
+  id: string;
+  email?: string;
+  recurring?: boolean;
+}
+
+export async function addEmail(c: Context, input: AddEmailInput): Promise<AddEmailResult> {
+  const { db } = c.get('databaseClient');
+  const emailClient = c.get('emailClient');
+
+  const recommendation = await findRecommendationById(db, input.id);
+  if (!recommendation) {
+    return { status: 404, body: { error: 'Recommendation not found', success: false } };
+  }
+
+  const requestId = recommendation.requestId;
+  const existingRequest = await findRequestById(db, requestId);
+
+  let finalEmail = input.email;
+  if (!finalEmail && existingRequest?.email) {
+    finalEmail = encryption.decrypt(existingRequest.email);
+  }
+
+  if (!finalEmail) {
+    return { status: 400, body: { error: 'No email provided', success: false } };
+  }
+
+  const encryptedEmail = encryption.encrypt(finalEmail);
+  const isRecurring = input.recurring === true;
+  const recommendationsAlreadyDone = !!(
+    recommendation.processedUtc && recommendation.recommendations
+  );
+
+  const shouldStoreEmail = !recommendationsAlreadyDone || isRecurring;
+  const emailToStore = shouldStoreEmail ? encryptedEmail : null;
+
+  await updateRequestEmailFields(db, requestId, {
+    email: emailToStore,
+    frequency: isRecurring ? 'M' : null,
+    nextRecommendationUtc: isRecurring ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
+  });
+
+  if (recommendationsAlreadyDone) {
+    try {
+      await emailClient.sendRecommendationsEmail({
+        from: 'Shelfie <postmaster@mailgun.shelfie.georgesheppard.dev>',
+        to: [finalEmail],
+        subject: 'Your Shelfie recommendations are here!',
+        template: 'recommendations',
+        variables: {
+          recommendationsurl: `https://shelfie.georgesheppard.dev/recommendations/${input.id}`,
+          unsubscribeUrl: `https://shelfie.georgesheppard.dev/unsubscribe/${requestId}`,
+          unsubscribeText: isRecurring ? 'Unsubscribe' : '',
+        },
+      });
+    } catch (error) {
+      console.error(`Failed to send email: ${error}`);
+    }
+  }
+
+  return { status: 200, body: { success: true } };
+}
+
 export function registerAddEmailRoute(app: OpenAPIHono) {
   app.openapi(route, async (c) => {
     const { id, email, recurring } = c.req.valid('form');
+    const result = await addEmail(c, { id, email, recurring });
 
-    const { db } = c.get('databaseClient');
-    const emailClient = c.get('emailClient');
-
-    // Find the recommendation by ID
-    const recommendation = await db
-      .select()
-      .from(recommendations)
-      .where(eq(recommendations.id, id))
-      .limit(1);
-
-    if (recommendation.length === 0) {
-      return c.json({ error: 'Recommendation not found', success: false }, 404);
+    switch (result.status) {
+      case 200:
+        return c.json(result.body, 200);
+      case 400:
+        return c.json(result.body, 400);
+      case 404:
+        return c.json(result.body, 404);
     }
-
-    const requestId = recommendation[0].requestId;
-
-    // Look up the original request to get email if not provided
-    const [existingRequest] = await db
-      .select()
-      .from(requests)
-      .where(eq(requests.id, requestId))
-      .limit(1);
-
-    // Determine final email - use provided email or decrypt from request
-    let finalEmail = email;
-    if (!finalEmail && existingRequest?.email) {
-      finalEmail = encryption.decrypt(existingRequest.email);
-    }
-
-    if (!finalEmail) {
-      return c.json({ error: 'No email provided', success: false }, 400);
-    }
-
-    const encryptedEmail = encryption.encrypt(finalEmail);
-    const isRecurring = recurring === true;
-    const recommendationsAlreadyDone = !!(
-      recommendation[0].processedUtc && recommendation[0].recommendations
-    );
-
-    // Only store email if recommendations are NOT yet done OR user wants recurring
-    const shouldStoreEmail = !recommendationsAlreadyDone || isRecurring;
-    const emailToStore = shouldStoreEmail ? encryptedEmail : null;
-
-    // Update the request with email and recurring settings
-    await db
-      .update(requests)
-      .set({
-        email: emailToStore,
-        frequency: isRecurring ? 'M' : null,
-        nextRecommendationUtc: isRecurring ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
-      })
-      .where(eq(requests.id, requestId));
-
-    // If recommendations are already done, send email immediately
-    if (recommendationsAlreadyDone) {
-      try {
-        await emailClient.sendRecommendationsEmail({
-          from: 'Shelfie <postmaster@mailgun.shelfie.georgesheppard.dev>',
-          to: [finalEmail],
-          subject: 'Your Shelfie recommendations are here!',
-          template: 'recommendations',
-          variables: {
-            recommendationsurl: `https://shelfie.georgesheppard.dev/recommendations/${id}`,
-            unsubscribeUrl: `https://shelfie.georgesheppard.dev/unsubscribe/${requestId}`,
-            unsubscribeText: isRecurring ? 'Unsubscribe' : '',
-          },
-        });
-      } catch (error) {
-        console.error(`Failed to send email: ${error}`);
-      }
-    }
-
-    return c.json({ success: true });
   });
 }

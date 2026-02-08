@@ -19,6 +19,8 @@ Integration tests using test containers are extensively used, these can be run b
 Basic unit tests can be run using:
 `pnpm test`
 
+When writing or modifying endpoints, follow the unit test guide at `test/UNIT_TEST_GUIDE.md` to ensure handlers are unit-testable. Run `pnpm test` to verify unit tests pass.
+
 ## Rules
 
 1. Never use `any`.
