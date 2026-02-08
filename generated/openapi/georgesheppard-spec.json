@@ -1093,6 +1093,169 @@
         }
       }
     },
+    "/kitchencalm/recipes/search": {
+      "get": {
+        "tags": [
+          "kitchencalm",
+          "recipes"
+        ],
+        "description": "Search recipes by name, description, ingredients, or instructions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search query string"
+            },
+            "required": true,
+            "description": "Search query string",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "default": "name,description,ingredients,instructions",
+              "description": "Comma-separated fields to search: name,description,ingredients,instructions"
+            },
+            "required": false,
+            "description": "Comma-separated fields to search: name,description,ingredients,instructions",
+            "name": "fields",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "uuid": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Recipe UUID"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Recipe name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Recipe description"
+                          },
+                          "ingredients": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Flattened list of ingredient names"
+                          }
+                        },
+                        "required": [
+                          "uuid",
+                          "name",
+                          "description",
+                          "ingredients"
+                        ]
+                      },
+                      "description": "Array of matching recipes"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Number of results returned"
+                    }
+                  },
+                  "required": [
+                    "results",
+                    "count"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/kitchencalm/recipes/{uuid}": {
       "delete": {
         "tags": [
