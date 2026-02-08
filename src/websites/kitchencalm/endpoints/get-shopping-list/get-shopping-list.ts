@@ -1,15 +1,8 @@
-/**
- * Get Shopping List Endpoint Handler
- *
- * Aggregates ingredients from recipes in the user's meal plan into a consolidated shopping list.
- * Handles quantity scaling based on servings and combines duplicate ingredients.
- * Uses the shopping_list_creator utility from MyLife.
- */
-
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
 import { getAllRecipesForUser, getMealPlanForUser } from '@core/dynamodb/utilities.js';
 import { createShoppingListData, createShoppingList } from '@core/utilities/shopping-list.js';
+import { categoriseIngredients } from '@core/utils/ingredient-categoriser.js';
 
 export const ShoppingListResponseSchema = z.string();
 
@@ -55,7 +48,14 @@ export async function getShoppingList(
     }
 
     const quantityAndMeals = createShoppingListData(recipes, mealPlan, selectedDates);
-    return createShoppingList(quantityAndMeals, { includeMeals: false, categorise: true });
+    const ingredientNames = Object.keys(quantityAndMeals);
+
+    let categories: Record<string, string> | undefined;
+    if (ingredientNames.length > 0) {
+      categories = await categoriseIngredients(ingredientNames);
+    }
+
+    return createShoppingList(quantityAndMeals, { includeMeals: false, categories });
   } catch (error) {
     console.error('Failed to fetch shopping list for user', userId, error);
     throw error;
