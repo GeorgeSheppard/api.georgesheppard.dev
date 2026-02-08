@@ -27,3 +27,4 @@ Basic unit tests can be run using:
 4. Use `pnpm`.
 5. Use `.js` extensions in all import statements, even though this is a TypeScript project. This is necessary for ESM compatibility and matches the project's build output.
 6. Verify your work by using `pnpm lint`
+7. Keep code minimal and concise. Only add comments where logic is non-obvious. Do not add documentation comments (JSDoc) or verbose annotations for every function and import. Let the code be self-documenting through clear naming.

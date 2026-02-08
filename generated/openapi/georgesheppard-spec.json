@@ -702,7 +702,7 @@
                           "properties": {
                             "name": {
                               "type": "string",
-                              "description": "Component name (e.g., \"Main dish\", \"Sauce\")"
+                              "description": "Component name"
                             },
                             "uuid": {
                               "type": "string",
@@ -911,7 +911,7 @@
                       "properties": {
                         "name": {
                           "type": "string",
-                          "description": "Component name (e.g., \"Main dish\", \"Sauce\")"
+                          "description": "Component name"
                         },
                         "uuid": {
                           "type": "string",
@@ -1429,6 +1429,102 @@
         }
       }
     },
+    "/kitchencalm/shopping-list": {
+      "get": {
+        "tags": [
+          "kitchencalm",
+          "shopping-list"
+        ],
+        "description": "Get aggregated shopping list from recipes in the meal plan, optionally filtered by date range",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter shopping list from this date (format: DayName - DD/MM/YYYY)"
+            },
+            "required": false,
+            "description": "Filter shopping list from this date (format: DayName - DD/MM/YYYY)",
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter shopping list until this date (format: DayName - DD/MM/YYYY)"
+            },
+            "required": false,
+            "description": "Filter shopping list until this date (format: DayName - DD/MM/YYYY)",
+            "name": "endDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shopping list retrieved successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/kitchencalm/s3/signed-url": {
       "post": {
         "tags": [
@@ -1813,7 +1909,7 @@
                           "properties": {
                             "name": {
                               "type": "string",
-                              "description": "Component name (e.g., \"Main dish\", \"Sauce\")"
+                              "description": "Component name"
                             },
                             "uuid": {
                               "type": "string",
