@@ -40,6 +40,12 @@ import {
   DeleteRecipeRequestSchema,
   DeleteRecipeResponseSchema,
 } from './endpoints/delete-recipe/delete-recipe.js';
+import { searchRecipesHandler } from './endpoints/search-recipes/search-recipes.js';
+import { searchRecipesRoute } from './endpoints/search-recipes/search-recipes-definition.js';
+import {
+  SearchRecipesRequestSchema,
+  SearchRecipesResponseSchema,
+} from './endpoints/search-recipes/search-recipes.js';
 
 /**
  * All MCP tools exposed by the KitchenCalm website
@@ -83,6 +89,13 @@ export const tools: McpTool[] = [
     async (c, input) => deleteRecipe(c, input.uuid),
     DeleteRecipeResponseSchema
   ),
+  createMcpTool(
+    'search_recipes',
+    'Search recipes by name, description, ingredients, or instructions',
+    SearchRecipesRequestSchema,
+    searchRecipesHandler,
+    SearchRecipesResponseSchema
+  ),
 ];
 
 /**
@@ -97,6 +110,12 @@ export function registerRoutes(app: OpenAPIHono) {
 
   app.openapi(getRecipesRoute, async (c) => {
     const result = await getRecipes(c as ContextWithUserId);
+    return c.json(result, 200);
+  });
+
+  app.openapi(searchRecipesRoute, async (c) => {
+    const query = c.req.valid('query');
+    const result = await searchRecipesHandler(c as ContextWithUserId, query);
     return c.json(result, 200);
   });
 
