@@ -1,4 +1,4 @@
-import { describe, expect } from 'vitest';
+import { describe, expect, vi } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 import { test } from '@test/fixtures.js';
 import { createTestApp } from '@test/utils/app.js';
@@ -7,6 +7,16 @@ import { updateRecipe, putMealPlanForUser } from '@core/dynamodb/utilities.js';
 import { IRecipe } from '@core/types/recipes.js';
 import { Unit } from '@core/types/recipes.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
+
+vi.mock('@core/utils/ingredient-categoriser.js', () => ({
+  categoriseIngredients: vi.fn(async (ingredients: string[]) => {
+    const map: Record<string, string> = {};
+    for (const ingredient of ingredients) {
+      map[ingredient] = 'Other';
+    }
+    return map;
+  }),
+}));
 
 describe('Get Shopping List Endpoint', () => {
   test('should return empty shopping list when no meal plan exists', async ({ dynamoClient }) => {
