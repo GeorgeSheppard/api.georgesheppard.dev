@@ -1,8 +1,6 @@
 import { IRecipe, Unit } from '@core/types/recipes.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
 import { Quantities } from './quantities.js';
-import foodGroups from './combinedGroups.json' assert { type: 'json' };
-import groupDescriptions from './groupDescriptions.json' assert { type: 'json' };
 
 export interface IQuantitiesAndMeals {
   [index: string]: {
@@ -88,25 +86,11 @@ export function createShoppingListData(
   return quantityAndMeals;
 }
 
-function getGroupDescriptionFromIngredient(ingredient: string): string {
-  const searchIngredient = ingredient.toUpperCase();
-  let group: string | undefined = (foodGroups as any)[searchIngredient];
-  if (!group) {
-    const moreSearchIngredients = searchIngredient.replace(',', ' ').replace('-', ' ').split(' ');
-    const otherGroup = moreSearchIngredients
-      .map((ingre) => (foodGroups as any)[ingre])
-      .find((group) => !!group);
-    group = otherGroup;
-  }
-  const groupDesc: string = group ? (groupDescriptions as any)[group] : 'Unknown';
-  return groupDesc;
-}
-
 export function createShoppingList(
   quantityAndMeals: IQuantitiesAndMeals,
   options: {
     includeMeals: boolean;
-    categorise: boolean;
+    categories?: Record<string, string>;
   }
 ): string {
   const ingredientsWithQuantities = Object.entries(quantityAndMeals).map(
@@ -115,44 +99,44 @@ export function createShoppingList(
         return Quantities.toString(quantity) ?? 'extra';
       });
 
-      const groupDesc = getGroupDescriptionFromIngredient(ingredient);
+      const category = options.categories?.[ingredient] ?? 'Other';
 
       let text = `${ingredient} (${quantityString.join(' + ')})`;
       if (options.includeMeals) {
         text += ` [${Array.from(meals).join(', ')}]`;
       }
-      return [text, groupDesc] as const;
+      return [text, category] as const;
     }
   );
 
-  if (!options.categorise) {
+  if (!options.categories) {
     return ingredientsWithQuantities
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([text, _]) => text)
+      .map(([text]) => text)
       .join('\n');
   }
 
   const categoriesWithIngredients = ingredientsWithQuantities.reduce(
-    (categories, [text, category]) => {
-      if (category in categories) {
-        categories[category].push(text);
+    (cats, [text, category]) => {
+      if (category in cats) {
+        cats[category].push(text);
       } else {
-        categories[category] = [text];
+        cats[category] = [text];
       }
-      return categories;
+      return cats;
     },
     {} as { [index: string]: string[] }
   );
 
-  const { Unknown, ...rest } = categoriesWithIngredients;
+  const { Other, ...rest } = categoriesWithIngredients;
 
   const list = [
     ...Object.entries(rest).sort(([a], [b]) => a.localeCompare(b)),
-    ['Unknown', Unknown ?? []] as const,
+    ['Other', Other ?? []] as const,
   ]
     .filter(([_, ingredients]) => ingredients.length > 0)
     .map(([category, ingredients]) => {
-      const sortedIngredients = ingredients.sort((a, b) => a.localeCompare(b));
+      const sortedIngredients = (ingredients as string[]).sort((a, b) => a.localeCompare(b));
       return `${category}\n${sortedIngredients.join('\n')}`;
     });
 
