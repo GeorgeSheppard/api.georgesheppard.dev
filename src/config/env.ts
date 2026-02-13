@@ -1,14 +1,6 @@
 import { z } from 'zod';
 
-const envSchema = z.preprocess(
-  (obj) => {
-    if (typeof obj !== 'object' || obj === null) return obj;
-    const processed = { ...(obj as Record<string, unknown>) };
-    if (processed.DYNAMODB_ENDPOINT === '') delete processed.DYNAMODB_ENDPOINT;
-    if (processed.S3_ENDPOINT === '') delete processed.S3_ENDPOINT;
-    return processed;
-  },
-  z.object({
+const envSchema = z.object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     PORT: z.coerce.number(),
 
@@ -44,16 +36,13 @@ const envSchema = z.preprocess(
     DYNAMODB_TABLE_NAME: z.string(),
     DYNAMODB_ACCESS_KEY_ID: z.string(),
     DYNAMODB_SECRET_ACCESS_KEY: z.string(),
-    DYNAMODB_ENDPOINT: z.string().url().optional(),
 
     // S3 (KitchenCalm image storage)
     S3_REGION: z.string().default('eu-west-2'),
     S3_BUCKET_NAME: z.string(),
     S3_ACCESS_KEY_ID: z.string(),
     S3_SECRET_ACCESS_KEY: z.string(),
-    S3_ENDPOINT: z.string().url().optional(),
-  })
-);
+  });
 
 export type Env = z.infer<typeof envSchema>;
 

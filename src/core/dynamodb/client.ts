@@ -20,13 +20,11 @@ export interface DynamoDBClientWrapper {
  */
 export async function createDynamoDBClient(
   region: string,
-  endpoint: string | undefined,
   accessKeyId: string,
   secretAccessKey: string
 ): Promise<DynamoDBClientWrapper> {
   const baseClient = new DynamoDBClient({
     region,
-    ...(endpoint && { endpoint }),
     credentials: {
       accessKeyId,
       secretAccessKey,

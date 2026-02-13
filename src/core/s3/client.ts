@@ -19,13 +19,11 @@ export interface S3ClientWrapper {
  */
 export async function createS3ClientWrapper(
   region: string,
-  endpoint: string | undefined,
   accessKeyId: string,
   secretAccessKey: string
 ): Promise<S3ClientWrapper> {
   const client = new S3Client({
     region,
-    ...(endpoint && { endpoint }),
     credentials: {
       accessKeyId,
       secretAccessKey,

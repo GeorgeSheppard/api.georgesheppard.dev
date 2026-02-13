@@ -92,10 +92,9 @@ export const test = base.extend<{
   },
 
   // Test-scoped DynamoDB client (fresh per test)
-  dynamoClient: async ({ dynamodbContainer }, use) => {
+  dynamoClient: async ({ dynamodbContainer: _dynamodbContainer }, use) => {
     const client = await createDynamoDBClient(
       config.DYNAMODB_REGION,
-      dynamodbContainer.getConnectionUri(),
       config.DYNAMODB_ACCESS_KEY_ID,
       config.DYNAMODB_SECRET_ACCESS_KEY
     );

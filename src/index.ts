@@ -13,14 +13,12 @@ async function main() {
   const queueClient = await createQueueClient(config.RABBITMQ_URL);
   const dynamoClient = await createDynamoDBClient(
     config.DYNAMODB_REGION,
-    config.DYNAMODB_ENDPOINT,
     config.DYNAMODB_ACCESS_KEY_ID,
     config.DYNAMODB_SECRET_ACCESS_KEY
   );
 
   const s3Client = await createS3ClientWrapper(
     config.S3_REGION,
-    config.S3_ENDPOINT,
     config.S3_ACCESS_KEY_ID,
     config.S3_SECRET_ACCESS_KEY
   );
