@@ -15,7 +15,7 @@ const RecommendationSchema = z.object({
   description: z.string(),
   reason: z.string(),
   amazonLink: z.string(),
-});
+}).openapi('Recommendation');
 
 const SuccessSchema = z.object({
   recommendations: z.array(RecommendationSchema).nullable(),
