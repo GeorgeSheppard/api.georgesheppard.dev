@@ -1398,6 +1398,7 @@
                         "properties": {
                           "componentId": {
                             "type": "string",
+                            "format": "uuid",
                             "description": "Recipe component UUID"
                           },
                           "servings": {
@@ -1494,6 +1495,7 @@
                       "properties": {
                         "componentId": {
                           "type": "string",
+                          "format": "uuid",
                           "description": "Recipe component UUID"
                         },
                         "servings": {

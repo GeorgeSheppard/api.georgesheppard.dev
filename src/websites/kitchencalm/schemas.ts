@@ -37,7 +37,7 @@ export const RecipeSchema = z.object({
 });
 
 export const MealPlanEntrySchema = z.object({
-  componentId: z.string().describe('Recipe component UUID'),
+  componentId: z.string().uuid().describe('Recipe component UUID'),
   servings: z.number().describe('Number of servings'),
 });
 

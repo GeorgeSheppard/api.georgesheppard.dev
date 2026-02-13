@@ -1,10 +1,13 @@
 import { config } from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { createTestApp } from 'test/utils/app.js';
 import { fileURLToPath } from 'url';
 
-config({ path: '.env.test' });
+// Load environment variables BEFORE importing anything else
+config({ path: '.env.test', override: true });
+
+// Now import app after env is loaded
+const { createTestApp } = await import('test/utils/app.js');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
