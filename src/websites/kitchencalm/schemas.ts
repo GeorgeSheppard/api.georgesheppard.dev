@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from '@hono/zod-openapi';
 import { Unit } from '@core/types/recipes.js';
 
 const QuantitySchema = z.object({
@@ -43,7 +43,9 @@ export const MealPlanEntrySchema = z.object({
   servings: z.number().describe('Number of servings'),
 }).openapi('MealPlanEntry');
 
+// MealPlanDaySchema cannot use .openapi() directly because it's nested in z.record()
+// which causes type incompatibility. Will be extracted by the library automatically.
 export const MealPlanDaySchema = z.record(
   z.string().uuid().describe('Recipe UUID'),
   z.array(MealPlanEntrySchema).describe('Array of component servings for this recipe')
-).openapi('MealPlanDay');
+);

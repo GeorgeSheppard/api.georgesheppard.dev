@@ -197,16 +197,6 @@
           "text"
         ]
       },
-      "MealPlanDay": {
-        "type": "object",
-        "additionalProperties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/components/schemas/MealPlanEntry"
-          },
-          "description": "Array of component servings for this recipe"
-        }
-      },
       "MealPlanEntry": {
         "type": "object",
         "properties": {
@@ -1345,7 +1335,14 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": {
-                    "$ref": "#/components/schemas/MealPlanDay"
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MealPlanEntry"
+                      },
+                      "description": "Array of component servings for this recipe"
+                    }
                   }
                 }
               }
@@ -1421,7 +1418,14 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": {
-                  "$ref": "#/components/schemas/MealPlanDay"
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/MealPlanEntry"
+                    },
+                    "description": "Array of component servings for this recipe"
+                  }
                 }
               }
             }
