@@ -26,7 +26,7 @@ export async function createDynamoDBClient(
 ): Promise<DynamoDBClientWrapper> {
   const baseClient = new DynamoDBClient({
     region,
-    endpoint,
+    ...(endpoint && { endpoint }),
     credentials: {
       accessKeyId,
       secretAccessKey,
