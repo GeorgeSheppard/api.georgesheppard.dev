@@ -9,13 +9,15 @@ const ParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
-const RecommendationSchema = z.object({
-  name: z.string(),
-  author: z.string(),
-  description: z.string(),
-  reason: z.string(),
-  amazonLink: z.string(),
-});
+const RecommendationSchema = z
+  .object({
+    name: z.string(),
+    author: z.string(),
+    description: z.string(),
+    reason: z.string(),
+    amazonLink: z.string(),
+  })
+  .openapi('Recommendation');
 
 const SuccessSchema = z.object({
   recommendations: z.array(RecommendationSchema).nullable(),
