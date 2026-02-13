@@ -12,7 +12,239 @@
     }
   ],
   "components": {
-    "schemas": {},
+    "schemas": {
+      "Quantity": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "enum": [
+              "none",
+              "mL",
+              "L",
+              "g",
+              "kg",
+              "cup",
+              "tsp",
+              "tbsp",
+              "quantity"
+            ],
+            "description": "Unit of measurement"
+          },
+          "value": {
+            "type": "number",
+            "description": "Numeric value"
+          }
+        },
+        "required": [
+          "unit"
+        ]
+      },
+      "Ingredient": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Ingredient name"
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/Quantity"
+          }
+        },
+        "required": [
+          "name",
+          "quantity"
+        ]
+      },
+      "Instruction": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Instruction text"
+          },
+          "optional": {
+            "type": "boolean",
+            "description": "Whether this step is optional"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "Image": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "description": "Image timestamp"
+          },
+          "key": {
+            "type": "string",
+            "description": "S3 object key"
+          }
+        },
+        "required": [
+          "timestamp",
+          "key"
+        ]
+      },
+      "RecipeComponent": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Component name"
+          },
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Component UUID"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Ingredient"
+            },
+            "description": "List of ingredients"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Instruction"
+            },
+            "description": "List of instructions"
+          },
+          "storeable": {
+            "type": "boolean",
+            "description": "Whether component can be made ahead"
+          },
+          "servings": {
+            "type": "number",
+            "description": "Number of servings"
+          }
+        },
+        "required": [
+          "name",
+          "uuid",
+          "ingredients",
+          "instructions"
+        ]
+      },
+      "Recipe": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Recipe UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Recipe name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Recipe description"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Image"
+            },
+            "description": "Recipe images"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeComponent"
+            },
+            "description": "Recipe components"
+          }
+        },
+        "required": [
+          "uuid",
+          "name",
+          "description",
+          "images",
+          "components"
+        ]
+      },
+      "UpdateRecipeRequest": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Recipe UUID (omit to generate new)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Recipe name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Recipe description"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Image"
+            },
+            "description": "Recipe images"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeComponent"
+            },
+            "description": "Recipe components"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "images",
+          "components"
+        ]
+      },
+      "MealPlanEntry": {
+        "type": "object",
+        "properties": {
+          "componentId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Recipe component UUID"
+          },
+          "servings": {
+            "type": "number",
+            "description": "Number of servings"
+          }
+        },
+        "required": [
+          "componentId",
+          "servings"
+        ]
+      },
+      "MealPlanDay": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/MealPlanEntry"
+          },
+          "description": "Array of component servings for this recipe"
+        },
+        "description": "Meal plan for a single day, keyed by recipe UUID"
+      },
+      "MealPlan": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/MealPlanDay"
+        },
+        "description": "Complete meal plan, keyed by date string"
+      }
+    },
     "parameters": {}
   },
   "paths": {
@@ -659,142 +891,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "object",
-                    "properties": {
-                      "uuid": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "Recipe UUID"
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "Recipe name"
-                      },
-                      "description": {
-                        "type": "string",
-                        "description": "Recipe description"
-                      },
-                      "images": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "timestamp": {
-                              "type": "number",
-                              "description": "Image timestamp"
-                            },
-                            "key": {
-                              "type": "string",
-                              "description": "S3 object key"
-                            }
-                          },
-                          "required": [
-                            "timestamp",
-                            "key"
-                          ]
-                        },
-                        "description": "Recipe images"
-                      },
-                      "components": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "name": {
-                              "type": "string",
-                              "description": "Component name"
-                            },
-                            "uuid": {
-                              "type": "string",
-                              "format": "uuid",
-                              "description": "Component UUID"
-                            },
-                            "ingredients": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "name": {
-                                    "type": "string",
-                                    "description": "Ingredient name"
-                                  },
-                                  "quantity": {
-                                    "type": "object",
-                                    "properties": {
-                                      "unit": {
-                                        "type": "string",
-                                        "enum": [
-                                          "none",
-                                          "mL",
-                                          "L",
-                                          "g",
-                                          "kg",
-                                          "cup",
-                                          "tsp",
-                                          "tbsp",
-                                          "quantity"
-                                        ]
-                                      },
-                                      "value": {
-                                        "type": "number"
-                                      }
-                                    },
-                                    "required": [
-                                      "unit"
-                                    ]
-                                  }
-                                },
-                                "required": [
-                                  "name",
-                                  "quantity"
-                                ]
-                              }
-                            },
-                            "instructions": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "text": {
-                                    "type": "string",
-                                    "description": "Instruction text"
-                                  },
-                                  "optional": {
-                                    "type": "boolean",
-                                    "description": "Whether this step is optional"
-                                  }
-                                },
-                                "required": [
-                                  "text"
-                                ]
-                              }
-                            },
-                            "storeable": {
-                              "type": "boolean",
-                              "description": "Whether component can be made ahead"
-                            },
-                            "servings": {
-                              "type": "number",
-                              "description": "Number of servings"
-                            }
-                          },
-                          "required": [
-                            "name",
-                            "uuid",
-                            "ingredients",
-                            "instructions"
-                          ]
-                        },
-                        "description": "Recipe components"
-                      }
-                    },
-                    "required": [
-                      "uuid",
-                      "name",
-                      "description",
-                      "images",
-                      "components"
-                    ]
+                    "$ref": "#/components/schemas/Recipe"
                   }
                 }
               }
@@ -868,141 +965,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "uuid": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Recipe UUID (omit to generate new)"
-                  },
-                  "name": {
-                    "type": "string",
-                    "description": "Recipe name"
-                  },
-                  "description": {
-                    "type": "string",
-                    "description": "Recipe description"
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "timestamp": {
-                          "type": "number",
-                          "description": "Image timestamp"
-                        },
-                        "key": {
-                          "type": "string",
-                          "description": "S3 object key"
-                        }
-                      },
-                      "required": [
-                        "timestamp",
-                        "key"
-                      ]
-                    },
-                    "description": "Recipe images"
-                  },
-                  "components": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "string",
-                          "description": "Component name"
-                        },
-                        "uuid": {
-                          "type": "string",
-                          "format": "uuid",
-                          "description": "Component UUID"
-                        },
-                        "ingredients": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "name": {
-                                "type": "string",
-                                "description": "Ingredient name"
-                              },
-                              "quantity": {
-                                "type": "object",
-                                "properties": {
-                                  "unit": {
-                                    "type": "string",
-                                    "enum": [
-                                      "none",
-                                      "mL",
-                                      "L",
-                                      "g",
-                                      "kg",
-                                      "cup",
-                                      "tsp",
-                                      "tbsp",
-                                      "quantity"
-                                    ]
-                                  },
-                                  "value": {
-                                    "type": "number"
-                                  }
-                                },
-                                "required": [
-                                  "unit"
-                                ]
-                              }
-                            },
-                            "required": [
-                              "name",
-                              "quantity"
-                            ]
-                          }
-                        },
-                        "instructions": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "text": {
-                                "type": "string",
-                                "description": "Instruction text"
-                              },
-                              "optional": {
-                                "type": "boolean",
-                                "description": "Whether this step is optional"
-                              }
-                            },
-                            "required": [
-                              "text"
-                            ]
-                          }
-                        },
-                        "storeable": {
-                          "type": "boolean",
-                          "description": "Whether component can be made ahead"
-                        },
-                        "servings": {
-                          "type": "number",
-                          "description": "Number of servings"
-                        }
-                      },
-                      "required": [
-                        "name",
-                        "uuid",
-                        "ingredients",
-                        "instructions"
-                      ]
-                    },
-                    "description": "Recipe components"
-                  }
-                },
-                "required": [
-                  "name",
-                  "description",
-                  "images",
-                  "components"
-                ]
+                "$ref": "#/components/schemas/UpdateRecipeRequest"
               }
             }
           }
@@ -1388,31 +1351,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "componentId": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "Recipe component UUID"
-                          },
-                          "servings": {
-                            "type": "number",
-                            "description": "Number of servings"
-                          }
-                        },
-                        "required": [
-                          "componentId",
-                          "servings"
-                        ]
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/MealPlan"
                 }
               }
             }
@@ -1485,31 +1424,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "componentId": {
-                          "type": "string",
-                          "format": "uuid",
-                          "description": "Recipe component UUID"
-                        },
-                        "servings": {
-                          "type": "number",
-                          "description": "Number of servings"
-                        }
-                      },
-                      "required": [
-                        "componentId",
-                        "servings"
-                      ]
-                    }
-                  }
-                }
+                "$ref": "#/components/schemas/MealPlan"
               }
             }
           }
@@ -2031,142 +1946,7 @@
                 "type": "object",
                 "properties": {
                   "recipe": {
-                    "type": "object",
-                    "properties": {
-                      "uuid": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "Recipe UUID"
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "Recipe name"
-                      },
-                      "description": {
-                        "type": "string",
-                        "description": "Recipe description"
-                      },
-                      "images": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "timestamp": {
-                              "type": "number",
-                              "description": "Image timestamp"
-                            },
-                            "key": {
-                              "type": "string",
-                              "description": "S3 object key"
-                            }
-                          },
-                          "required": [
-                            "timestamp",
-                            "key"
-                          ]
-                        },
-                        "description": "Recipe images"
-                      },
-                      "components": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "name": {
-                              "type": "string",
-                              "description": "Component name"
-                            },
-                            "uuid": {
-                              "type": "string",
-                              "format": "uuid",
-                              "description": "Component UUID"
-                            },
-                            "ingredients": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "name": {
-                                    "type": "string",
-                                    "description": "Ingredient name"
-                                  },
-                                  "quantity": {
-                                    "type": "object",
-                                    "properties": {
-                                      "unit": {
-                                        "type": "string",
-                                        "enum": [
-                                          "none",
-                                          "mL",
-                                          "L",
-                                          "g",
-                                          "kg",
-                                          "cup",
-                                          "tsp",
-                                          "tbsp",
-                                          "quantity"
-                                        ]
-                                      },
-                                      "value": {
-                                        "type": "number"
-                                      }
-                                    },
-                                    "required": [
-                                      "unit"
-                                    ]
-                                  }
-                                },
-                                "required": [
-                                  "name",
-                                  "quantity"
-                                ]
-                              }
-                            },
-                            "instructions": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "text": {
-                                    "type": "string",
-                                    "description": "Instruction text"
-                                  },
-                                  "optional": {
-                                    "type": "boolean",
-                                    "description": "Whether this step is optional"
-                                  }
-                                },
-                                "required": [
-                                  "text"
-                                ]
-                              }
-                            },
-                            "storeable": {
-                              "type": "boolean",
-                              "description": "Whether component can be made ahead"
-                            },
-                            "servings": {
-                              "type": "number",
-                              "description": "Number of servings"
-                            }
-                          },
-                          "required": [
-                            "name",
-                            "uuid",
-                            "ingredients",
-                            "instructions"
-                          ]
-                        },
-                        "description": "Recipe components"
-                      }
-                    },
-                    "required": [
-                      "uuid",
-                      "name",
-                      "description",
-                      "images",
-                      "components"
-                    ]
+                    "$ref": "#/components/schemas/Recipe"
                   }
                 },
                 "required": [
@@ -2283,139 +2063,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "nullable": true,
-                  "properties": {
-                    "uuid": {
-                      "type": "string",
-                      "format": "uuid",
-                      "description": "Recipe UUID"
-                    },
-                    "name": {
-                      "type": "string",
-                      "description": "Recipe name"
-                    },
-                    "description": {
-                      "type": "string",
-                      "description": "Recipe description"
-                    },
-                    "images": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "timestamp": {
-                            "type": "number",
-                            "description": "Image timestamp"
-                          },
-                          "key": {
-                            "type": "string",
-                            "description": "S3 object key"
-                          }
-                        },
-                        "required": [
-                          "timestamp",
-                          "key"
-                        ]
-                      }
-                    },
-                    "components": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "name": {
-                            "type": "string",
-                            "description": "Component name"
-                          },
-                          "uuid": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "Component UUID"
-                          },
-                          "ingredients": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "name": {
-                                  "type": "string",
-                                  "description": "Ingredient name"
-                                },
-                                "quantity": {
-                                  "type": "object",
-                                  "properties": {
-                                    "unit": {
-                                      "type": "string",
-                                      "enum": [
-                                        "none",
-                                        "mL",
-                                        "L",
-                                        "g",
-                                        "kg",
-                                        "cup",
-                                        "tsp",
-                                        "tbsp",
-                                        "quantity"
-                                      ]
-                                    },
-                                    "value": {
-                                      "type": "number"
-                                    }
-                                  },
-                                  "required": [
-                                    "unit"
-                                  ]
-                                }
-                              },
-                              "required": [
-                                "name",
-                                "quantity"
-                              ]
-                            }
-                          },
-                          "instructions": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "text": {
-                                  "type": "string",
-                                  "description": "Instruction text"
-                                },
-                                "optional": {
-                                  "type": "boolean"
-                                }
-                              },
-                              "required": [
-                                "text"
-                              ]
-                            }
-                          },
-                          "storeable": {
-                            "type": "boolean"
-                          },
-                          "servings": {
-                            "type": "number"
-                          }
-                        },
-                        "required": [
-                          "name",
-                          "uuid",
-                          "ingredients",
-                          "instructions"
-                        ]
-                      },
-                      "description": "Recipe components"
-                    }
-                  },
-                  "required": [
-                    "uuid",
-                    "name",
-                    "description",
-                    "images",
-                    "components"
-                  ]
+                  "$ref": "#/components/schemas/Recipe"
                 }
               }
             }

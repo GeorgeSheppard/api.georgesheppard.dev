@@ -1,12 +1,14 @@
 import { z } from 'zod';
 import { Unit } from '@core/types/recipes.js';
 
+const QuantitySchema = z.object({
+  unit: z.nativeEnum(Unit).describe('Unit of measurement'),
+  value: z.number().optional().describe('Numeric value'),
+});
+
 export const IngredientSchema = z.object({
   name: z.string().describe('Ingredient name'),
-  quantity: z.object({
-    unit: z.nativeEnum(Unit),
-    value: z.number().optional(),
-  }),
+  quantity: QuantitySchema,
 });
 
 export const InstructionSchema = z.object({
@@ -17,8 +19,8 @@ export const InstructionSchema = z.object({
 export const ComponentSchema = z.object({
   name: z.string().describe('Component name'),
   uuid: z.string().uuid().describe('Component UUID'),
-  ingredients: z.array(IngredientSchema),
-  instructions: z.array(InstructionSchema),
+  ingredients: z.array(IngredientSchema).describe('List of ingredients'),
+  instructions: z.array(InstructionSchema).describe('List of instructions'),
   storeable: z.boolean().optional().describe('Whether component can be made ahead'),
   servings: z.number().optional().describe('Number of servings'),
 });
@@ -41,9 +43,7 @@ export const MealPlanEntrySchema = z.object({
   servings: z.number().describe('Number of servings'),
 });
 
-export const MealPlanDaySchema = z.record(z.string().uuid(), z.array(MealPlanEntrySchema));
-
-export const QuantitySchema = z.object({
-  unit: z.nativeEnum(Unit),
-  value: z.number().optional(),
-});
+export const MealPlanDaySchema = z.record(
+  z.string().uuid().describe('Recipe UUID'),
+  z.array(MealPlanEntrySchema).describe('Array of component servings for this recipe')
+);
