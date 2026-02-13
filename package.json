@@ -11,7 +11,7 @@
     "start": "node dist/index.js",
     "worker": "node dist/worker.js",
     "migrate:generate": "drizzle-kit generate",
-    "generate:openapi": "tsx scripts/generate-openapi.ts",
+    "generate:openapi": "tsx scripts/generate-openapi.ts && tsx scripts/extract-schemas.ts",
     "test": "vitest --project unit",
     "test:integration": "vitest --project integration:mcp --project integration:db",
     "test:integration:mcp": "vitest --project integration:mcp",
