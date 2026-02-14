@@ -1,11 +1,8 @@
-import { jwtVerify, createRemoteJWKSet } from 'jose';
+import { jwtVerify, createRemoteJWKSet, JWTPayload } from 'jose';
 import { config } from '@config/index.js';
 
-export interface CognitoJwtPayload {
+export interface CognitoJwtPayload extends JWTPayload {
   sub: string;
-  email?: string;
-  'cognito:username'?: string;
-  [key: string]: unknown;
 }
 
 const jwksUrl = `https://cognito-idp.${config.COGNITO_REGION}.amazonaws.com/${config.COGNITO_USER_POOL_ID}/.well-known/jwks.json`;
@@ -25,15 +22,5 @@ export async function verifyCognitoJwt(token: string): Promise<CognitoJwtPayload
 }
 
 export function extractUserIdFromCognitoToken(payload: CognitoJwtPayload): string {
-  // Try different claim names in order of preference
-  if (payload['cognito:username']) {
-    return payload['cognito:username'] as string;
-  }
-  if (payload.email) {
-    return payload.email as string;
-  }
-  if (payload.sub) {
-    return payload.sub;
-  }
-  throw new Error('Could not extract userId from Cognito token');
+  return payload.sub;
 }
