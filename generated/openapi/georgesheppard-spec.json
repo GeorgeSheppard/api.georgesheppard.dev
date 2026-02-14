@@ -703,47 +703,27 @@
         "tags": [
           "mcp"
         ],
-        "description": "Generate a JWT token for authenticated users",
+        "description": "Exchange a Cognito JWT for a long-lived MCP JWT token",
         "security": [
           {
-            "apiKey": []
+            "bearerAuth": []
           }
         ],
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication"
+              "description": "Bearer token with Cognito JWT"
             },
             "required": true,
-            "description": "API key for authentication",
-            "name": "x-api-key",
+            "description": "Bearer token with Cognito JWT",
+            "name": "authorization",
             "in": "header"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "userId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "User ID as UUID"
-                  }
-                },
-                "required": [
-                  "userId"
-                ]
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "JWT token generated successfully",
+            "description": "MCP JWT token generated successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -751,11 +731,10 @@
                   "properties": {
                     "token": {
                       "type": "string",
-                      "description": "JWT token"
+                      "description": "JWT token for MCP authentication"
                     },
                     "userId": {
                       "type": "string",
-                      "format": "uuid",
                       "description": "User ID"
                     }
                   },
@@ -767,26 +746,8 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request body",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
           "401": {
-            "description": "Unauthorized - invalid API key",
+            "description": "Unauthorized - invalid or missing JWT",
             "content": {
               "application/json": {
                 "schema": {
