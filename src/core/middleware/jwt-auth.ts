@@ -1,5 +1,6 @@
 import { createMiddleware } from 'hono/factory';
 import { verifyJwt } from '@core/utils/jwt.js';
+import { verifyCognitoJwt, extractUserIdFromCognitoToken } from '@core/utils/cognito-jwt.js';
 import { ProtectedEnv } from '@core/types/context.js';
 
 export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) => {
@@ -15,18 +16,37 @@ export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) 
   }
 
   const token = authHeader.slice(7);
+  let userId: string | null = null;
 
-  try {
-    const payload = await verifyJwt(token);
-    c.set('userId', payload.userId);
-    await next();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Invalid token';
+  // Try Cognito JWT first
+  if (userId === null) {
+    try {
+      const payload = await verifyCognitoJwt(token);
+      userId = extractUserIdFromCognitoToken(payload);
+    } catch {
+      // Cognito verification failed, try own JWT next
+    }
+  }
+
+  // Try own JWT if Cognito failed
+  if (userId === null) {
+    try {
+      const payload = await verifyJwt(token);
+      userId = payload.userId;
+    } catch {
+      // Both failed
+    }
+  }
+
+  if (userId === null) {
     return c.json(
       {
-        error: `Token validation failed: ${message}`,
+        error: 'Invalid token: neither Cognito nor internal JWT validation passed',
       },
       401
     );
   }
+
+  c.set('userId', userId);
+  await next();
 });
