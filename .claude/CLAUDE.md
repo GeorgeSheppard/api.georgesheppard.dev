@@ -21,6 +21,33 @@ Basic unit tests can be run using:
 
 When writing or modifying endpoints, follow the unit test guide at `test/UNIT_TEST_GUIDE.md` to ensure handlers are unit-testable. Run `pnpm test` to verify unit tests pass.
 
+## Development Workflow
+
+After making code changes, always run these steps before committing:
+
+1. `pnpm lint:fix` - Fix TypeScript and ESLint issues
+2. `pnpm format` - Format code with Prettier
+3. `pnpm generate:openapi` - Regenerate OpenAPI spec (if endpoints changed)
+4. `pnpm test` - Verify unit tests pass
+5. Commit with a clear message
+
+## Environment Variables
+
+When adding new required environment variables:
+
+1. Add to `src/config/env.ts` with Zod validation schema
+2. Add to `.env.example` with a descriptive comment and placeholder value
+3. Add to `.env.test` with a dummy/test value (required for local tests and OpenAPI generation)
+
+All environment variables are validated once at app startup. See the `env` skill for detailed patterns.
+
+## Test Environment Setup
+
+- `.env.test` must have all required environment variables set (even with dummy values)
+- This file is used by integration tests, unit tests, and the OpenAPI generation script
+- When adding new required env vars, update `.env.test` before running tests
+- The test environment should mirror production requirements while using safe test values
+
 ## Rules
 
 1. Never use `any`.

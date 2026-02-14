@@ -87,6 +87,7 @@ if (!config.DATABASE_URL) { ... } // ❌ Unnecessary
    - Add the new variable to `@.env.example` with a descriptive placeholder value
    - Add the new variable to `@.env.test` with a dummy test value
    - Include comments explaining what the variable is for (see existing examples)
+   - **Critical**: `.env.test` is used by integration tests, unit tests, and the OpenAPI generation script. All required variables must be set with valid test values.
 
 3. **Update Docker Compose** in `@infra/compose.yaml`:
    - Add the new environment variable to the `api` service under the `environment` section
