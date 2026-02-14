@@ -27,6 +27,11 @@ const envSchema = z.object({
   // JWT
   JWT_SECRET: z.string().min(32).describe('Secret for signing JWTs (min 32 chars)'),
 
+  // Cognito
+  COGNITO_REGION: z.string().default('us-east-1'),
+  COGNITO_USER_POOL_ID: z.string().optional(),
+  COGNITO_CLIENT_ID: z.string().optional(),
+
   // Encryption (must be exact lengths)
   ENCRYPTION_KEY: z.string().length(32),
   ENCRYPTION_IV: z.string().length(16),
