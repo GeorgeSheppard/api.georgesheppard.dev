@@ -29,8 +29,8 @@ const envSchema = z.object({
 
   // Cognito
   COGNITO_REGION: z.string().default('us-east-1'),
-  COGNITO_USER_POOL_ID: z.string().optional(),
-  COGNITO_CLIENT_ID: z.string().optional(),
+  COGNITO_USER_POOL_ID: z.string(),
+  COGNITO_CLIENT_ID: z.string(),
 
   // Encryption (must be exact lengths)
   ENCRYPTION_KEY: z.string().length(32),

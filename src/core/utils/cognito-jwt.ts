@@ -12,8 +12,8 @@ const jwksUrl = `https://cognito-idp.${config.COGNITO_REGION}.amazonaws.com/${co
 const jwks = config.COGNITO_USER_POOL_ID ? createRemoteJWKSet(new URL(jwksUrl)) : null;
 
 export async function verifyCognitoJwt(token: string): Promise<CognitoJwtPayload> {
-  if (!jwks || !config.COGNITO_USER_POOL_ID) {
-    throw new Error('Cognito configuration not available');
+  if (!jwks) {
+    throw new Error('Cognito JWKS not initialized');
   }
 
   const verified = await jwtVerify(token, jwks, {
