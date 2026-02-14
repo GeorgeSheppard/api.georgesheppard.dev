@@ -20,6 +20,7 @@ pnpm lint:fix
 ```
 
 This runs TypeScript compilation and ESLint to identify and fix:
+
 - Type errors
 - Unused imports
 - Code style issues
@@ -34,6 +35,7 @@ pnpm format
 ```
 
 This runs Prettier to ensure consistent code formatting:
+
 - Indentation
 - Line length
 - Quote style
@@ -46,12 +48,14 @@ pnpm generate:openapi
 ```
 
 **When to run**: Always, but especially important when:
+
 - Adding new endpoints
 - Modifying endpoint schemas
 - Changing endpoint paths or methods
 - Updating request/response types
 
 This script:
+
 - Validates that `@hono/zod-openapi` definitions are correct
 - Generates updated OpenAPI spec in `generated/openapi/`
 - Requires all environment variables in `.env.test` to be set
@@ -64,6 +68,7 @@ pnpm test
 ```
 
 Verify that all unit tests pass:
+
 - Tests for endpoint handlers
 - Tests for utility functions
 - Tests for business logic
@@ -78,6 +83,7 @@ git commit -m "Brief description of changes"
 ```
 
 Include the session URL at the end:
+
 ```
 git commit -m "Fix authentication bug
 
@@ -122,6 +128,7 @@ See the `env` skill for detailed patterns.
 **Cause**: Code changes broke existing functionality or tests need updating
 
 **Fix**:
+
 - Review the failing test output
 - Update code or tests as needed
 - Re-run `pnpm test` to verify
