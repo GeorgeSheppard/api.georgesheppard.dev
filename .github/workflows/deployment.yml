@@ -5,12 +5,15 @@ on:
     branches: ['master']
   workflow_dispatch:
 
+env:
+  DEPLOY_DIR: ~/deploy
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -29,3 +32,21 @@ jobs:
         with:
           push: true
           tags: georgeshep/bord:api.georgesheppard.dev
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Copy compose file to deploy directory
+        run: |
+          mkdir -p $DEPLOY_DIR
+          cp infra/compose.yaml $DEPLOY_DIR/compose.yaml
+
+      - name: Pull and restart services
+        working-directory: ~/deploy
+        run: |
+          docker compose pull
+          docker compose up -d
