@@ -1,31 +1,19 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
-import { authMiddleware } from '@core/middleware/auth.js';
+import { jwtAuthMiddleware } from '@core/middleware/jwt-auth.js';
 import { AuthTokenResponseSchema } from './auth-token.js';
-
-export const AuthTokenRequestSchema = z.object({
-  userId: z.string().uuid().describe('User ID as UUID'),
-});
 
 export const authTokenRoute = createRoute({
   method: 'post',
   path: '/mcp/auth/token',
   tags: ['mcp'],
-  description: 'Generate a JWT token for authenticated users',
-  security: [{ apiKey: [] }],
-  middleware: authMiddleware,
+  description: 'Exchange a Cognito JWT for a long-lived MCP JWT token',
+  security: [{ bearerAuth: [] }],
+  middleware: [jwtAuthMiddleware],
   request: {
     headers: z.object({
-      'x-api-key': z.string().describe('API key for authentication'),
+      authorization: z.string().describe('Bearer token with Cognito JWT'),
     }),
-    body: {
-      content: {
-        'application/json': {
-          schema: AuthTokenRequestSchema,
-        },
-      },
-      required: true,
-    },
   },
   responses: {
     200: {
@@ -34,17 +22,7 @@ export const authTokenRoute = createRoute({
           schema: AuthTokenResponseSchema,
         },
       },
-      description: 'JWT token generated successfully',
-    },
-    400: {
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-      description: 'Invalid request body',
+      description: 'MCP JWT token generated successfully',
     },
     401: {
       content: {
@@ -54,7 +32,7 @@ export const authTokenRoute = createRoute({
           }),
         },
       },
-      description: 'Unauthorized - invalid API key',
+      description: 'Unauthorized - invalid or missing JWT',
     },
   },
 });

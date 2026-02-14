@@ -1,12 +1,10 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { App } from '../../../../server.js';
-import { config } from '@config/index.js';
-import { verifyJwt } from '@core/utils/jwt.js';
+import { signJwt, verifyJwt } from '@core/utils/jwt.js';
 import { createTestApp } from '@test/utils/app.js';
 
 let app: App;
 const validUserId = '550e8400-e29b-41d4-a716-446655440000';
-const invalidUserId = 'not-a-uuid';
 
 beforeAll(async () => {
   app = await createTestApp({});
@@ -14,15 +12,15 @@ beforeAll(async () => {
 
 describe('POST /mcp/auth/token', () => {
   describe('Success cases', () => {
-    it('should return 200 with token and userId when provided valid API key and UUID userId', async () => {
+    it('should return 200 with token and userId when provided a valid JWT', async () => {
+      const cognitoToken = await signJwt(validUserId);
+
       const response = await app.request(
         new Request('http://localhost/mcp/auth/token', {
           method: 'POST',
           headers: {
-            'x-api-key': config.API_KEY,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${cognitoToken}`,
           },
-          body: JSON.stringify({ userId: validUserId }),
         })
       );
 
@@ -35,14 +33,14 @@ describe('POST /mcp/auth/token', () => {
     });
 
     it('should return a valid JWT token that can be verified', async () => {
+      const cognitoToken = await signJwt(validUserId);
+
       const response = await app.request(
         new Request('http://localhost/mcp/auth/token', {
           method: 'POST',
           headers: {
-            'x-api-key': config.API_KEY,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${cognitoToken}`,
           },
-          body: JSON.stringify({ userId: validUserId }),
         })
       );
 
@@ -57,14 +55,14 @@ describe('POST /mcp/auth/token', () => {
       vi.useFakeTimers();
 
       try {
+        const cognitoToken = await signJwt(validUserId);
+
         const response1 = await app.request(
           new Request('http://localhost/mcp/auth/token', {
             method: 'POST',
             headers: {
-              'x-api-key': config.API_KEY,
-              'Content-Type': 'application/json',
+              Authorization: `Bearer ${cognitoToken}`,
             },
-            body: JSON.stringify({ userId: validUserId }),
           })
         );
 
@@ -75,10 +73,8 @@ describe('POST /mcp/auth/token', () => {
           new Request('http://localhost/mcp/auth/token', {
             method: 'POST',
             headers: {
-              'x-api-key': config.API_KEY,
-              'Content-Type': 'application/json',
+              Authorization: `Bearer ${cognitoToken}`,
             },
-            body: JSON.stringify({ userId: validUserId }),
           })
         );
 
@@ -94,14 +90,10 @@ describe('POST /mcp/auth/token', () => {
   });
 
   describe('Authorization failures', () => {
-    it('should return 401 when API key is missing', async () => {
+    it('should return 401 when Authorization header is missing', async () => {
       const response = await app.request(
         new Request('http://localhost/mcp/auth/token', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userId: validUserId }),
         })
       );
 
@@ -110,66 +102,30 @@ describe('POST /mcp/auth/token', () => {
       expect(body).toHaveProperty('error');
     });
 
-    it('should return 401 when API key is invalid', async () => {
+    it('should return 401 when token is invalid', async () => {
       const response = await app.request(
         new Request('http://localhost/mcp/auth/token', {
           method: 'POST',
           headers: {
-            'x-api-key': 'wrong-api-key',
-            'Content-Type': 'application/json',
+            Authorization: 'Bearer invalid-token',
           },
-          body: JSON.stringify({ userId: validUserId }),
         })
       );
 
       expect(response.status).toBe(401);
     });
-  });
 
-  describe('Validation failures', () => {
-    it('should return 400 when userId is not a valid UUID', async () => {
+    it('should return 401 when Authorization header format is wrong', async () => {
       const response = await app.request(
         new Request('http://localhost/mcp/auth/token', {
           method: 'POST',
           headers: {
-            'x-api-key': config.API_KEY,
-            'Content-Type': 'application/json',
+            Authorization: 'Basic some-credentials',
           },
-          body: JSON.stringify({ userId: invalidUserId }),
         })
       );
 
-      expect(response.status).toBe(400);
-    });
-
-    it('should return 400 when userId is missing', async () => {
-      const response = await app.request(
-        new Request('http://localhost/mcp/auth/token', {
-          method: 'POST',
-          headers: {
-            'x-api-key': config.API_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({}),
-        })
-      );
-
-      expect(response.status).toBe(400);
-    });
-
-    it('should return 400 for invalid JSON body', async () => {
-      const response = await app.request(
-        new Request('http://localhost/mcp/auth/token', {
-          method: 'POST',
-          headers: {
-            'x-api-key': config.API_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: 'invalid json',
-        })
-      );
-
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(401);
     });
   });
 });

@@ -111,8 +111,8 @@ export const tools: McpTool[] = [
 
 export function registerRoutes(app: OpenAPIHono) {
   app.openapi(authTokenRoute, async (c) => {
-    const { userId } = c.req.valid('json');
-    const result = await authToken(c, userId);
+    const userId = (c as ContextWithUserId).get('userId');
+    const result = await authToken(userId);
     return c.json(result, 200);
   });
 
