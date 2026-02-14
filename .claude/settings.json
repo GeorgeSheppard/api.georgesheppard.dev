@@ -1,5 +1,20 @@
 {
   "permissions": {
     "allow": ["Bash"]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm format",
+            "timeout": 60,
+            "statusMessage": "Running pnpm format..."
+          }
+        ]
+      }
+    ]
   }
 }
