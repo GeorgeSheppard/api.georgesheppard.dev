@@ -10,11 +10,6 @@ export const authTokenRoute = createRoute({
   description: 'Exchange a Cognito JWT for a long-lived MCP JWT token',
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
-  request: {
-    headers: z.object({
-      authorization: z.string().describe('Bearer token with Cognito JWT'),
-    }),
-  },
   responses: {
     200: {
       content: {

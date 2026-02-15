@@ -709,18 +709,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with Cognito JWT"
-            },
-            "required": true,
-            "description": "Bearer token with Cognito JWT",
-            "name": "authorization",
-            "in": "header"
-          }
-        ],
         "responses": {
           "200": {
             "description": "MCP JWT token generated successfully",
@@ -776,19 +764,7 @@
         "description": "Get all recipes for the authenticated user",
         "security": [
           {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with JWT"
-            },
-            "required": true,
-            "description": "Bearer token with JWT",
-            "name": "authorization",
-            "in": "header"
+            "Bearer": []
           }
         ],
         "responses": {
@@ -854,18 +830,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with JWT"
-            },
-            "required": true,
-            "description": "Bearer token with JWT",
-            "name": "authorization",
-            "in": "header"
           }
         ],
         "requestBody": {
@@ -1033,16 +997,6 @@
             "description": "Comma-separated fields to search: name,description,ingredients,instructions",
             "name": "fields",
             "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with JWT"
-            },
-            "required": true,
-            "description": "Bearer token with JWT",
-            "name": "authorization",
-            "in": "header"
           }
         ],
         "responses": {
@@ -1185,16 +1139,6 @@
             "description": "Recipe UUID to delete",
             "name": "uuid",
             "in": "path"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with JWT"
-            },
-            "required": true,
-            "description": "Bearer token with JWT",
-            "name": "authorization",
-            "in": "header"
           }
         ],
         "responses": {
@@ -1276,18 +1220,6 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with JWT"
-            },
-            "required": true,
-            "description": "Bearer token with JWT",
-            "name": "authorization",
-            "in": "header"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Meal plan retrieved successfully",
@@ -1358,18 +1290,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with JWT"
-            },
-            "required": true,
-            "description": "Bearer token with JWT",
-            "name": "authorization",
-            "in": "header"
           }
         ],
         "requestBody": {
@@ -1504,16 +1424,6 @@
             "description": "Filter shopping list until this date (format: DayName - DD/MM/YYYY)",
             "name": "endDate",
             "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with JWT"
-            },
-            "required": true,
-            "description": "Bearer token with JWT",
-            "name": "authorization",
-            "in": "header"
           }
         ],
         "responses": {
@@ -1666,18 +1576,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with JWT"
-            },
-            "required": true,
-            "description": "Bearer token with JWT",
-            "name": "authorization",
-            "in": "header"
           }
         ],
         "requestBody": {
@@ -1887,18 +1785,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer token with JWT"
-            },
-            "required": true,
-            "description": "Bearer token with JWT",
-            "name": "authorization",
-            "in": "header"
           }
         ],
         "requestBody": {

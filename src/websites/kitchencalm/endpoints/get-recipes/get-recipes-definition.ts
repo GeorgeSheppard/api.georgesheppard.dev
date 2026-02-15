@@ -8,13 +8,8 @@ export const getRecipesRoute = createRoute({
   path: '/kitchencalm/recipes',
   tags: ['kitchencalm', 'recipes'],
   description: 'Get all recipes for the authenticated user',
-  security: [{ bearerAuth: [] }],
+  security: [{ Bearer: [] }],
   middleware: [jwtAuthMiddleware],
-  request: {
-    headers: z.object({
-      authorization: z.string().describe('Bearer token with JWT'),
-    }),
-  },
   responses: {
     200: {
       content: {

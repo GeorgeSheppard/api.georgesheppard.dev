@@ -12,9 +12,6 @@ export const getShoppingListRoute = createRoute({
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
-    headers: z.object({
-      authorization: z.string().describe('Bearer token with JWT'),
-    }),
     query: z.object({
       startDate: z
         .string()

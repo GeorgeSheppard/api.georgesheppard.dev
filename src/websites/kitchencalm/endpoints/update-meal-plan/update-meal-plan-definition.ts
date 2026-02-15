@@ -11,9 +11,6 @@ export const updateMealPlanRoute = createRoute({
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
-    headers: z.object({
-      authorization: z.string().describe('Bearer token with JWT'),
-    }),
     body: {
       content: {
         'application/json': {

@@ -10,11 +10,6 @@ export const getMealPlanRoute = createRoute({
   description: 'Get the meal plan for the authenticated user',
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
-  request: {
-    headers: z.object({
-      authorization: z.string().describe('Bearer token with JWT'),
-    }),
-  },
   responses: {
     200: {
       content: {

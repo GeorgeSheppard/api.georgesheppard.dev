@@ -11,9 +11,6 @@ export const searchRecipesRoute = createRoute({
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
-    headers: z.object({
-      authorization: z.string().describe('Bearer token with JWT'),
-    }),
     query: SearchRecipesRequestSchema,
   },
   responses: {

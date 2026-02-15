@@ -23,8 +23,8 @@ export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) 
     try {
       const payload = await verifyCognitoJwt(token);
       userId = extractUserIdFromCognitoToken(payload);
-    } catch {
-      // Cognito verification failed, try own JWT next
+    } catch (error) {
+      console.log('Cognito JWT verification failed:', error);
     }
   }
 
@@ -33,8 +33,8 @@ export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) 
     try {
       const payload = await verifyJwt(token);
       userId = payload.userId;
-    } catch {
-      // Both failed
+    } catch (error) {
+      console.log('Internal JWT verification failed:', error);
     }
   }
 

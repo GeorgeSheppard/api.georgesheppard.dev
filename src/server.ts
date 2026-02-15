@@ -80,7 +80,12 @@ export async function createApp(dependencies: AppDependencies) {
         { url: 'https://api.georgesheppard.dev', description: 'Production' },
       ],
     });
-    app.get('/swagger', swaggerUI({ url: '/swagger/json' }));
+    app.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+    });
+    app.get('/swagger', swaggerUI({ url: '/swagger/json', persistAuthorization: true }));
   }
 
   return app;
