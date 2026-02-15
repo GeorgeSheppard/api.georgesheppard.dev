@@ -11,9 +11,6 @@ export const deleteRecipeRoute = createRoute({
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
-    headers: z.object({
-      authorization: z.string().describe('Bearer token with JWT'),
-    }),
     params: z.object({
       uuid: z.string().uuid().describe('Recipe UUID to delete'),
     }),
