@@ -1,4 +1,4 @@
-import { jwtVerify, createRemoteJWKSet, JWTPayload } from 'jose';
+import { jwtVerify, createRemoteJWKSet, JWTPayload, decodeProtectedHeader } from 'jose';
 import { config } from '@config/index.js';
 
 export interface CognitoJwtPayload extends JWTPayload {
