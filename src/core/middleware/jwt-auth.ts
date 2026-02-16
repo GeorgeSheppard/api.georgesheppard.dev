@@ -22,7 +22,7 @@ export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) 
   if (userId === null) {
     try {
       const payload = await verifyCognitoJwt(token);
-      userId = payload.sub
+      userId = payload.sub;
     } catch (error) {
       console.log('Cognito JWT verification failed:', error);
     }

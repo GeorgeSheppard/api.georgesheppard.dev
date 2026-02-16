@@ -1,4 +1,4 @@
-import { jwtVerify, createRemoteJWKSet, JWTPayload, decodeProtectedHeader } from 'jose';
+import { jwtVerify, createRemoteJWKSet, JWTPayload } from 'jose';
 import { config } from '@config/index.js';
 
 export interface CognitoJwtPayload extends JWTPayload {
@@ -8,7 +8,7 @@ export interface CognitoJwtPayload extends JWTPayload {
   aud?: string | string[];
 }
 
-const cognitoUrl = `https://cognito-idp.${config.COGNITO_REGION}.amazonaws.com/${config.COGNITO_USER_POOL_ID}`
+const cognitoUrl = `https://cognito-idp.${config.COGNITO_REGION}.amazonaws.com/${config.COGNITO_USER_POOL_ID}`;
 const jwksUrl = `${cognitoUrl}/.well-known/jwks.json`;
 const jwks = createRemoteJWKSet(new URL(jwksUrl));
 
