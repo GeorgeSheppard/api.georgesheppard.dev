@@ -1,6 +1,6 @@
 import { createMiddleware } from 'hono/factory';
 import { verifyJwt } from '@core/utils/jwt.js';
-import { verifyCognitoJwt, extractUserIdFromCognitoToken } from '@core/utils/cognito-jwt.js';
+import { verifyCognitoJwt } from '@core/utils/cognito-jwt.js';
 import { ProtectedEnv } from '@core/types/context.js';
 
 export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) => {
@@ -22,7 +22,7 @@ export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) 
   if (userId === null) {
     try {
       const payload = await verifyCognitoJwt(token);
-      userId = extractUserIdFromCognitoToken(payload);
+      userId = payload.sub;
     } catch (error) {
       console.log('Cognito JWT verification failed:', error);
     }
