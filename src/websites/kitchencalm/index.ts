@@ -55,7 +55,7 @@ import {
   SearchRecipesResponseSchema,
 } from './endpoints/search-recipes/search-recipes.js';
 
-export const tools: McpTool[] = [
+export const tools: McpTool<any, any>[] = [
   {
     name: 'hello_protected',
     description: 'Get a protected hello message with user ID',
@@ -71,13 +71,8 @@ export const tools: McpTool[] = [
     'get_meal_plan',
     'Get the meal plan for the authenticated user',
     z.object({}),
-    async (c: ContextWithUserId) => {
-      const result = await getMealPlan(c);
-      return { mealPlan: result } as Record<string, unknown>;
-    },
-    z.object({
-      mealPlan: GetMealPlanResponseSchema,
-    })
+    getMealPlan,
+    GetMealPlanResponseSchema
   ),
   createMcpTool(
     'get_shopping_list',

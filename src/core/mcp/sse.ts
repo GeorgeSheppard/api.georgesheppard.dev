@@ -18,10 +18,10 @@ export const honoContextStorage = new AsyncLocalStorage<Context>();
 export const MCP_SERVER_NAME = 'api.georgesheppard.dev';
 export const MCP_SERVER_VERSION = '1.0.0';
 
-export interface McpTool<TInput = unknown> {
+export interface McpTool<TInput = unknown, TOutput = unknown> {
   name: string;
   description: string;
-  handler: (c: ContextWithUserId, input?: TInput) => Promise<Record<string, unknown>>;
+  handler: (c: ContextWithUserId, input?: TInput) => Promise<TOutput>;
   inputSchema?: z.ZodSchema;
   outputSchema?: z.ZodSchema;
 }
@@ -30,13 +30,13 @@ export interface McpTool<TInput = unknown> {
  * Helper function to create a typed MCP tool with automatic validation
  * This eliminates the need to manually cast or validate input in handlers
  */
-export function createMcpTool<TInput>(
+export function createMcpTool<TInput, TOutput = unknown>(
   name: string,
   description: string,
   schema: z.ZodSchema<TInput>,
-  handler: (c: ContextWithUserId, input: TInput) => Promise<Record<string, unknown>>,
+  handler: (c: ContextWithUserId, input: TInput) => Promise<TOutput>,
   outputSchema?: z.ZodSchema
-): McpTool<unknown> {
+): McpTool<TInput, TOutput> {
   return {
     name,
     description,
@@ -76,8 +76,15 @@ export function registerMcpSseRoute(app: OpenAPIHono, tools: McpTool[]) {
         if (!c) throw new Error('Hono context not available');
 
         const result = await tool.handler(c, input as any);
+        // Wrap result in an object if it's an array or primitive
+        const structuredResult = (
+          Array.isArray(result) || typeof result !== 'object' || result === null
+            ? { result }
+            : result
+        ) as { [x: string]: unknown };
+
         return {
-          structuredContent: result,
+          structuredContent: structuredResult,
           content: [],
         };
       }
