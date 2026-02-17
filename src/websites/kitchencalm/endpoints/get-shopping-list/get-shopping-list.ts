@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
 import { getAllRecipesForUser, getMealPlanForUser } from '@core/dynamodb/utilities.js';
-import { createShoppingListData, createShoppingList } from '@core/utilities/shopping-list.js';
-import { categoriseIngredients } from '@core/utils/ingredient-categoriser.js';
+import { createShoppingListData, createShoppingList } from '@websites/kitchencalm/utils/shopping-list.js';
+import { categoriseIngredients } from '@websites/kitchencalm/utils/ingredient-categoriser.js';
 
 export const ShoppingListResponseSchema = z.string();
 
