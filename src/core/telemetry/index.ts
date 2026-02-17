@@ -2,15 +2,16 @@ import { NodeSDK } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-proto';
-import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs';
 import { logs, SeverityNumber } from '@opentelemetry/api-logs';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { config } from '../../config/index.js';
+import { config } from '@config/index.js';
 
-if (config.OTEL_EXPORTER_OTLP_ENDPOINT) {
+export function initTelemetry(): NodeSDK | undefined {
+  if (!config.OTEL_EXPORTER_OTLP_ENDPOINT) return undefined;
+
   const endpoint = config.OTEL_EXPORTER_OTLP_ENDPOINT;
   const headers = parseHeaders(config.OTEL_EXPORTER_OTLP_HEADERS);
   const serviceName = config.OTEL_SERVICE_NAME ?? 'api-georgesheppard';
@@ -32,8 +33,6 @@ if (config.OTEL_EXPORTER_OTLP_ENDPOINT) {
     headers,
   });
 
-  const logRecordProcessor = new BatchLogRecordProcessor(logExporter);
-
   const sdk = new NodeSDK({
     resource,
     traceExporter,
@@ -41,8 +40,7 @@ if (config.OTEL_EXPORTER_OTLP_ENDPOINT) {
       exporter: metricExporter,
       exportIntervalMillis: 60_000,
     }),
-    logRecordProcessors: [logRecordProcessor],
-    instrumentations: [new HttpInstrumentation()],
+    logRecordProcessors: [new BatchLogRecordProcessor(logExporter)],
   });
 
   sdk.start();
@@ -66,12 +64,7 @@ if (config.OTEL_EXPORTER_OTLP_ENDPOINT) {
   console.warn = wrap(console.warn.bind(console), SeverityNumber.WARN);
   console.error = wrap(console.error.bind(console), SeverityNumber.ERROR);
 
-  const shutdown = async () => {
-    await sdk.shutdown();
-  };
-
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  return sdk;
 }
 
 function parseHeaders(raw: string | undefined): Record<string, string> {

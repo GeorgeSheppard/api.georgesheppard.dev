@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server';
 import { createApp } from './server.js';
 import { config } from '@config/index.js';
+import { initTelemetry } from '@core/telemetry/index.js';
 import { createQueueClient } from '@core/queue/client.js';
 import { createDatabaseClient } from '@core/database/client.js';
 import { createDynamoDBClient } from '@core/dynamodb/client.js';
@@ -9,6 +10,7 @@ import { MailgunClient } from '@core/utils/mailgun.js';
 import { CountryIsIpLocator } from '@core/utils/ip-locator.js';
 
 async function main() {
+  const telemetrySdk = initTelemetry();
   const databaseClient = await createDatabaseClient(config.DATABASE_URL);
   const queueClient = await createQueueClient(config.RABBITMQ_URL);
   const dynamoClient = await createDynamoDBClient(
@@ -54,6 +56,7 @@ async function main() {
         queueClient.close(),
         dynamoClient.close(),
         s3Client.close(),
+        telemetrySdk?.shutdown(),
       ]);
       server.close();
       console.log('✅ Server closed');
