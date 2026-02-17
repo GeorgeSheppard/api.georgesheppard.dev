@@ -8,7 +8,7 @@ import { IRecipe } from '@core/types/recipes.js';
 import { Unit } from '@core/types/recipes.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
 
-vi.mock('@core/utils/ingredient-categoriser.js', () => ({
+vi.mock('@websites/kitchencalm/utils/ingredient-categoriser.js', () => ({
   categoriseIngredients: vi.fn(async (ingredients: string[]) => {
     const map: Record<string, string> = {};
     for (const ingredient of ingredients) {
