@@ -4,7 +4,12 @@ import { putMealPlanForUser } from '@core/dynamodb/utilities.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
 import { MealPlanDaySchema } from '../../schemas.js';
 
-export const UpdateMealPlanRequestSchema = z.record(z.string(), MealPlanDaySchema);
+export const MealPlanEntryItemSchema = z.object({
+  date: z.string().describe('Date string in format "DayName - DD/MM/YYYY"'),
+  plan: MealPlanDaySchema,
+});
+
+export const UpdateMealPlanRequestSchema = z.array(MealPlanEntryItemSchema);
 
 export type UpdateMealPlanRequest = z.infer<typeof UpdateMealPlanRequestSchema>;
 
@@ -16,13 +21,19 @@ export type UpdateMealPlanResponse = z.infer<typeof UpdateMealPlanResponseSchema
 
 export async function updateMealPlan(
   c: ContextWithUserId,
-  mealPlan: UpdateMealPlanRequest
+  mealPlanArray: UpdateMealPlanRequest
 ): Promise<UpdateMealPlanResponse> {
   const userId = c.get('userId');
   const dynamoClient = c.get('dynamoClient');
 
   try {
-    await putMealPlanForUser(dynamoClient.client, userId, mealPlan as IMealPlan);
+    // Convert array back to record object for storage
+    const mealPlan: IMealPlan = {};
+    for (const entry of mealPlanArray) {
+      mealPlan[entry.date] = entry.plan;
+    }
+
+    await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
     return {
       success: true,
