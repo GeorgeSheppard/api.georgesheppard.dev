@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
 import { putMealPlanForUser } from '@core/dynamodb/utilities.js';
-import { IMealPlan } from '@core/types/meal-plan.js';
 import { MealPlanDaySchema } from '../../schemas.js';
 
 export const MealPlanEntryItemSchema = z.object({
@@ -28,12 +27,12 @@ export async function updateMealPlan(
 
   try {
     // Convert array back to record object for storage
-    const mealPlan: IMealPlan = {};
+    const mealPlan: Record<string, (typeof mealPlanArray)[0]['plan']> = {};
     for (const entry of mealPlanArray) {
       mealPlan[entry.date] = entry.plan;
     }
 
-    await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
+    await putMealPlanForUser(dynamoClient.client, userId, mealPlan as any);
 
     return {
       success: true,

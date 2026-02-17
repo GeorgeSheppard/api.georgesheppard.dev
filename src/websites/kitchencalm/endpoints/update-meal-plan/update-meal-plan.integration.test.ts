@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { test } from '@test/fixtures.js';
 import { createTestApp } from '@test/utils/app.js';
 import { signJwt } from '@core/utils/jwt.js';
-import { IMealPlan } from '@core/types/meal-plan.js';
 
 describe('Update Meal Plan Endpoint', () => {
   test('should create a new meal plan', async ({ dynamoClient }) => {
