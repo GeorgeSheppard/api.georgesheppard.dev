@@ -51,9 +51,8 @@ const envSchema = z.object({
   S3_ENDPOINT: z.string().url().optional(),
 
   // OpenTelemetry (optional — telemetry is disabled when endpoint is unset)
+  // OTEL_EXPORTER_OTLP_HEADERS and OTEL_SERVICE_NAME are also read by the SDK from process.env.
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
-  OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
-  OTEL_SERVICE_NAME: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
