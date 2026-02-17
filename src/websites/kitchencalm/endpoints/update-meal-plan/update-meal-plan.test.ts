@@ -23,11 +23,14 @@ describe('updateMealPlan handler', () => {
   it('should return success on update', async () => {
     vi.mocked(putMealPlanForUser).mockResolvedValue();
 
-    const mealPlan: UpdateMealPlanRequest = {
-      'Monday - 01/08/2024': {
-        'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
+    const mealPlan: UpdateMealPlanRequest = [
+      {
+        date: 'Monday - 01/08/2024',
+        plan: {
+          'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
+        },
       },
-    };
+    ];
 
     const result = await updateMealPlan(mockContext(), mealPlan);
 
@@ -42,21 +45,33 @@ describe('updateMealPlan handler', () => {
     });
     vi.mocked(putMealPlanForUser).mockResolvedValue();
 
-    const mealPlan: UpdateMealPlanRequest = {
+    const mealPlanArray: UpdateMealPlanRequest = [
+      {
+        date: 'Tuesday - 01/09/2024',
+        plan: {
+          'recipe-uuid-2': [{ componentId: 'comp-2', servings: 4 }],
+        },
+      },
+    ];
+
+    await updateMealPlan(c, mealPlanArray);
+
+    const expectedMealPlan = {
       'Tuesday - 01/09/2024': {
         'recipe-uuid-2': [{ componentId: 'comp-2', servings: 4 }],
       },
     };
-
-    await updateMealPlan(c, mealPlan);
-
-    expect(putMealPlanForUser).toHaveBeenCalledWith(mockClient.client, validUserId, mealPlan);
+    expect(putMealPlanForUser).toHaveBeenCalledWith(
+      mockClient.client,
+      validUserId,
+      expectedMealPlan
+    );
   });
 
   it('should handle empty meal plan', async () => {
     vi.mocked(putMealPlanForUser).mockResolvedValue();
 
-    const result = await updateMealPlan(mockContext(), {});
+    const result = await updateMealPlan(mockContext(), []);
 
     expect(result).toEqual({ success: true });
   });
@@ -64,6 +79,6 @@ describe('updateMealPlan handler', () => {
   it('should throw when DynamoDB fails', async () => {
     vi.mocked(putMealPlanForUser).mockRejectedValue(new Error('DynamoDB error'));
 
-    await expect(updateMealPlan(mockContext(), {})).rejects.toThrow('DynamoDB error');
+    await expect(updateMealPlan(mockContext(), [])).rejects.toThrow('DynamoDB error');
   });
 });

@@ -1226,16 +1226,29 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
+                  "type": "array",
+                  "items": {
                     "type": "object",
-                    "additionalProperties": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/MealPlanEntry"
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "description": "Date string in format \"DayName - DD/MM/YYYY\""
                       },
-                      "description": "Array of component servings for this recipe"
-                    }
+                      "plan": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/MealPlanEntry"
+                          },
+                          "description": "Array of component servings for this recipe"
+                        }
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "plan"
+                    ]
                   }
                 }
               }
@@ -1297,16 +1310,29 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": {
+                "type": "array",
+                "items": {
                   "type": "object",
-                  "additionalProperties": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/MealPlanEntry"
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "description": "Date string in format \"DayName - DD/MM/YYYY\""
                     },
-                    "description": "Array of component servings for this recipe"
-                  }
+                    "plan": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/MealPlanEntry"
+                        },
+                        "description": "Array of component servings for this recipe"
+                      }
+                    }
+                  },
+                  "required": [
+                    "date",
+                    "plan"
+                  ]
                 }
               }
             }

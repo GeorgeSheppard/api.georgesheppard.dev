@@ -35,6 +35,7 @@ import {
 } from './endpoints/get-shopping-list/get-shopping-list.js';
 import { getShoppingListRoute } from './endpoints/get-shopping-list/get-shopping-list-definition.js';
 import { GetMealPlanResponseSchema } from './endpoints/get-meal-plan/get-meal-plan.js';
+import { z } from 'zod';
 import {
   UpdateMealPlanRequestSchema,
   UpdateMealPlanResponseSchema,
@@ -54,7 +55,7 @@ import {
   SearchRecipesResponseSchema,
 } from './endpoints/search-recipes/search-recipes.js';
 
-export const tools: McpTool[] = [
+export const tools: McpTool<any, any>[] = [
   {
     name: 'hello_protected',
     description: 'Get a protected hello message with user ID',
@@ -66,12 +67,13 @@ export const tools: McpTool[] = [
     description: 'Get all recipes for the authenticated user',
     handler: getRecipes,
   },
-  {
-    name: 'get_meal_plan',
-    description: 'Get the meal plan for the authenticated user',
-    handler: getMealPlan,
-    outputSchema: GetMealPlanResponseSchema,
-  },
+  createMcpTool(
+    'get_meal_plan',
+    'Get the meal plan for the authenticated user',
+    z.object({}),
+    getMealPlan,
+    GetMealPlanResponseSchema
+  ),
   createMcpTool(
     'get_shopping_list',
     'Get aggregated shopping list from recipes in the meal plan, optionally filtered by date range',
