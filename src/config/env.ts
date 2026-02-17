@@ -49,6 +49,11 @@ const envSchema = z.object({
   S3_ACCESS_KEY_ID: z.string(),
   S3_SECRET_ACCESS_KEY: z.string(),
   S3_ENDPOINT: z.string().url().optional(),
+
+  // OpenTelemetry (optional — telemetry is disabled when endpoint is unset)
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
+  OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
+  OTEL_SERVICE_NAME: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

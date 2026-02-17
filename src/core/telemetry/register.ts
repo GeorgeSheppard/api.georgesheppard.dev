@@ -8,12 +8,12 @@ import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs
 import { logs, SeverityNumber } from '@opentelemetry/api-logs';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+import { config } from '../../config/index.js';
 
-const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
-
-if (endpoint) {
-  const headers = parseHeaders(process.env.OTEL_EXPORTER_OTLP_HEADERS);
-  const serviceName = process.env.OTEL_SERVICE_NAME ?? 'api-georgesheppard';
+if (config.OTEL_EXPORTER_OTLP_ENDPOINT) {
+  const endpoint = config.OTEL_EXPORTER_OTLP_ENDPOINT;
+  const headers = parseHeaders(config.OTEL_EXPORTER_OTLP_HEADERS);
+  const serviceName = config.OTEL_SERVICE_NAME ?? 'api-georgesheppard';
 
   const resource = resourceFromAttributes({ [ATTR_SERVICE_NAME]: serviceName });
 
