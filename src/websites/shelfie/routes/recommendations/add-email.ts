@@ -8,6 +8,7 @@ import {
 } from '../../queries/recommendations.js';
 import { encryption } from '@core/utils/encryption.js';
 import { ROUTES } from '../paths.js';
+import { logger } from '@core/telemetry/logger.js';
 
 const BodySchema = z.object({
   id: z.string().uuid(),
@@ -122,7 +123,7 @@ export async function addEmail(c: Context, input: AddEmailInput): Promise<AddEma
         },
       });
     } catch (error) {
-      console.error(`Failed to send email: ${error}`);
+      logger.error(`Failed to send email: ${error}`);
     }
   }
 

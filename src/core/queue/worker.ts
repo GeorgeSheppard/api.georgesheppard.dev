@@ -5,9 +5,10 @@ import { processRecommendationJob } from '@websites/shelfie/workers/recommendati
 import { config } from '@config/index.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { OpenAIRecommender } from '@core/utils/openai-recommender.js';
+import { logger } from '@core/telemetry/logger.js';
 
 async function main() {
-  console.log('🔧 Starting RabbitMQ workers...');
+  logger.info('Starting RabbitMQ workers...');
 
   const queueClient = await createQueueClient(config.RABBITMQ_URL);
   const databaseClient = await createDatabaseClient(config.DATABASE_URL);
@@ -24,12 +25,12 @@ async function main() {
 
     try {
       const job = JSON.parse(msg.content.toString());
-      console.log(`📦 Processing text extraction job:`, job);
+      logger.info(`Processing text extraction job:`, job);
       await processTextExtractionJob(job, databaseClient, queueClient);
       channel.ack(msg);
-      console.log(`✓ Text extraction job completed`);
+      logger.info(`Text extraction job completed`);
     } catch (err) {
-      console.error(`✗ Text extraction job failed:`, err);
+      logger.error(`Text extraction job failed:`, err);
       channel.nack(msg, false, true); // Requeue on error
     }
   });
@@ -40,29 +41,29 @@ async function main() {
 
     try {
       const job = JSON.parse(msg.content.toString());
-      console.log(`📦 Processing recommendation job:`, job);
+      logger.info(`Processing recommendation job:`, job);
       await processRecommendationJob(job, databaseClient, emailClient, recommender);
       channel.ack(msg);
-      console.log(`✓ Recommendation job completed`);
+      logger.info(`Recommendation job completed`);
     } catch (err) {
-      console.error(`✗ Recommendation job failed:`, err);
+      logger.error(`Recommendation job failed:`, err);
       channel.nack(msg, false, true); // Requeue on error
     }
   });
 
-  console.log('✅ Text extraction worker started');
-  console.log('✅ Recommendation worker started');
+  logger.info('Text extraction worker started');
+  logger.info('Recommendation worker started');
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {
-    console.log(`\n${signal} received. Shutting down workers...`);
+    logger.info(`${signal} received. Shutting down workers...`);
 
     try {
       await Promise.all([queueClient.close(), databaseClient.close()]);
-      console.log('✅ Workers closed');
+      logger.info('Workers closed');
       process.exit(0);
     } catch (err) {
-      console.error('❌ Error during shutdown:', err);
+      logger.error('Error during shutdown:', err);
       process.exit(1);
     }
   };
@@ -72,6 +73,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('❌ Worker startup failed:', err);
+  logger.error('Worker startup failed:', err);
   process.exit(1);
 });

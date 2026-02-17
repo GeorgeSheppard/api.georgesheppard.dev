@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { textExtractorClient } from '@core/utils/text-extractor.js';
 import { TextExtractionJob, QueueClient } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
+import { logger } from '@core/telemetry/logger.js';
 
 export async function processTextExtractionJob(
   job: TextExtractionJob,
@@ -11,7 +12,7 @@ export async function processTextExtractionJob(
 ) {
   const { userId, recommendationId } = job;
 
-  console.log(`Processing text extraction for user ${userId}`);
+  logger.info(`Processing text extraction for user ${userId}`);
 
   const { db } = databaseClient;
 
@@ -32,7 +33,7 @@ export async function processTextExtractionJob(
   // Extract text from all images
   const allBooks: string[] = [];
   for (const image of userImages) {
-    console.log(`Extracting text from image ${image.id}`);
+    logger.info(`Extracting text from image ${image.id}`);
 
     const result = await textExtractorClient.extractText(image.image, image.contentType);
     allBooks.push(...result.books);
@@ -50,7 +51,7 @@ export async function processTextExtractionJob(
     })
     .where(eq(requests.id, userId));
 
-  console.log(`Extracted ${uniqueBooks.length} unique books`);
+  logger.info(`Extracted ${uniqueBooks.length} unique books`);
 
   // Queue recommendation generation
   queueClient.channel.sendToQueue(

@@ -8,6 +8,7 @@ import { createDynamoDBClient } from '@core/dynamodb/client.js';
 import { createS3ClientWrapper } from '@core/s3/client.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { CountryIsIpLocator } from '@core/utils/ip-locator.js';
+import { logger } from '@core/telemetry/logger.js';
 
 async function main() {
   const telemetrySdk = initTelemetry();
@@ -44,11 +45,11 @@ async function main() {
     hostname: '0.0.0.0',
   });
 
-  console.log(`🚀 Server is running on http://localhost:${config.PORT}`);
-  console.log(`📚 Swagger UI available at http://localhost:${config.PORT}/swagger`);
+  logger.info(`Server is running on http://localhost:${config.PORT}`);
+  logger.info(`Swagger UI available at http://localhost:${config.PORT}/swagger`);
 
   const shutdown = async (signal: string) => {
-    console.log(`\n${signal} received. Shutting down gracefully...`);
+    logger.info(`${signal} received. Shutting down gracefully...`);
 
     try {
       await Promise.all([
@@ -59,10 +60,10 @@ async function main() {
         telemetrySdk?.shutdown(),
       ]);
       server.close();
-      console.log('✅ Server closed');
+      logger.info('Server closed');
       process.exit(0);
     } catch (err) {
-      console.error('Error during shutdown:', err);
+      logger.error('Error during shutdown:', err);
       process.exit(1);
     }
   };

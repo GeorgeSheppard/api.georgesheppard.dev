@@ -5,6 +5,7 @@ import { DynamoDBDocument, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { IRecipe, RecipeUuid } from '@core/types/recipes.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
 import { config } from '@config/index.js';
+import { logger } from '@core/telemetry/logger.js';
 
 /**
  * Get all recipes for a user from DynamoDB
@@ -41,7 +42,7 @@ export async function getAllRecipesForUser(
       ({ UserId: _userId, Item: _item, ...recipe }) => recipe as IRecipe
     );
   } catch (error) {
-    console.error('Failed to query recipes from DynamoDB:', error);
+    logger.error('Failed to query recipes from DynamoDB:', error);
     throw error;
   }
 }
@@ -75,7 +76,7 @@ export async function getRecipeByUuid(
     const { UserId: _userId, Item: _item, ...recipe } = result.Item;
     return recipe as IRecipe;
   } catch (error) {
-    console.error('Failed to get recipe from DynamoDB:', error);
+    logger.error('Failed to get recipe from DynamoDB:', error);
     throw error;
   }
 }
@@ -103,7 +104,7 @@ export async function updateRecipe(
       },
     });
   } catch (error) {
-    console.error('Failed to update recipe in DynamoDB:', error);
+    logger.error('Failed to update recipe in DynamoDB:', error);
     throw error;
   }
 }
@@ -130,7 +131,7 @@ export async function deleteRecipe(
       },
     });
   } catch (error) {
-    console.error('Failed to delete recipe from DynamoDB:', error);
+    logger.error('Failed to delete recipe from DynamoDB:', error);
     throw error;
   }
 }
@@ -166,7 +167,7 @@ export async function getMealPlanForUser(
     const { UserId: _userId, Item: _item, ...mealPlan } = result.Item;
     return mealPlan as IMealPlan;
   } catch (error) {
-    console.error('Failed to get meal plan from DynamoDB:', error);
+    logger.error('Failed to get meal plan from DynamoDB:', error);
     throw error;
   }
 }
@@ -197,7 +198,7 @@ export async function putMealPlanForUser(
       },
     });
   } catch (error) {
-    console.error('Failed to put meal plan in DynamoDB:', error);
+    logger.error('Failed to put meal plan in DynamoDB:', error);
     throw error;
   }
 }

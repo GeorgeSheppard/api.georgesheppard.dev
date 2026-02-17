@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Location } from '@core/types/location.js';
+import { logger } from '@core/telemetry/logger.js';
 
 interface CountryIpResponse {
   ip: string;
@@ -48,7 +49,7 @@ export class CountryIsIpLocator implements IpLocator {
           return Location.Us; // Default fallback
       }
     } catch (error) {
-      console.error('IP location lookup failed:', error);
+      logger.error('IP location lookup failed:', error);
       return Location.Us; // Default fallback on error
     }
   }

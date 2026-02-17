@@ -1,6 +1,7 @@
 import FormData from 'form-data';
 import axios from 'axios';
 import { config } from '@config/index.js';
+import { logger } from '@core/telemetry/logger.js';
 
 export interface SendEmailOptions {
   from: string;
@@ -51,7 +52,7 @@ export class MailgunClient implements EmailClient {
         headers: form.getHeaders(),
       });
     } catch (error) {
-      console.error('Failed to send email via Mailgun:', error);
+      logger.error('Failed to send email via Mailgun:', error);
       throw error;
     }
   }

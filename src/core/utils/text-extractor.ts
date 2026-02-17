@@ -1,6 +1,7 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import { config } from '@config/index.js';
+import { logger } from '@core/telemetry/logger.js';
 
 export interface TextExtractionResponse {
   books: string[];
@@ -34,7 +35,7 @@ export class TextExtractorClient {
 
       return response.data;
     } catch (error) {
-      console.error('Text extraction failed:', error);
+      logger.error('Text extraction failed:', error);
       throw error;
     }
   }

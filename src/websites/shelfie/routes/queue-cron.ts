@@ -4,6 +4,7 @@ import { Context } from 'hono';
 import { findDueUsers, createRecurringRecommendation } from '../queries/recommendations.js';
 import { authMiddleware } from '@core/middleware/auth.js';
 import { ROUTES } from './paths.js';
+import { logger } from '@core/telemetry/logger.js';
 
 const route = createRoute({
   method: 'get',
@@ -54,15 +55,15 @@ export async function queueDueRecommendations(c: Context): Promise<QueueCronResu
         );
         successCount++;
       } catch (queueError) {
-        console.error(`Failed to queue recommendation for user ${user.id}:`, queueError);
+        logger.error(`Failed to queue recommendation for user ${user.id}:`, queueError);
         queueFailures++;
       }
     } catch (error) {
-      console.error(`Failed to process user ${user.id}:`, error);
+      logger.error(`Failed to process user ${user.id}:`, error);
     }
   }
 
-  console.log(
+  logger.info(
     `Queued recommendations for ${successCount}/${dueUsers.length} users (${queueFailures} queue failures)`
   );
 
