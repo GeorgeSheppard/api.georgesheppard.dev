@@ -6,6 +6,7 @@ import { RecipeSchema } from '../../schemas.js';
 
 export const ParseRecipeRequestSchema = z.object({
   recipeText: z.string().min(1).describe('Natural language recipe text to parse'),
+  recipeId: z.string().uuid().optional().describe('Recipe UUID for editing existing recipes'),
 });
 
 export type ParseRecipeRequest = z.infer<typeof ParseRecipeRequestSchema>;
@@ -22,7 +23,11 @@ export async function parseRecipe(
   const dynamoClient = c.get('dynamoClient');
   const openaiClient = c.get('openaiClient');
 
-  const recipe = await parseRecipeWithOpenAI(input.recipeText, openaiClient.getClient());
+  const recipe = await parseRecipeWithOpenAI(
+    input.recipeText,
+    openaiClient.getClient(),
+    input.recipeId
+  );
 
   await updateRecipeInDynamo(dynamoClient.client, userId, recipe);
 

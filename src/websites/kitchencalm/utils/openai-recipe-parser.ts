@@ -8,7 +8,8 @@ const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided na
 
 export async function parseRecipeWithOpenAI(
   recipeText: string,
-  openaiClient: OpenAI
+  openaiClient: OpenAI,
+  recipeId?: string
 ): Promise<IRecipe> {
   const completion = await openaiClient.beta.chat.completions.parse({
     model: 'gpt-4o',
@@ -28,7 +29,7 @@ export async function parseRecipeWithOpenAI(
   // Add UUIDs to the parsed recipe
   const recipe = {
     ...parsed,
-    uuid: uuidv4(),
+    uuid: recipeId ?? uuidv4(),
     components: parsed.components.map((component) => ({
       ...component,
       uuid: uuidv4(),

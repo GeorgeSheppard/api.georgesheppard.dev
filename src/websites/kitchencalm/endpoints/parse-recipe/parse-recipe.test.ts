@@ -57,7 +57,11 @@ describe('parseRecipe handler', () => {
     const result = await parseRecipe(mockContext(), input);
 
     expect(result).toEqual(validParsedRecipe);
-    expect(parseRecipeWithOpenAI).toHaveBeenCalledWith(input.recipeText, expect.any(Object));
+    expect(parseRecipeWithOpenAI).toHaveBeenCalledWith(
+      input.recipeText,
+      expect.any(Object),
+      undefined
+    );
     expect(updateRecipeInDynamo).toHaveBeenCalledWith({}, validUserId, validParsedRecipe);
   });
 
@@ -122,7 +126,8 @@ describe('parseRecipe handler', () => {
 
     expect(parseRecipeWithOpenAI).toHaveBeenCalledWith(
       recipeText,
-      context.get('openaiClient').getClient()
+      context.get('openaiClient').getClient(),
+      undefined
     );
   });
 });
