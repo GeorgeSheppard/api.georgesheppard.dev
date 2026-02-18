@@ -21,15 +21,15 @@ describe('getMealPlan handler', () => {
     vi.clearAllMocks();
   });
 
-  it('should return empty array when no meal plan exists', async () => {
+  it('should return empty object when no meal plan exists', async () => {
     vi.mocked(getMealPlanForUser).mockResolvedValue({});
 
     const result = await getMealPlan(mockContext());
 
-    expect(result).toEqual([]);
+    expect(result).toEqual({});
   });
 
-  it('should return meal plan with entries as sorted array', async () => {
+  it('should return meal plan with entries', async () => {
     const mealPlan: IMealPlan = {
       'Monday - 01/08/2024': {
         'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
@@ -39,14 +39,7 @@ describe('getMealPlan handler', () => {
 
     const result = await getMealPlan(mockContext());
 
-    expect(result).toEqual([
-      {
-        date: 'Monday - 01/08/2024',
-        plan: {
-          'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
-        },
-      },
-    ]);
+    expect(result).toEqual(mealPlan);
   });
 
   it('should pass dynamoClient.client and userId to utility function', async () => {
@@ -60,44 +53,6 @@ describe('getMealPlan handler', () => {
     await getMealPlan(c);
 
     expect(getMealPlanForUser).toHaveBeenCalledWith(mockClient.client, validUserId);
-  });
-
-  it('should sort meal plan entries by date', async () => {
-    const mealPlan: IMealPlan = {
-      'Wednesday - 01/10/2024': {
-        'recipe-uuid-3': [{ componentId: 'comp-3', servings: 1 }],
-      },
-      'Monday - 01/08/2024': {
-        'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
-      },
-      'Tuesday - 01/09/2024': {
-        'recipe-uuid-2': [{ componentId: 'comp-2', servings: 3 }],
-      },
-    };
-    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
-
-    const result = await getMealPlan(mockContext());
-
-    expect(result).toEqual([
-      {
-        date: 'Monday - 01/08/2024',
-        plan: {
-          'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
-        },
-      },
-      {
-        date: 'Tuesday - 01/09/2024',
-        plan: {
-          'recipe-uuid-2': [{ componentId: 'comp-2', servings: 3 }],
-        },
-      },
-      {
-        date: 'Wednesday - 01/10/2024',
-        plan: {
-          'recipe-uuid-3': [{ componentId: 'comp-3', servings: 1 }],
-        },
-      },
-    ]);
   });
 
   it('should throw when DynamoDB fails', async () => {

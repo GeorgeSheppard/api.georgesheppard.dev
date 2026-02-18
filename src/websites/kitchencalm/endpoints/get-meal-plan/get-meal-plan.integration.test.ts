@@ -10,7 +10,7 @@ import { putMealPlanForUser } from '@core/dynamodb/utilities.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
 
 describe('Get Meal Plan Endpoint', () => {
-  test('should return empty array when no meal plan exists', async ({ dynamoClient }) => {
+  test('should return empty meal plan when none exists', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
     const userId = uuidv4();
     const token = await signJwt(userId);
@@ -26,21 +26,20 @@ describe('Get Meal Plan Endpoint', () => {
 
     expect(response.status).toBe(200);
     const result = await response.json();
-    expect(result).toEqual([]);
+    expect(result).toEqual({});
   });
 
-  test('should return meal plan as sorted array when it exists', async ({ dynamoClient }) => {
+  test('should return meal plan when it exists', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
     const userId = uuidv4();
     const token = await signJwt(userId);
     const recipeId = uuidv4();
-    const componentId = uuidv4();
 
     const mealPlan: IMealPlan = {
       'Monday - 01/08/2024': {
         [recipeId]: [
           {
-            componentId,
+            componentId: uuidv4(),
             servings: 2,
           },
         ],
@@ -60,19 +59,7 @@ describe('Get Meal Plan Endpoint', () => {
 
     expect(response.status).toBe(200);
     const result = await response.json();
-    expect(result).toEqual([
-      {
-        date: 'Monday - 01/08/2024',
-        plan: {
-          [recipeId]: [
-            {
-              componentId,
-              servings: 2,
-            },
-          ],
-        },
-      },
-    ]);
+    expect(result).toEqual(mealPlan);
   });
 
   test('should require authentication', async ({ dynamoClient }) => {

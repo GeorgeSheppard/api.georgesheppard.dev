@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { test } from '@test/fixtures.js';
 import { createTestApp } from '@test/utils/app.js';
 import { signJwt } from '@core/utils/jwt.js';
+import { IMealPlan } from '@core/types/meal-plan.js';
 
 describe('Update Meal Plan Endpoint', () => {
   test('should create a new meal plan', async ({ dynamoClient }) => {
@@ -13,21 +14,17 @@ describe('Update Meal Plan Endpoint', () => {
     const userId = uuidv4();
     const token = await signJwt(userId);
     const recipeId = uuidv4();
-    const componentId = uuidv4();
 
-    const mealPlanArray = [
-      {
-        date: 'Monday - 01/08/2024',
-        plan: {
-          [recipeId]: [
-            {
-              componentId,
-              servings: 2,
-            },
-          ],
-        },
+    const mealPlan: IMealPlan = {
+      'Monday - 01/08/2024': {
+        [recipeId]: [
+          {
+            componentId: uuidv4(),
+            servings: 2,
+          },
+        ],
       },
-    ];
+    };
 
     const response = await app.request(
       new Request('http://localhost/kitchencalm/meal-plan', {
@@ -36,7 +33,7 @@ describe('Update Meal Plan Endpoint', () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(mealPlanArray),
+        body: JSON.stringify(mealPlan),
       })
     );
 
@@ -55,7 +52,7 @@ describe('Update Meal Plan Endpoint', () => {
     );
 
     const retrieved = await getResponse.json();
-    expect(retrieved).toEqual(mealPlanArray);
+    expect(retrieved).toEqual(mealPlan);
   });
 
   test('should require authentication', async ({ dynamoClient }) => {
@@ -79,7 +76,7 @@ describe('Update Meal Plan Endpoint', () => {
     const userId = uuidv4();
     const token = await signJwt(userId);
 
-    const emptyMealPlan: Array<{ date: string; plan: Record<string, unknown> }> = [];
+    const emptyMealPlan: IMealPlan = {};
 
     const response = await app.request(
       new Request('http://localhost/kitchencalm/meal-plan', {
