@@ -4,10 +4,9 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-proto';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
-import { config } from '@config/index.js';
 
 export function initTelemetry(): NodeSDK | undefined {
-  if (!config.OTEL_EXPORTER_OTLP_ENDPOINT) return undefined;
+  if (!process.env.OTEL_EXPORTER_OTLP_ENDPOINT) return undefined;
 
   // Exporters auto-read OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_HEADERS,
   // and OTEL_SERVICE_NAME from standard env vars.

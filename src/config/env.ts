@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { logger } from '@core/telemetry/logger.js';
+import { logger, flushLogs } from '@core/telemetry/logger.js';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -58,12 +58,13 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
-export function validateEnv() {
+export async function validateEnv() {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
     logger.error('Invalid environment variables:');
     logger.error(z.treeifyError(result.error));
+    await flushLogs();
     process.exit(1);
   }
 

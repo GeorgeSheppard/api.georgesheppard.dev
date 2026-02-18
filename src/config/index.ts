@@ -1,4 +1,4 @@
 import 'dotenv/config';
 import { validateEnv } from './env.js';
 
-export const config = validateEnv();
+export const config = await validateEnv();

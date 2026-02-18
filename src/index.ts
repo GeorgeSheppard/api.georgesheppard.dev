@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server';
+import { telemetrySdk } from '@core/telemetry/init.js';
 import { createApp } from './server.js';
 import { config } from '@config/index.js';
-import { initTelemetry } from '@core/telemetry/index.js';
 import { createQueueClient } from '@core/queue/client.js';
 import { createDatabaseClient } from '@core/database/client.js';
 import { createDynamoDBClient } from '@core/dynamodb/client.js';
@@ -11,7 +11,6 @@ import { CountryIsIpLocator } from '@core/utils/ip-locator.js';
 import { logger } from '@core/telemetry/logger.js';
 
 async function main() {
-  const telemetrySdk = initTelemetry();
   const databaseClient = await createDatabaseClient(config.DATABASE_URL);
   const queueClient = await createQueueClient(config.RABBITMQ_URL);
   const dynamoClient = await createDynamoDBClient(

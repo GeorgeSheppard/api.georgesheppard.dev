@@ -7,6 +7,13 @@ function emit(severity: SeverityNumber, args: unknown[]) {
   });
 }
 
+export async function flushLogs() {
+  const provider = logs.getLoggerProvider();
+  if ('forceFlush' in provider) {
+    await (provider as { forceFlush(): Promise<void> }).forceFlush().catch(() => {});
+  }
+}
+
 export const logger = {
   info(...args: unknown[]) {
     console.log(...args);

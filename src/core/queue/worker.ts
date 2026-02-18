@@ -1,3 +1,4 @@
+import '@core/telemetry/init.js';
 import { createQueueClient } from './client.js';
 import { createDatabaseClient } from '@core/database/client.js';
 import { processTextExtractionJob } from '@websites/shelfie/workers/text-extraction-worker.js';
