@@ -1,41 +1,71 @@
 import { v4 as uuidv4 } from 'uuid';
 import OpenAI from 'openai';
-import { IRecipe, Unit } from '@core/types/recipes.js';
+import { IRecipe } from '@core/types/recipes.js';
 import { RecipeSchema } from '../schemas.js';
 
-const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided natural language recipe text into a structured JSON format.
+const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided natural language recipe text into a structured JSON format.`;
 
-Return a JSON object matching this exact schema (do NOT include uuid fields):
-{
-  "name": "<recipe name>",
-  "description": "<brief description of the dish>",
-  "images": [],
-  "components": [
-    {
-      "name": "<component name, e.g. 'Main' or 'Sauce'>",
-      "ingredients": [
-        {
-          "name": "<ingredient name>",
-          "quantity": {
-            "unit": "<one of: none, mL, L, g, kg, cup, tsp, tbsp, quantity>",
-            "value": <numeric value or omit if not specified>
-          }
-        }
-      ],
-      "instructions": [
-        {
-          "text": "<instruction step>",
-          "optional": <true or false, omit if not optional>
-        }
-      ],
-      "storeable": <true if this component can be made ahead, omit otherwise>,
-      "servings": <number of servings, omit if not specified>
-    }
-  ]
-}
-
-Unit values must be one of: "none", "mL", "L", "g", "kg", "cup", "tsp", "tbsp", "quantity".
-Group ingredients and instructions into logical components. Use a single "Main" component if the recipe has no distinct parts.`;
+// JSON Schema for structured outputs (without uuid fields)
+const RECIPE_SCHEMA = {
+  type: 'object' as const,
+  properties: {
+    name: { type: 'string', description: 'Recipe name' },
+    description: { type: 'string', description: 'Brief description of the dish' },
+    images: { type: 'array', items: { type: 'object' }, description: 'Images array' },
+    components: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Component name (e.g., "Main" or "Sauce")',
+          },
+          ingredients: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                quantity: {
+                  type: 'object',
+                  properties: {
+                    unit: {
+                      type: 'string',
+                      enum: ['none', 'mL', 'L', 'g', 'kg', 'cup', 'tsp', 'tbsp', 'quantity'],
+                      description: 'Unit of measurement',
+                    },
+                    value: {
+                      type: 'number',
+                      description: 'Numeric quantity value (optional)',
+                    },
+                  },
+                  required: ['unit'],
+                },
+              },
+              required: ['name', 'quantity'],
+            },
+          },
+          instructions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                text: { type: 'string' },
+                optional: { type: 'boolean' },
+              },
+              required: ['text'],
+            },
+          },
+          storeable: { type: 'boolean', description: 'Can be made ahead and stored' },
+          servings: { type: 'number', description: 'Number of servings' },
+        },
+        required: ['name', 'ingredients', 'instructions'],
+      },
+    },
+  },
+  required: ['name', 'description', 'images', 'components'],
+};
 
 function injectUUIDs(recipe: Record<string, unknown>): void {
   recipe.uuid = uuidv4();
@@ -45,31 +75,6 @@ function injectUUIDs(recipe: Record<string, unknown>): void {
       if (typeof component === 'object' && component !== null) {
         const comp = component as Record<string, unknown>;
         comp.uuid = uuidv4();
-      }
-    });
-  }
-}
-
-function validateAndFixUnits(recipe: Record<string, unknown>, validUnits: string[]): void {
-  if (Array.isArray(recipe.components)) {
-    recipe.components.forEach((component: unknown) => {
-      if (typeof component === 'object' && component !== null) {
-        const comp = component as Record<string, unknown>;
-
-        if (Array.isArray(comp.ingredients)) {
-          comp.ingredients.forEach((ingredient: unknown) => {
-            if (typeof ingredient === 'object' && ingredient !== null) {
-              const ing = ingredient as Record<string, unknown>;
-
-              if (typeof ing.quantity === 'object' && ing.quantity !== null) {
-                const qty = ing.quantity as Record<string, unknown>;
-                if (!validUnits.includes(qty.unit as string)) {
-                  qty.unit = Unit.NO_UNIT;
-                }
-              }
-            }
-          });
-        }
       }
     });
   }
@@ -85,7 +90,14 @@ export async function parseRecipeWithOpenAI(
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: recipeText },
     ],
-    response_format: { type: 'json_object' },
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
+        name: 'recipe',
+        schema: RECIPE_SCHEMA,
+        strict: true,
+      },
+    } as Parameters<typeof openaiClient.chat.completions.create>[0]['response_format'],
     temperature: 0.2,
   });
 
@@ -100,11 +112,9 @@ export async function parseRecipeWithOpenAI(
   }
 
   const recipe = parsed as Record<string, unknown>;
-  const validUnits = Object.values(Unit);
 
-  // Inject UUIDs and validate units
+  // Inject UUIDs
   injectUUIDs(recipe);
-  validateAndFixUnits(recipe, validUnits);
 
   const result = RecipeSchema.safeParse(recipe);
   if (!result.success) {
