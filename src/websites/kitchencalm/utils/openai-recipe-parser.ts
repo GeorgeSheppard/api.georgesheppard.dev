@@ -5,16 +5,14 @@ import { RecipeSchema } from '../schemas.js';
 
 const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided natural language recipe text into a structured JSON format.
 
-Return a JSON object matching this exact schema:
+Return a JSON object matching this exact schema (do NOT include uuid fields):
 {
-  "uuid": "<a new UUID v4>",
   "name": "<recipe name>",
   "description": "<brief description of the dish>",
   "images": [],
   "components": [
     {
       "name": "<component name, e.g. 'Main' or 'Sauce'>",
-      "uuid": "<a new UUID v4>",
       "ingredients": [
         {
           "name": "<ingredient name>",
@@ -37,48 +35,44 @@ Return a JSON object matching this exact schema:
 }
 
 Unit values must be one of: "none", "mL", "L", "g", "kg", "cup", "tsp", "tbsp", "quantity".
-Group ingredients and instructions into logical components. Use a single "Main" component if the recipe has no distinct parts.
-Always generate fresh UUID v4 values for uuid fields.`;
+Group ingredients and instructions into logical components. Use a single "Main" component if the recipe has no distinct parts.`;
 
-function sanitizeRecipe(parsed: unknown, validUnits: string[]): unknown {
-  if (typeof parsed !== 'object' || parsed === null) return parsed;
+function injectUUIDs(recipe: Record<string, unknown>): void {
+  recipe.uuid = uuidv4();
 
-  const obj = parsed as Record<string, unknown>;
-
-  if (!obj.uuid || typeof obj.uuid !== 'string') {
-    obj.uuid = uuidv4();
-  }
-
-  if (Array.isArray(obj.components)) {
-    obj.components = obj.components.map((component: unknown) => {
-      if (typeof component !== 'object' || component === null) return component;
-      const comp = component as Record<string, unknown>;
-
-      if (!comp.uuid || typeof comp.uuid !== 'string') {
+  if (Array.isArray(recipe.components)) {
+    recipe.components.forEach((component: unknown) => {
+      if (typeof component === 'object' && component !== null) {
+        const comp = component as Record<string, unknown>;
         comp.uuid = uuidv4();
       }
-
-      if (Array.isArray(comp.ingredients)) {
-        comp.ingredients = comp.ingredients.map((ingredient: unknown) => {
-          if (typeof ingredient !== 'object' || ingredient === null) return ingredient;
-          const ing = ingredient as Record<string, unknown>;
-
-          if (typeof ing.quantity === 'object' && ing.quantity !== null) {
-            const qty = ing.quantity as Record<string, unknown>;
-            if (!validUnits.includes(qty.unit as string)) {
-              qty.unit = Unit.NO_UNIT;
-            }
-          }
-
-          return ing;
-        });
-      }
-
-      return comp;
     });
   }
+}
 
-  return obj;
+function validateAndFixUnits(recipe: Record<string, unknown>, validUnits: string[]): void {
+  if (Array.isArray(recipe.components)) {
+    recipe.components.forEach((component: unknown) => {
+      if (typeof component === 'object' && component !== null) {
+        const comp = component as Record<string, unknown>;
+
+        if (Array.isArray(comp.ingredients)) {
+          comp.ingredients.forEach((ingredient: unknown) => {
+            if (typeof ingredient === 'object' && ingredient !== null) {
+              const ing = ingredient as Record<string, unknown>;
+
+              if (typeof ing.quantity === 'object' && ing.quantity !== null) {
+                const qty = ing.quantity as Record<string, unknown>;
+                if (!validUnits.includes(qty.unit as string)) {
+                  qty.unit = Unit.NO_UNIT;
+                }
+              }
+            }
+          });
+        }
+      }
+    });
+  }
 }
 
 export async function parseRecipeWithOpenAI(
@@ -101,10 +95,18 @@ export async function parseRecipeWithOpenAI(
   }
 
   const parsed: unknown = JSON.parse(content);
-  const validUnits = Object.values(Unit);
-  const sanitized = sanitizeRecipe(parsed, validUnits);
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new Error('Invalid recipe format from OpenAI');
+  }
 
-  const result = RecipeSchema.safeParse(sanitized);
+  const recipe = parsed as Record<string, unknown>;
+  const validUnits = Object.values(Unit);
+
+  // Inject UUIDs and validate units
+  injectUUIDs(recipe);
+  validateAndFixUnits(recipe, validUnits);
+
+  const result = RecipeSchema.safeParse(recipe);
   if (!result.success) {
     throw new Error(`OpenAI returned invalid recipe format: ${result.error.message}`);
   }
