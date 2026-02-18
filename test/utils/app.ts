@@ -42,6 +42,7 @@ export async function createTestApp(dependencies: Partial<AppDependencies>): Pro
     ipLocator: dependencies.ipLocator ?? createMissingDependencyProxy('ipLocator'),
     dynamoClient: dependencies.dynamoClient ?? createMissingDependencyProxy('dynamoClient'),
     s3Client: dependencies.s3Client ?? createMissingDependencyProxy('s3Client'),
+    openaiClient: dependencies.openaiClient ?? createMissingDependencyProxy('openaiClient'),
   };
 
   return createApp(fullDependencies);

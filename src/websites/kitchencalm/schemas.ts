@@ -50,6 +50,10 @@ export const RecipeSchema = z
   })
   .openapi('Recipe');
 
+// Schemas for OpenAI parsing (without UUIDs - we generate those on the backend)
+export const OpenAIComponentSchema = ComponentSchema.omit({ uuid: true });
+export const OpenAIRecipeSchema = RecipeSchema.omit({ uuid: true });
+
 export const MealPlanEntrySchema = z
   .object({
     componentId: z.string().uuid().describe('Recipe component UUID'),

@@ -9,6 +9,7 @@ import { QueueClient } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
 import { DynamoDBClientWrapper } from '@core/dynamodb/client.js';
 import { S3ClientWrapper } from '@core/s3/client.js';
+import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import { registerShelfieRoutes } from '@websites/shelfie/index.js';
 import {
   registerRoutes as registerKitchenCalmRoutes,
@@ -29,11 +30,19 @@ export interface AppDependencies {
   ipLocator: IpLocator;
   dynamoClient: DynamoDBClientWrapper;
   s3Client: S3ClientWrapper;
+  openaiClient: OpenAIClientWrapper;
 }
 
 export async function createApp(dependencies: AppDependencies) {
-  const { databaseClient, queueClient, emailClient, ipLocator, dynamoClient, s3Client } =
-    dependencies;
+  const {
+    databaseClient,
+    queueClient,
+    emailClient,
+    ipLocator,
+    dynamoClient,
+    s3Client,
+    openaiClient,
+  } = dependencies;
   const app = new OpenAPIHono();
 
   // Store clients in app context
@@ -44,6 +53,7 @@ export async function createApp(dependencies: AppDependencies) {
     c.set('ipLocator', ipLocator);
     c.set('dynamoClient', dynamoClient);
     c.set('s3Client', s3Client);
+    c.set('openaiClient', openaiClient);
     await next();
   });
 
@@ -102,5 +112,6 @@ declare module 'hono' {
     ipLocator: IpLocator;
     dynamoClient: DynamoDBClientWrapper;
     s3Client: S3ClientWrapper;
+    openaiClient: OpenAIClientWrapper;
   }
 }
