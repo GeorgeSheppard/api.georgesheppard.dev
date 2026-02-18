@@ -20,8 +20,9 @@ export async function parseRecipe(
 ): Promise<ParseRecipeResponse> {
   const userId = c.get('userId');
   const dynamoClient = c.get('dynamoClient');
+  const openaiClient = c.get('openaiClient');
 
-  const recipe = await parseRecipeWithOpenAI(input.recipeText);
+  const recipe = await parseRecipeWithOpenAI(input.recipeText, openaiClient.getClient());
 
   await updateRecipeInDynamo(dynamoClient.client, userId, recipe);
 

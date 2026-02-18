@@ -40,6 +40,7 @@ function mockContext(userId = validUserId) {
   return createMockContext<ContextWithUserId>({
     userId,
     dynamoClient: { client: {} },
+    openaiClient: { getClient: () => ({}) },
   });
 }
 
@@ -56,7 +57,7 @@ describe('parseRecipe handler', () => {
     const result = await parseRecipe(mockContext(), input);
 
     expect(result).toEqual(validParsedRecipe);
-    expect(parseRecipeWithOpenAI).toHaveBeenCalledWith(input.recipeText);
+    expect(parseRecipeWithOpenAI).toHaveBeenCalledWith(input.recipeText, expect.any(Object));
     expect(updateRecipeInDynamo).toHaveBeenCalledWith({}, validUserId, validParsedRecipe);
   });
 
@@ -65,6 +66,7 @@ describe('parseRecipe handler', () => {
     const c = createMockContext<ContextWithUserId>({
       userId: validUserId,
       dynamoClient: mockClient,
+      openaiClient: { getClient: () => ({}) },
     });
     vi.mocked(parseRecipeWithOpenAI).mockResolvedValue(validParsedRecipe);
     vi.mocked(updateRecipeInDynamo).mockResolvedValue();
@@ -110,13 +112,17 @@ describe('parseRecipe handler', () => {
     expect(result.uuid).toBe('550e8400-e29b-41d4-a716-446655440003');
   });
 
-  it('should pass the recipeText to OpenAI parser', async () => {
+  it('should pass the recipeText and OpenAI client to parser', async () => {
     vi.mocked(parseRecipeWithOpenAI).mockResolvedValue(validParsedRecipe);
     vi.mocked(updateRecipeInDynamo).mockResolvedValue();
 
     const recipeText = 'Detailed recipe instructions go here';
-    await parseRecipe(mockContext(), { recipeText });
+    const context = mockContext();
+    await parseRecipe(context, { recipeText });
 
-    expect(parseRecipeWithOpenAI).toHaveBeenCalledWith(recipeText);
+    expect(parseRecipeWithOpenAI).toHaveBeenCalledWith(
+      recipeText,
+      context.get('openaiClient').getClient()
+    );
   });
 });

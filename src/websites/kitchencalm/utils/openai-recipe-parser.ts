@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import OpenAI from 'openai';
-import { config } from '@config/index.js';
 import { IRecipe, Unit } from '@core/types/recipes.js';
 import { RecipeSchema } from '../schemas.js';
 
@@ -82,9 +81,10 @@ function sanitizeRecipe(parsed: unknown, validUnits: string[]): unknown {
   return obj;
 }
 
-export async function parseRecipeWithOpenAI(recipeText: string): Promise<IRecipe> {
-  const openaiClient = new OpenAI({ apiKey: config.OPENAI_API_KEY });
-
+export async function parseRecipeWithOpenAI(
+  recipeText: string,
+  openaiClient: OpenAI
+): Promise<IRecipe> {
   const completion = await openaiClient.chat.completions.create({
     model: 'gpt-4o',
     messages: [
