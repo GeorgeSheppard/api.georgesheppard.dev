@@ -6,6 +6,7 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { IRecipe } from '@core/types/recipes.js';
 import { config } from '@config/index.js';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@core/telemetry/logger.js';
 
 /**
  * Create a shared recipe (public access)
@@ -34,7 +35,7 @@ export async function createSharedRecipe(
 
     return { shareId };
   } catch (error) {
-    console.error('Failed to create shared recipe in DynamoDB:', error);
+    logger.error('Failed to create shared recipe in DynamoDB:', error);
     throw error;
   }
 }
@@ -66,7 +67,7 @@ export async function getSharedRecipe(
     const { UserId: _userId, Item: _item, ...recipe } = result.Item;
     return recipe as IRecipe;
   } catch (error) {
-    console.error('Failed to get shared recipe from DynamoDB:', error);
+    logger.error('Failed to get shared recipe from DynamoDB:', error);
     throw error;
   }
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logger, flushLogs } from '@core/telemetry/logger.js';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -49,16 +50,23 @@ const envSchema = z.object({
   S3_ACCESS_KEY_ID: z.string(),
   S3_SECRET_ACCESS_KEY: z.string(),
   S3_ENDPOINT: z.string().url().optional(),
+
+  // OpenTelemetry (optional — telemetry is disabled when endpoint is unset)
+  // These are read directly from process.env by the OTel SDK, not from config.
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
+  OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
+  OTEL_SERVICE_NAME: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
 
-export function validateEnv() {
+export async function validateEnv() {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error('Invalid environment variables:');
-    console.error(z.treeifyError(result.error));
+    logger.error('Invalid environment variables:');
+    logger.error(z.treeifyError(result.error));
+    await flushLogs();
     process.exit(1);
   }
 

@@ -5,6 +5,7 @@ import { createBookcaseRequest } from '../../queries/recommendations.js';
 import { parseMultipartFiles } from '@core/utils/multipart.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 import { ROUTES } from '../paths.js';
+import { logger } from '@core/telemetry/logger.js';
 
 const SuccessResponse = z.object({
   id: z.string().uuid(),
@@ -87,7 +88,7 @@ export async function fromBookcase(
       { persistent: true }
     );
   } catch (error) {
-    console.error('Failed to send queue message:', error);
+    logger.error('Failed to send queue message:', error);
     return {
       status: 500,
       body: { error: 'Failed to queue recommendation processing', success: false },

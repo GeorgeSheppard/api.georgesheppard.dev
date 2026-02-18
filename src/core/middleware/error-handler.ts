@@ -1,8 +1,9 @@
 import { ErrorHandler } from 'hono';
 import z, { ZodError } from 'zod';
+import { logger } from '@core/telemetry/logger.js';
 
 export const errorHandler: ErrorHandler = (error, c) => {
-  console.error('Error occurred:', {
+  logger.error('Error occurred:', {
     method: c.req.method,
     url: c.req.url,
     error: error.message,

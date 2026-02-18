@@ -9,6 +9,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { config } from '@config/index.js';
+import { logger } from '@core/telemetry/logger.js';
 
 /**
  * Generate a signed GET URL for downloading a file from S3
@@ -27,7 +28,7 @@ export async function getSignedGetUrl(client: S3Client, key: string): Promise<st
     const url = await getSignedUrl(client, command, { expiresIn: 3600 });
     return url;
   } catch (error) {
-    console.error('Failed to generate signed GET URL for S3:', error);
+    logger.error('Failed to generate signed GET URL for S3:', error);
     throw error;
   }
 }
@@ -62,7 +63,7 @@ export async function getSignedPutUrl(
     const url = await getSignedUrl(client, command, { expiresIn: 3600 });
     return url;
   } catch (error) {
-    console.error('Failed to generate signed PUT URL for S3:', error);
+    logger.error('Failed to generate signed PUT URL for S3:', error);
     throw error;
   }
 }
@@ -83,7 +84,7 @@ export async function deleteS3Object(client: S3Client, key: string): Promise<voi
 
     await client.send(command);
   } catch (error) {
-    console.error('Failed to delete S3 object:', error);
+    logger.error('Failed to delete S3 object:', error);
     throw error;
   }
 }

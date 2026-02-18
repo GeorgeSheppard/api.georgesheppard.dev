@@ -2,6 +2,7 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { swaggerUI } from '@hono/swagger-ui';
+import { httpInstrumentationMiddleware } from '@hono/otel';
 import { securityHeaders } from '@core/middleware/security.js';
 import { errorHandler } from '@core/middleware/error-handler.js';
 import { QueueClient } from '@core/queue/client.js';
@@ -47,6 +48,7 @@ export async function createApp(dependencies: AppDependencies) {
   });
 
   // Middleware registration
+  app.use('*', httpInstrumentationMiddleware());
   app.use('*', logger());
   app.use('*', securityHeaders());
   app.use('*', cors({ origin: '*' }));

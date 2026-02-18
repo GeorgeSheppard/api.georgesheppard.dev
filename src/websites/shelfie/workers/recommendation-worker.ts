@@ -6,6 +6,7 @@ import { encryption } from '@core/utils/encryption.js';
 import { RecommendationJob } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
 import { Location } from '@core/types/location.js';
+import { logger } from '@core/telemetry/logger.js';
 
 export async function processRecommendationJob(
   job: RecommendationJob,
@@ -15,7 +16,7 @@ export async function processRecommendationJob(
 ) {
   const { userId, recommendationId } = job;
 
-  console.log(`Generating recommendations for user ${userId}`);
+  logger.info(`Generating recommendations for user ${userId}`);
 
   const { db } = databaseClient;
 
@@ -36,7 +37,7 @@ export async function processRecommendationJob(
 
   const previousBooks = previousRecs.flatMap((r) => r.recommendations || []);
 
-  console.log(`Found ${previousBooks.length} previous recommendations`);
+  logger.info(`Found ${previousBooks.length} previous recommendations`);
 
   // Generate new recommendations
   const location = (user.location as Location) || Location.Us;
@@ -55,7 +56,7 @@ export async function processRecommendationJob(
     })
     .where(eq(recommendations.id, recommendationId));
 
-  console.log(`Generated ${newRecommendations.length} recommendations`);
+  logger.info(`Generated ${newRecommendations.length} recommendations`);
 
   // Send email if user has email
   if (user.email) {
@@ -74,14 +75,14 @@ export async function processRecommendationJob(
         },
       });
 
-      console.log('Email sent successfully');
+      logger.info('Email sent successfully');
 
       // Clear email if one-time subscription
       if (!user.frequency) {
         await db.update(requests).set({ email: null }).where(eq(requests.id, userId));
       }
     } catch (error) {
-      console.error(`Failed to send email: ${error}`);
+      logger.error(`Failed to send email: ${error}`);
       // Don't fail the job if email fails
     }
   }

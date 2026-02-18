@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { config } from '@config/index.js';
 import { Location, toAffiliateTag, toAmazonDomain } from '@core/types/location.js';
 import { Recommendation } from '@core/types/recommendation.js';
+import { logger } from '@core/telemetry/logger.js';
 
 export abstract class Recommender {
   abstract getRecommendations(
@@ -63,7 +64,7 @@ export class OpenAIRecommender implements Recommender {
         amazonLink: this.buildAmazonLink(rec.name || rec.title, rec.author, location),
       }));
     } catch (error) {
-      console.error('OpenAI recommendation generation failed:', error);
+      logger.error('OpenAI recommendation generation failed:', error);
       throw error;
     }
   }

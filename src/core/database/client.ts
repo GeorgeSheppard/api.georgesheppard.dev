@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import * as schema from './schema/index.js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { config } from '@config/index.js';
+import { logger } from '@core/telemetry/logger.js';
 
 export interface DatabaseClient {
   db: ReturnType<typeof drizzle>;
@@ -20,9 +21,9 @@ export async function createDatabaseClient(url: string): Promise<DatabaseClient>
     await migrate(db, {
       migrationsFolder: config.DATABASE_MIGRATIONS_PATH,
     });
-    console.log('✅ Database migrations completed');
+    logger.info('Database migrations completed');
   } catch (error) {
-    console.warn('⚠️ Migration error, check that the DB is running:', error);
+    logger.warn('Migration error, check that the DB is running:', error);
   }
 
   return {

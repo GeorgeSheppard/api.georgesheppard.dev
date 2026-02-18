@@ -2,6 +2,7 @@ import { createMiddleware } from 'hono/factory';
 import { verifyJwt } from '@core/utils/jwt.js';
 import { verifyCognitoJwt } from '@core/utils/cognito-jwt.js';
 import { ProtectedEnv } from '@core/types/context.js';
+import { logger } from '@core/telemetry/logger.js';
 
 export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) => {
   const authHeader = c.req.header('Authorization');
@@ -24,7 +25,7 @@ export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) 
       const payload = await verifyCognitoJwt(token);
       userId = payload.sub;
     } catch (error) {
-      console.log('Cognito JWT verification failed:', error);
+      logger.info('Cognito JWT verification failed:', error);
     }
   }
 
@@ -34,7 +35,7 @@ export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) 
       const payload = await verifyJwt(token);
       userId = payload.userId;
     } catch (error) {
-      console.log('Internal JWT verification failed:', error);
+      logger.info('Internal JWT verification failed:', error);
     }
   }
 
