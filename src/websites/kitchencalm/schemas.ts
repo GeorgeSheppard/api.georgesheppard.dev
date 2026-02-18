@@ -22,6 +22,37 @@ export const InstructionSchema = z
   })
   .openapi('Instruction');
 
+// Schema for OpenAI parsing (without UUIDs - we generate those on the backend)
+export const OpenAIQuantitySchema = z.object({
+  unit: z.nativeEnum(Unit).describe('Unit of measurement'),
+  value: z.number().optional().describe('Numeric value'),
+});
+
+export const OpenAIIngredientSchema = z.object({
+  name: z.string().describe('Ingredient name'),
+  quantity: OpenAIQuantitySchema,
+});
+
+export const OpenAIInstructionSchema = z.object({
+  text: z.string().describe('Instruction text'),
+  optional: z.boolean().optional().describe('Whether this step is optional'),
+});
+
+export const OpenAIComponentSchema = z.object({
+  name: z.string().describe('Component name'),
+  ingredients: z.array(OpenAIIngredientSchema).describe('List of ingredients'),
+  instructions: z.array(OpenAIInstructionSchema).describe('List of instructions'),
+  storeable: z.boolean().optional().describe('Whether component can be made ahead'),
+  servings: z.number().optional().describe('Number of servings'),
+});
+
+export const OpenAIRecipeSchema = z.object({
+  name: z.string().describe('Recipe name'),
+  description: z.string().describe('Recipe description'),
+  images: z.array(z.object({})).describe('Recipe images'),
+  components: z.array(OpenAIComponentSchema).describe('Recipe components'),
+});
+
 export const ComponentSchema = z
   .object({
     name: z.string().describe('Component name'),
