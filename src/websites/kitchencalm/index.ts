@@ -54,6 +54,8 @@ import {
   SearchRecipesRequestSchema,
   SearchRecipesResponseSchema,
 } from './endpoints/search-recipes/search-recipes.js';
+import { parseRecipe } from './endpoints/parse-recipe/parse-recipe.js';
+import { parseRecipeRoute } from './endpoints/parse-recipe/parse-recipe-definition.js';
 
 export const tools: McpTool<any, any>[] = [
   {
@@ -188,6 +190,12 @@ export function registerRoutes(app: OpenAPIHono) {
     if (!result) {
       return c.json({ error: 'Recipe not found' }, 404);
     }
+    return c.json(result, 200);
+  });
+
+  app.openapi(parseRecipeRoute, async (c) => {
+    const input = c.req.valid('json');
+    const result = await parseRecipe(c as ContextWithUserId, input);
     return c.json(result, 200);
   });
 }
