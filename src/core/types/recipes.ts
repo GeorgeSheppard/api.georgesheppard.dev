@@ -29,6 +29,7 @@ export type ComponentUuid = string;
 export interface Image {
   timestamp: number;
   key: string;
+  presignedUrl: string;
 }
 
 /**

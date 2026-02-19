@@ -223,4 +223,50 @@ describe('GET /kitchencalm/recipes', () => {
     expect(body).toHaveProperty('550e8400-e29b-41d4-a716-446655440104');
     expect(body).toHaveProperty('550e8400-e29b-41d4-a716-446655440105');
   });
+
+  test('should include presigned URLs for recipe images', async ({ dynamoClient }) => {
+    const app = await createTestApp({ dynamoClient });
+    const token = await signJwt(validUserId);
+
+    // Seed a recipe with images
+    const testRecipe: IRecipe = {
+      uuid: '550e8400-e29b-41d4-a716-446655440106' as any,
+      name: 'Test Recipe with Images',
+      description: 'Recipe with images',
+      images: [
+        { timestamp: 1234567890, key: `${validUserId}/image1.jpg`, presignedUrl: '' },
+        { timestamp: 1234567891, key: `${validUserId}/image2.jpg`, presignedUrl: '' },
+      ],
+      components: [],
+    };
+
+    await dynamoClient.client.send(
+      new PutCommand({
+        TableName: config.DYNAMODB_TABLE_NAME,
+        Item: {
+          ...testRecipe,
+          UserId: validUserId,
+          Item: `R-${testRecipe.uuid}`,
+        },
+      })
+    );
+
+    const response = await app.request(
+      new Request('http://localhost/kitchencalm/recipes', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    );
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as Record<string, IRecipe>;
+    const recipe = body['550e8400-e29b-41d4-a716-446655440106'];
+    expect(recipe.images).toHaveLength(2);
+    expect(recipe.images[0].presignedUrl).toBeTruthy();
+    expect(recipe.images[1].presignedUrl).toBeTruthy();
+    expect(recipe.images[0].presignedUrl).toMatch(/^https:\/\//);
+    expect(recipe.images[1].presignedUrl).toMatch(/^https:\/\//);
+  });
 });

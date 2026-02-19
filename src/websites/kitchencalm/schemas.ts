@@ -37,6 +37,7 @@ export const ImageSchema = z
   .object({
     timestamp: z.number().describe('Image timestamp'),
     key: z.string().describe('S3 object key'),
+    presignedUrl: z.string().url().describe('Presigned URL for downloading the image'),
   })
   .openapi('Image');
 
