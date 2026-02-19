@@ -94,6 +94,12 @@ export async function getShoppingListMcp(
   c: ContextWithUserId,
   input: { startDate?: string; endDate?: string }
 ): Promise<GetShoppingListMcpResponse> {
-  const content = await getShoppingList(c, input);
+  const items = await getShoppingList(c, input);
+  const content = items
+    .map(
+      (item) =>
+        `${item.ingredient} - ${item.quantities.map((q) => `${q.value || ''}${q.unit}`).join(', ')} (${item.category})`
+    )
+    .join('\n');
   return { content };
 }
