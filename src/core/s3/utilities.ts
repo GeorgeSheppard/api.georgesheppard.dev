@@ -16,16 +16,21 @@ import { logger } from '@core/telemetry/logger.js';
  *
  * @param client - S3 client
  * @param key - S3 object key
+ * @param expiresIn - URL expiration time in seconds (default: 86400 = 24 hours)
  * @returns Signed GET URL valid for download
  */
-export async function getSignedGetUrl(client: S3Client, key: string): Promise<string> {
+export async function getSignedGetUrl(
+  client: S3Client,
+  key: string,
+  expiresIn: number = 86400
+): Promise<string> {
   try {
     const command = new GetObjectCommand({
       Bucket: config.S3_BUCKET_NAME,
       Key: key,
     });
 
-    const url = await getSignedUrl(client, command, { expiresIn: 3600 });
+    const url = await getSignedUrl(client, command, { expiresIn });
     return url;
   } catch (error) {
     logger.error('Failed to generate signed GET URL for S3:', error);

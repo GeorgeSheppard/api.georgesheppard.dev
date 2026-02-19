@@ -1,7 +1,7 @@
 /**
  * Integration tests for GET /kitchencalm/recipes endpoint
  */
-import { describe, expect } from 'vitest';
+import { describe, expect, vi } from 'vitest';
 import { test } from '@test/fixtures.js';
 import { config } from '@config/index.js';
 import { signJwt } from '@core/utils/jwt.js';
@@ -222,5 +222,56 @@ describe('GET /kitchencalm/recipes', () => {
     const body = (await response.json()) as Record<string, IRecipe>;
     expect(body).toHaveProperty('550e8400-e29b-41d4-a716-446655440104');
     expect(body).toHaveProperty('550e8400-e29b-41d4-a716-446655440105');
+  });
+
+  test('should gracefully handle missing presigned URLs', async ({ dynamoClient }) => {
+    const mockS3Client = {
+      client: {
+        send: vi.fn().mockResolvedValue({}),
+      },
+      close: vi.fn().mockResolvedValue(undefined),
+    } as any;
+    const app = await createTestApp({ dynamoClient, s3Client: mockS3Client });
+    const token = await signJwt(validUserId);
+
+    // Seed a recipe with images
+    const testRecipe: IRecipe = {
+      uuid: '550e8400-e29b-41d4-a716-446655440106' as any,
+      name: 'Test Recipe with Images',
+      description: 'Recipe with images',
+      images: [
+        { timestamp: 1234567890, key: `${validUserId}/image1.jpg` },
+        { timestamp: 1234567891, key: `${validUserId}/image2.jpg` },
+      ],
+      components: [],
+    };
+
+    await dynamoClient.client.send(
+      new PutCommand({
+        TableName: config.DYNAMODB_TABLE_NAME,
+        Item: {
+          ...testRecipe,
+          UserId: validUserId,
+          Item: `R-${testRecipe.uuid}`,
+        },
+      })
+    );
+
+    const response = await app.request(
+      new Request('http://localhost/kitchencalm/recipes', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    );
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as Record<string, IRecipe>;
+    const recipe = body['550e8400-e29b-41d4-a716-446655440106'];
+    expect(recipe.images).toHaveLength(2);
+    // presignedUrl can be either present or undefined - we're testing graceful degradation
+    expect(recipe.images[0]).toHaveProperty('key');
+    expect(recipe.images[1]).toHaveProperty('key');
   });
 });
