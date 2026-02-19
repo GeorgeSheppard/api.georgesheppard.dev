@@ -93,13 +93,12 @@
           "presignedUrl": {
             "type": "string",
             "format": "uri",
-            "description": "Presigned URL for downloading the image"
+            "description": "Presigned URL for downloading the image (undefined if generation failed)"
           }
         },
         "required": [
           "timestamp",
-          "key",
-          "presignedUrl"
+          "key"
         ]
       },
       "Component": {

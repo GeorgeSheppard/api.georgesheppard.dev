@@ -234,8 +234,8 @@ describe('GET /kitchencalm/recipes', () => {
       name: 'Test Recipe with Images',
       description: 'Recipe with images',
       images: [
-        { timestamp: 1234567890, key: `${validUserId}/image1.jpg`, presignedUrl: '' },
-        { timestamp: 1234567891, key: `${validUserId}/image2.jpg`, presignedUrl: '' },
+        { timestamp: 1234567890, key: `${validUserId}/image1.jpg` },
+        { timestamp: 1234567891, key: `${validUserId}/image2.jpg` },
       ],
       components: [],
     };
