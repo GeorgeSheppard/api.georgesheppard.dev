@@ -7,6 +7,7 @@ import { updateRecipe, putMealPlanForUser } from '@core/dynamodb/utilities.js';
 import { IRecipe } from '@core/types/recipes.js';
 import { Unit } from '@core/types/recipes.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
+import type { ShoppingListItem } from '@websites/kitchencalm/endpoints/get-shopping-list/get-shopping-list.js';
 
 vi.mock('@websites/kitchencalm/utils/ingredient-categoriser.js', () => ({
   categoriseIngredients: vi.fn(async (ingredients: string[]) => {
@@ -34,8 +35,8 @@ describe('Get Shopping List Endpoint', () => {
     );
 
     expect(response.status).toBe(200);
-    const result = await response.text();
-    expect(result).toBe('');
+    const result = await response.json();
+    expect(result).toEqual([]);
   });
 
   test('should aggregate ingredients from single recipe', async ({ dynamoClient }) => {
@@ -94,12 +95,17 @@ describe('Get Shopping List Endpoint', () => {
     );
 
     expect(response.status).toBe(200);
-    const result = await response.text();
+    const result = (await response.json()) as ShoppingListItem[];
 
-    expect(result).toContain('Eggs');
-    expect(result).toContain('Spaghetti');
-    expect(result).toContain('400 g');
-    expect(result).toContain('3');
+    expect(result).toHaveLength(2);
+    const eggs = result.find((item) => item.ingredient === 'Eggs')!;
+    const spaghetti = result.find((item) => item.ingredient === 'Spaghetti')!;
+    expect(eggs).toBeDefined();
+    expect(spaghetti).toBeDefined();
+    expect(spaghetti.quantities[0].value).toBe(400);
+    expect(spaghetti.quantities[0].unit).toBe(Unit.GRAM);
+    expect(eggs.quantities[0].value).toBe(3);
+    expect(eggs.quantities[0].unit).toBe(Unit.NUMBER);
   });
 
   test('should scale quantities based on servings', async ({ dynamoClient }) => {
@@ -154,10 +160,13 @@ describe('Get Shopping List Endpoint', () => {
     );
 
     expect(response.status).toBe(200);
-    const result = await response.text();
+    const result = (await response.json()) as ShoppingListItem[];
 
-    expect(result).toContain('Rice');
-    expect(result).toContain('600 g');
+    expect(result).toHaveLength(1);
+    const rice = result.find((item) => item.ingredient === 'Rice')!;
+    expect(rice).toBeDefined();
+    expect(rice.quantities[0].value).toBe(600);
+    expect(rice.quantities[0].unit).toBe(Unit.GRAM);
   });
 
   test('should combine duplicate ingredients from multiple recipes', async ({ dynamoClient }) => {
@@ -244,10 +253,12 @@ describe('Get Shopping List Endpoint', () => {
     );
 
     expect(response.status).toBe(200);
-    const result = await response.text();
-
-    expect(result).toContain('Eggs');
-    expect(result).toContain('9');
+    const result = (await response.json()) as ShoppingListItem[];
+    expect(result).toHaveLength(1);
+    const eggs = result.find((item) => item.ingredient === 'Eggs')!;
+    expect(eggs).toBeDefined();
+    expect(eggs.quantities[0].value).toBe(9);
+    expect(eggs.quantities[0].unit).toBe(Unit.NUMBER);
   });
 
   test('should filter by date range', async ({ dynamoClient }) => {
@@ -334,9 +345,10 @@ describe('Get Shopping List Endpoint', () => {
     );
 
     expect(responseAll.status).toBe(200);
-    const resultAll = await responseAll.text();
-    expect(resultAll).toContain('Flour');
-    expect(resultAll).toContain('Sugar');
+    const resultAll = (await responseAll.json()) as ShoppingListItem[];
+    expect(resultAll).toHaveLength(2);
+    expect(resultAll.some((item) => item.ingredient === 'Flour')).toBe(true);
+    expect(resultAll.some((item) => item.ingredient === 'Sugar')).toBe(true);
 
     const responseMonday = await app.request(
       new Request(
@@ -351,9 +363,10 @@ describe('Get Shopping List Endpoint', () => {
     );
 
     expect(responseMonday.status).toBe(200);
-    const resultMonday = await responseMonday.text();
-    expect(resultMonday).toContain('Flour');
-    expect(resultMonday).not.toContain('Sugar');
+    const resultMonday = (await responseMonday.json()) as ShoppingListItem[];
+    expect(resultMonday).toHaveLength(1);
+    expect(resultMonday.some((item) => item.ingredient === 'Flour')).toBe(true);
+    expect(resultMonday.some((item) => item.ingredient === 'Sugar')).toBe(false);
   });
 
   test('should require authentication', async ({ dynamoClient }) => {
