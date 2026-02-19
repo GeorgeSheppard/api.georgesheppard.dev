@@ -26,13 +26,13 @@ describe('getShoppingList handler', () => {
     vi.clearAllMocks();
   });
 
-  it('should return empty string when meal plan is empty', async () => {
+  it('should return empty array when meal plan is empty', async () => {
     vi.mocked(getAllRecipesForUser).mockResolvedValue([]);
     vi.mocked(getMealPlanForUser).mockResolvedValue({});
 
     const result = await getShoppingList(mockContext());
 
-    expect(result).toBe('');
+    expect(result).toEqual([]);
     expect(categoriseIngredients).not.toHaveBeenCalled();
   });
 
@@ -73,10 +73,19 @@ describe('getShoppingList handler', () => {
     const result = await getShoppingList(mockContext());
 
     expect(categoriseIngredients).toHaveBeenCalledWith(['Spaghetti', 'Eggs']);
-    expect(result).toContain('Rice, Pasta & Grains');
-    expect(result).toContain('Dairy & Eggs');
-    expect(result).toContain('Spaghetti');
-    expect(result).toContain('Eggs');
+    expect(result).toHaveLength(2);
+    const spaghetti = result.find((item) => item.ingredient === 'Spaghetti');
+    const eggs = result.find((item) => item.ingredient === 'Eggs');
+    expect(spaghetti).toEqual({
+      ingredient: 'Spaghetti',
+      quantities: [{ value: 400, unit: Unit.GRAM }],
+      category: 'Rice, Pasta & Grains',
+    });
+    expect(eggs).toEqual({
+      ingredient: 'Eggs',
+      quantities: [{ value: 3, unit: Unit.NUMBER }],
+      category: 'Dairy & Eggs',
+    });
   });
 
   it('should pass date range to filter dates', async () => {

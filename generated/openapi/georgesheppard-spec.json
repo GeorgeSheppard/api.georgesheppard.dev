@@ -1461,9 +1461,48 @@
           "200": {
             "description": "Shopping list retrieved successfully",
             "content": {
-              "text/plain": {
+              "application/json": {
                 "schema": {
-                  "type": "string"
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ingredient": {
+                        "type": "string",
+                        "description": "Name of the ingredient"
+                      },
+                      "quantities": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number",
+                              "description": "Quantity value"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "Unit of measurement"
+                            }
+                          },
+                          "required": [
+                            "unit"
+                          ]
+                        },
+                        "description": "Array of quantities with units"
+                      },
+                      "category": {
+                        "type": "string",
+                        "description": "Shopping category for the ingredient"
+                      }
+                    },
+                    "required": [
+                      "ingredient",
+                      "quantities",
+                      "category"
+                    ]
+                  },
+                  "description": "Array of shopping list items with ingredient, quantity, and category"
                 }
               }
             }

@@ -26,7 +26,7 @@ export const getShoppingListRoute = createRoute({
   responses: {
     200: {
       content: {
-        'text/plain': {
+        'application/json': {
           schema: ShoppingListResponseSchema,
         },
       },

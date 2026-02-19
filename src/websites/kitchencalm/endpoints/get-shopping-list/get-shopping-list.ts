@@ -1,13 +1,25 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
 import { getAllRecipesForUser, getMealPlanForUser } from '@core/dynamodb/utilities.js';
-import {
-  createShoppingListData,
-  createShoppingList,
-} from '@websites/kitchencalm/utils/shopping-list.js';
+import { createShoppingListData } from '@websites/kitchencalm/utils/shopping-list.js';
 import { categoriseIngredients } from '@websites/kitchencalm/utils/ingredient-categoriser.js';
 
-export const ShoppingListResponseSchema = z.string();
+export const ShoppingListItemSchema = z.object({
+  ingredient: z.string().describe('Name of the ingredient'),
+  quantities: z
+    .array(
+      z.object({
+        value: z.number().optional().describe('Quantity value'),
+        unit: z.string().describe('Unit of measurement'),
+      })
+    )
+    .describe('Array of quantities with units'),
+  category: z.string().describe('Shopping category for the ingredient'),
+});
+
+export const ShoppingListResponseSchema = z
+  .array(ShoppingListItemSchema)
+  .describe('Array of shopping list items with ingredient, quantity, and category');
 
 export const GetShoppingListMcpSchema = z.object({
   content: z.string().describe('Formatted shopping list'),
@@ -17,6 +29,8 @@ export const GetShoppingListRequestSchema = z.object({
   startDate: z.string().optional().describe('Start date (format: DayName - DD/MM/YYYY)'),
   endDate: z.string().optional().describe('End date (format: DayName - DD/MM/YYYY)'),
 });
+
+export type ShoppingListItem = z.infer<typeof ShoppingListItemSchema>;
 
 export type GetShoppingListResponse = z.infer<typeof ShoppingListResponseSchema>;
 
@@ -58,7 +72,18 @@ export async function getShoppingList(
       categories = await categoriseIngredients(ingredientNames);
     }
 
-    return createShoppingList(quantityAndMeals, { includeMeals: false, categories });
+    const items: ShoppingListItem[] = Object.entries(quantityAndMeals).map(
+      ([ingredient, { quantities }]) => ({
+        ingredient,
+        quantities: quantities.map((q) => ({
+          value: q.value,
+          unit: q.unit,
+        })),
+        category: categories?.[ingredient] ?? 'Other',
+      })
+    );
+
+    return items.sort((a, b) => a.ingredient.localeCompare(b.ingredient));
   } catch (error) {
     console.error('Failed to fetch shopping list for user', userId, error);
     throw error;
@@ -69,6 +94,12 @@ export async function getShoppingListMcp(
   c: ContextWithUserId,
   input: { startDate?: string; endDate?: string }
 ): Promise<GetShoppingListMcpResponse> {
-  const content = await getShoppingList(c, input);
+  const items = await getShoppingList(c, input);
+  const content = items
+    .map(
+      (item) =>
+        `${item.ingredient} - ${item.quantities.map((q) => `${q.value || ''}${q.unit}`).join(', ')} (${item.category})`
+    )
+    .join('\n');
   return { content };
 }

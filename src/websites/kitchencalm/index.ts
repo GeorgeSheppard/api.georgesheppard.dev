@@ -151,7 +151,7 @@ export function registerRoutes(app: OpenAPIHono) {
   app.openapi(getShoppingListRoute, async (c) => {
     const { startDate, endDate } = c.req.valid('query');
     const result = await getShoppingList(c as ContextWithUserId, { startDate, endDate });
-    return c.text(result, 200);
+    return c.json(result, 200);
   });
 
   app.openapi(updateMealPlanRoute, async (c) => {
