@@ -89,6 +89,11 @@
           "key": {
             "type": "string",
             "description": "S3 object key"
+          },
+          "presignedUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Presigned URL for downloading the image (undefined if generation failed)"
           }
         },
         "required": [
