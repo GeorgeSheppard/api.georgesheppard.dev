@@ -229,7 +229,8 @@ describe('GET /kitchencalm/recipes', () => {
       client: {
         send: vi.fn().mockResolvedValue({}),
       },
-    };
+      close: vi.fn().mockResolvedValue(undefined),
+    } as any;
     const app = await createTestApp({ dynamoClient, s3Client: mockS3Client });
     const token = await signJwt(validUserId);
 
