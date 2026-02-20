@@ -146,9 +146,7 @@ describe('getShoppingList handler', () => {
           uuid: componentId,
           name: 'Main',
           servings: 2,
-          ingredients: [
-            { name: 'Ingredient A', quantity: { unit: Unit.GRAM, value: 100 } },
-          ],
+          ingredients: [{ name: 'Ingredient A', quantity: { unit: Unit.GRAM, value: 100 } }],
           instructions: [],
         },
       ],
@@ -192,9 +190,7 @@ describe('getShoppingList handler', () => {
           uuid: componentId,
           name: 'Main',
           servings: 1,
-          ingredients: [
-            { name: 'Ingredient B', quantity: { unit: Unit.GRAM, value: 50 } },
-          ],
+          ingredients: [{ name: 'Ingredient B', quantity: { unit: Unit.GRAM, value: 50 } }],
           instructions: [],
         },
       ],
@@ -237,9 +233,7 @@ describe('getShoppingList handler', () => {
           uuid: componentId,
           name: 'Main',
           servings: 1,
-          ingredients: [
-            { name: 'Flour', quantity: { unit: Unit.GRAM, value: 100 } },
-          ],
+          ingredients: [{ name: 'Flour', quantity: { unit: Unit.GRAM, value: 100 } }],
           instructions: [],
         },
       ],
@@ -255,9 +249,7 @@ describe('getShoppingList handler', () => {
           uuid: componentId,
           name: 'Main',
           servings: 1,
-          ingredients: [
-            { name: 'Sugar', quantity: { unit: Unit.GRAM, value: 50 } },
-          ],
+          ingredients: [{ name: 'Sugar', quantity: { unit: Unit.GRAM, value: 50 } }],
           instructions: [],
         },
       ],
@@ -303,9 +295,7 @@ describe('getShoppingList handler', () => {
           uuid: componentId,
           name: 'Main Component',
           servings: 2,
-          ingredients: [
-            { name: 'Ingredient X', quantity: { unit: Unit.GRAM, value: 100 } },
-          ],
+          ingredients: [{ name: 'Ingredient X', quantity: { unit: Unit.GRAM, value: 100 } }],
           instructions: [],
         },
       ],
@@ -338,6 +328,245 @@ describe('getShoppingList handler', () => {
     expect(result).toHaveLength(1);
     expect(result[0].ingredient).toBe('Ingredient X');
     expect(result[0].quantities[0].value).toBe(100); // 100 grams from ingredient definition
+  });
+
+  it('should skip when recipe ID does not match any loaded recipes', async () => {
+    const recipeId = 'recipe-1';
+    const unknownRecipeId = 'recipe-unknown';
+    const componentId = 'comp-1';
+
+    const recipe: IRecipe = {
+      uuid: recipeId,
+      name: 'Recipe 1',
+      description: '',
+      images: [],
+      components: [
+        {
+          uuid: componentId,
+          name: 'Main',
+          servings: 1,
+          ingredients: [{ name: 'Flour', quantity: { unit: Unit.GRAM, value: 100 } }],
+          instructions: [],
+        },
+      ],
+    };
+
+    // Meal plan has a recipe ID that doesn't exist
+    const mealPlan: IMealPlan = {
+      'Thursday - 19/2/2026': {
+        [unknownRecipeId]: [{ componentId, servings: 1 }],
+      },
+    };
+
+    vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
+    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
+    vi.mocked(categoriseIngredients).mockResolvedValue({});
+
+    const result = await getShoppingList(mockContext(), {
+      dates: ['19/2/2026'],
+    });
+
+    // Should be empty because the recipe ID doesn't match
+    expect(result).toHaveLength(0);
+  });
+
+  it('should skip when component ID does not match any recipe components', async () => {
+    const recipeId = 'recipe-1';
+    const componentId = 'comp-1';
+    const unknownComponentId = 'comp-unknown';
+
+    const recipe: IRecipe = {
+      uuid: recipeId,
+      name: 'Recipe 1',
+      description: '',
+      images: [],
+      components: [
+        {
+          uuid: componentId,
+          name: 'Main',
+          servings: 1,
+          ingredients: [{ name: 'Flour', quantity: { unit: Unit.GRAM, value: 100 } }],
+          instructions: [],
+        },
+      ],
+    };
+
+    // Meal plan has a component ID that doesn't exist in the recipe
+    const mealPlan: IMealPlan = {
+      'Thursday - 19/2/2026': {
+        [recipeId]: [{ componentId: unknownComponentId, servings: 1 }],
+      },
+    };
+
+    vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
+    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
+    vi.mocked(categoriseIngredients).mockResolvedValue({});
+
+    const result = await getShoppingList(mockContext(), {
+      dates: ['19/2/2026'],
+    });
+
+    // Should be empty because the component ID doesn't match
+    expect(result).toHaveLength(0);
+  });
+
+  it('should correctly match recipe and component IDs from meal plan', async () => {
+    const recipeId = 'recipe-abc123';
+    const componentId = 'comp-xyz789';
+
+    const recipe: IRecipe = {
+      uuid: recipeId,
+      name: 'Pasta Carbonara',
+      description: '',
+      images: [],
+      components: [
+        {
+          uuid: componentId,
+          name: 'Main Pasta',
+          servings: 2,
+          ingredients: [
+            { name: 'Spaghetti', quantity: { unit: Unit.GRAM, value: 400 } },
+            { name: 'Eggs', quantity: { unit: Unit.NUMBER, value: 3 } },
+          ],
+          instructions: [],
+        },
+      ],
+    };
+
+    const mealPlan: IMealPlan = {
+      'Thursday - 19/2/2026': {
+        [recipeId]: [{ componentId, servings: 2 }],
+      },
+    };
+
+    vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
+    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
+    vi.mocked(categoriseIngredients).mockResolvedValue({
+      Spaghetti: 'Pasta',
+      Eggs: 'Dairy',
+    });
+
+    const result = await getShoppingList(mockContext(), {
+      dates: ['19/2/2026'],
+    });
+
+    expect(result).toHaveLength(2);
+    expect(result.some((item) => item.ingredient === 'Spaghetti')).toBe(true);
+    expect(result.some((item) => item.ingredient === 'Eggs')).toBe(true);
+  });
+
+  it('should handle multiple recipes and components on same date', async () => {
+    const recipeId1 = 'recipe-1';
+    const recipeId2 = 'recipe-2';
+    const componentId1 = 'comp-1';
+    const componentId2 = 'comp-2';
+
+    const recipe1: IRecipe = {
+      uuid: recipeId1,
+      name: 'Pasta',
+      description: '',
+      images: [],
+      components: [
+        {
+          uuid: componentId1,
+          name: 'Main',
+          servings: 1,
+          ingredients: [{ name: 'Pasta', quantity: { unit: Unit.GRAM, value: 200 } }],
+          instructions: [],
+        },
+      ],
+    };
+
+    const recipe2: IRecipe = {
+      uuid: recipeId2,
+      name: 'Salad',
+      description: '',
+      images: [],
+      components: [
+        {
+          uuid: componentId2,
+          name: 'Main',
+          servings: 1,
+          ingredients: [{ name: 'Lettuce', quantity: { unit: Unit.GRAM, value: 100 } }],
+          instructions: [],
+        },
+      ],
+    };
+
+    const mealPlan: IMealPlan = {
+      'Thursday - 19/2/2026': {
+        [recipeId1]: [{ componentId: componentId1, servings: 1 }],
+        [recipeId2]: [{ componentId: componentId2, servings: 1 }],
+      },
+    };
+
+    vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe1, recipe2]);
+    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
+    vi.mocked(categoriseIngredients).mockResolvedValue({
+      Pasta: 'Grains',
+      Lettuce: 'Produce',
+    });
+
+    const result = await getShoppingList(mockContext(), {
+      dates: ['19/2/2026'],
+    });
+
+    expect(result).toHaveLength(2);
+    expect(result.some((item) => item.ingredient === 'Pasta')).toBe(true);
+    expect(result.some((item) => item.ingredient === 'Lettuce')).toBe(true);
+  });
+
+  it('should handle recipe with multiple components', async () => {
+    const recipeId = 'recipe-1';
+    const componentId1 = 'comp-1';
+    const componentId2 = 'comp-2';
+
+    const recipe: IRecipe = {
+      uuid: recipeId,
+      name: 'Complex Recipe',
+      description: '',
+      images: [],
+      components: [
+        {
+          uuid: componentId1,
+          name: 'Main',
+          servings: 1,
+          ingredients: [{ name: 'Rice', quantity: { unit: Unit.GRAM, value: 200 } }],
+          instructions: [],
+        },
+        {
+          uuid: componentId2,
+          name: 'Sauce',
+          servings: 1,
+          ingredients: [{ name: 'Soy Sauce', quantity: { unit: Unit.MILLILITER, value: 50 } }],
+          instructions: [],
+        },
+      ],
+    };
+
+    const mealPlan: IMealPlan = {
+      'Thursday - 19/2/2026': {
+        [recipeId]: [
+          { componentId: componentId1, servings: 1 },
+          { componentId: componentId2, servings: 1 },
+        ],
+      },
+    };
+
+    vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
+    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
+    vi.mocked(categoriseIngredients).mockResolvedValue({
+      Rice: 'Grains',
+      'Soy Sauce': 'Condiments',
+    });
+
+    const result = await getShoppingList(mockContext(), {
+      dates: ['19/2/2026'],
+    });
+
+    expect(result).toHaveLength(2);
+    expect(result.some((item) => item.ingredient === 'Rice')).toBe(true);
+    expect(result.some((item) => item.ingredient === 'Soy Sauce')).toBe(true);
   });
 
   it('should throw when categorisation fails', async () => {
