@@ -78,7 +78,7 @@ export const tools: McpTool<any, any>[] = [
   ),
   createMcpTool(
     'get_shopping_list',
-    'Get aggregated shopping list from recipes in the meal plan, optionally filtered by date range',
+    'Get aggregated shopping list from recipes in the meal plan, optionally filtered by specific dates',
     GetShoppingListRequestSchema,
     getShoppingListMcp,
     GetShoppingListMcpSchema
@@ -149,8 +149,8 @@ export function registerRoutes(app: OpenAPIHono) {
   });
 
   app.openapi(getShoppingListRoute, async (c) => {
-    const { startDate, endDate } = c.req.valid('query');
-    const result = await getShoppingList(c as ContextWithUserId, { startDate, endDate });
+    const { dates } = c.req.valid('query');
+    const result = await getShoppingList(c as ContextWithUserId, { dates });
     return c.json(result, 200);
   });
 
