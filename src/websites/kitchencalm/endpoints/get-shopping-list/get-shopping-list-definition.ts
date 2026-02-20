@@ -13,14 +13,10 @@ export const getShoppingListRoute = createRoute({
   middleware: [jwtAuthMiddleware],
   request: {
     query: z.object({
-      startDate: z
-        .string()
+      dates: z
+        .array(z.string())
         .optional()
-        .describe('Filter shopping list from this date (format: DayName - DD/MM/YYYY)'),
-      endDate: z
-        .string()
-        .optional()
-        .describe('Filter shopping list until this date (format: DayName - DD/MM/YYYY)'),
+        .describe('Array of dates to include in shopping list (format: DD/MM/YYYY)'),
     }),
   },
   responses: {

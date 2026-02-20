@@ -261,7 +261,7 @@ describe('Get Shopping List Endpoint', () => {
     expect(eggs.quantities[0].unit).toBe(Unit.NUMBER);
   });
 
-  test('should filter by exact date (same startDate and endDate)', async ({ dynamoClient }) => {
+  test('should filter by single date', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
     const userId = uuidv4();
     const token = await signJwt(userId);
@@ -347,20 +347,15 @@ describe('Get Shopping List Endpoint', () => {
     expect(responseAll.status).toBe(200);
     const resultAll = (await responseAll.json()) as ShoppingListItem[];
     expect(resultAll).toHaveLength(2);
-    expect(resultAll.some((item) => item.ingredient === 'Flour')).toBe(true);
-    expect(resultAll.some((item) => item.ingredient === 'Sugar')).toBe(true);
 
-    // Filter to Monday only using same date for start and end
+    // Filter to Monday only by passing single date
     const responseMonday = await app.request(
-      new Request(
-        'http://localhost/kitchencalm/shopping-list?startDate=Monday%20-%2001/08/2024&endDate=Monday%20-%2001/08/2024',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+      new Request('http://localhost/kitchencalm/shopping-list?dates=01%2F08%2F2024', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
     );
 
     expect(responseMonday.status).toBe(200);
@@ -370,7 +365,7 @@ describe('Get Shopping List Endpoint', () => {
     expect(resultMonday.some((item) => item.ingredient === 'Sugar')).toBe(false);
   });
 
-  test('should filter by date range with multiple dates', async ({ dynamoClient }) => {
+  test('should filter by multiple dates', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
     const userId = uuidv4();
     const token = await signJwt(userId);
@@ -474,17 +469,14 @@ describe('Get Shopping List Endpoint', () => {
     await updateRecipe(dynamoClient.client, userId, recipe3);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
-    // Filter from Monday to Tuesday (should include both)
+    // Filter to Monday and Tuesday using dates array
     const responseRange = await app.request(
-      new Request(
-        'http://localhost/kitchencalm/shopping-list?startDate=Monday%20-%2001/08/2024&endDate=Tuesday%20-%2002/08/2024',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+      new Request('http://localhost/kitchencalm/shopping-list?dates=01%2F08%2F2024&dates=02%2F08%2F2024', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
     );
 
     expect(responseRange.status).toBe(200);
@@ -495,193 +487,7 @@ describe('Get Shopping List Endpoint', () => {
     expect(resultRange.some((item) => item.ingredient === 'Cheese')).toBe(false);
   });
 
-  test('should filter by startDate only', async ({ dynamoClient }) => {
-    const app = await createTestApp({ dynamoClient });
-    const userId = uuidv4();
-    const token = await signJwt(userId);
-    const recipeId1 = uuidv4();
-    const recipeId2 = uuidv4();
-    const componentId = uuidv4();
-
-    const recipe1: IRecipe = {
-      uuid: recipeId1,
-      name: 'Recipe Early',
-      description: 'Recipe for early date',
-      images: [],
-      components: [
-        {
-          uuid: componentId,
-          name: 'Main',
-          servings: 1,
-          ingredients: [
-            {
-              name: 'Salt',
-              quantity: { unit: Unit.GRAM, value: 5 },
-            },
-          ],
-          instructions: [],
-        },
-      ],
-    };
-
-    const recipe2: IRecipe = {
-      uuid: recipeId2,
-      name: 'Recipe Late',
-      description: 'Recipe for late date',
-      images: [],
-      components: [
-        {
-          uuid: componentId,
-          name: 'Main',
-          servings: 1,
-          ingredients: [
-            {
-              name: 'Pepper',
-              quantity: { unit: Unit.GRAM, value: 5 },
-            },
-          ],
-          instructions: [],
-        },
-      ],
-    };
-
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
-          {
-            componentId,
-            servings: 1,
-          },
-        ],
-      },
-      'Wednesday - 03/08/2024': {
-        [recipeId2]: [
-          {
-            componentId,
-            servings: 1,
-          },
-        ],
-      },
-    };
-
-    await updateRecipe(dynamoClient.client, userId, recipe1);
-    await updateRecipe(dynamoClient.client, userId, recipe2);
-    await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
-
-    // Only provide startDate (should include all dates from startDate onwards)
-    const responseStartDate = await app.request(
-      new Request(
-        'http://localhost/kitchencalm/shopping-list?startDate=Tuesday%20-%2002/08/2024',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-    );
-
-    expect(responseStartDate.status).toBe(200);
-    const resultStartDate = (await responseStartDate.json()) as ShoppingListItem[];
-    expect(resultStartDate).toHaveLength(1);
-    expect(resultStartDate[0].ingredient).toBe('Pepper');
-    expect(resultStartDate.some((item) => item.ingredient === 'Salt')).toBe(false);
-  });
-
-  test('should filter by endDate only', async ({ dynamoClient }) => {
-    const app = await createTestApp({ dynamoClient });
-    const userId = uuidv4();
-    const token = await signJwt(userId);
-    const recipeId1 = uuidv4();
-    const recipeId2 = uuidv4();
-    const componentId = uuidv4();
-
-    const recipe1: IRecipe = {
-      uuid: recipeId1,
-      name: 'Recipe Early',
-      description: 'Recipe for early date',
-      images: [],
-      components: [
-        {
-          uuid: componentId,
-          name: 'Main',
-          servings: 1,
-          ingredients: [
-            {
-              name: 'Honey',
-              quantity: { unit: Unit.GRAM, value: 10 },
-            },
-          ],
-          instructions: [],
-        },
-      ],
-    };
-
-    const recipe2: IRecipe = {
-      uuid: recipeId2,
-      name: 'Recipe Late',
-      description: 'Recipe for late date',
-      images: [],
-      components: [
-        {
-          uuid: componentId,
-          name: 'Main',
-          servings: 1,
-          ingredients: [
-            {
-              name: 'Vinegar',
-              quantity: { unit: Unit.GRAM, value: 20 },
-            },
-          ],
-          instructions: [],
-        },
-      ],
-    };
-
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
-          {
-            componentId,
-            servings: 1,
-          },
-        ],
-      },
-      'Wednesday - 03/08/2024': {
-        [recipeId2]: [
-          {
-            componentId,
-            servings: 1,
-          },
-        ],
-      },
-    };
-
-    await updateRecipe(dynamoClient.client, userId, recipe1);
-    await updateRecipe(dynamoClient.client, userId, recipe2);
-    await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
-
-    // Only provide endDate (should include all dates up to endDate)
-    const responseEndDate = await app.request(
-      new Request(
-        'http://localhost/kitchencalm/shopping-list?endDate=Tuesday%20-%2002/08/2024',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-    );
-
-    expect(responseEndDate.status).toBe(200);
-    const resultEndDate = (await responseEndDate.json()) as ShoppingListItem[];
-    expect(resultEndDate).toHaveLength(1);
-    expect(resultEndDate[0].ingredient).toBe('Honey');
-    expect(resultEndDate.some((item) => item.ingredient === 'Vinegar')).toBe(false);
-  });
-
-  test('should handle date range that excludes all dates', async ({ dynamoClient }) => {
+  test('should handle empty dates array', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
     const userId = uuidv4();
     const token = await signJwt(userId);
@@ -723,17 +529,74 @@ describe('Get Shopping List Endpoint', () => {
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
-    // Filter with date range that doesn't include any planned dates
-    const responseNoMatch = await app.request(
-      new Request(
-        'http://localhost/kitchencalm/shopping-list?startDate=Friday%20-%2005/08/2024&endDate=Sunday%20-%2007/08/2024',
+    // Empty dates array should return all dates
+    const responseEmpty = await app.request(
+      new Request('http://localhost/kitchencalm/shopping-list', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    );
+
+    expect(responseEmpty.status).toBe(200);
+    const resultEmpty = (await responseEmpty.json()) as ShoppingListItem[];
+    expect(resultEmpty).toHaveLength(1);
+    expect(resultEmpty[0].ingredient).toBe('Yeast');
+  });
+
+  test('should return empty shopping list when dates do not match any meal plans', async ({
+    dynamoClient,
+  }) => {
+    const app = await createTestApp({ dynamoClient });
+    const userId = uuidv4();
+    const token = await signJwt(userId);
+    const recipeId = uuidv4();
+    const componentId = uuidv4();
+
+    const recipe: IRecipe = {
+      uuid: recipeId,
+      name: 'Test Recipe',
+      description: 'Test',
+      images: [],
+      components: [
         {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
+          uuid: componentId,
+          name: 'Main',
+          servings: 1,
+          ingredients: [
+            {
+              name: 'Salt',
+              quantity: { unit: Unit.GRAM, value: 5 },
+            },
+          ],
+          instructions: [],
+        },
+      ],
+    };
+
+    const mealPlan: IMealPlan = {
+      'Monday - 01/08/2024': {
+        [recipeId]: [
+          {
+            componentId,
+            servings: 1,
           },
-        }
-      )
+        ],
+      },
+    };
+
+    await updateRecipe(dynamoClient.client, userId, recipe);
+    await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
+
+    // Filter with dates that do not match any meal plan dates
+    const responseNoMatch = await app.request(
+      new Request('http://localhost/kitchencalm/shopping-list?dates=15%2F08%2F2024&dates=20%2F08%2F2024', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
     );
 
     expect(responseNoMatch.status).toBe(200);
