@@ -12,12 +12,24 @@ export const getShoppingListRoute = createRoute({
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
-    query: z.object({
-      dates: z
-        .union([z.string().transform((val) => [val]), z.array(z.string())])
-        .optional()
-        .describe('Array of dates to include in shopping list (format: DD/MM/YYYY)'),
-    }),
+    query: z.preprocess(
+      (obj: any) => {
+        // Handle dates[]=val notation by renaming it to dates
+        if (obj && typeof obj === 'object' && obj['dates[]'] && !obj.dates) {
+          return {
+            ...obj,
+            dates: obj['dates[]'],
+          };
+        }
+        return obj;
+      },
+      z.object({
+        dates: z
+          .union([z.string().transform((val) => [val]), z.array(z.string())])
+          .optional()
+          .describe('Array of dates to include in shopping list (format: DD/MM/YYYY)'),
+      })
+    ),
   },
   responses: {
     200: {

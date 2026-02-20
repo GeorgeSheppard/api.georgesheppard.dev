@@ -610,6 +610,97 @@ describe('Get Shopping List Endpoint', () => {
     expect(resultNoMatch).toHaveLength(0);
   });
 
+  test('should filter by dates using bracket notation', async ({ dynamoClient }) => {
+    const app = await createTestApp({ dynamoClient });
+    const userId = uuidv4();
+    const token = await signJwt(userId);
+    const recipeId1 = uuidv4();
+    const recipeId2 = uuidv4();
+    const componentId1 = uuidv4();
+    const componentId2 = uuidv4();
+
+    const recipe1: IRecipe = {
+      uuid: recipeId1,
+      name: 'Monday Recipe',
+      description: 'Recipe for Monday',
+      images: [],
+      components: [
+        {
+          uuid: componentId1,
+          name: 'Main Course',
+          servings: 1,
+          ingredients: [
+            {
+              name: 'Flour',
+              quantity: { unit: Unit.GRAM, value: 100 },
+            },
+          ],
+          instructions: [],
+        },
+      ],
+    };
+
+    const recipe2: IRecipe = {
+      uuid: recipeId2,
+      name: 'Wednesday Recipe',
+      description: 'Recipe for Wednesday',
+      images: [],
+      components: [
+        {
+          uuid: componentId2,
+          name: 'Main Course',
+          servings: 1,
+          ingredients: [
+            {
+              name: 'Sugar',
+              quantity: { unit: Unit.GRAM, value: 50 },
+            },
+          ],
+          instructions: [],
+        },
+      ],
+    };
+
+    const mealPlan: IMealPlan = {
+      'Monday - 01/08/2024': {
+        [recipeId1]: [
+          {
+            componentId: componentId1,
+            servings: 1,
+          },
+        ],
+      },
+      'Wednesday - 03/08/2024': {
+        [recipeId2]: [
+          {
+            componentId: componentId2,
+            servings: 1,
+          },
+        ],
+      },
+    };
+
+    await updateRecipe(dynamoClient.client, userId, recipe1);
+    await updateRecipe(dynamoClient.client, userId, recipe2);
+    await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
+
+    // Filter using bracket notation: dates[]=01/08/2024
+    const responseMonday = await app.request(
+      new Request('http://localhost/kitchencalm/shopping-list?dates%5B%5D=01%2F08%2F2024', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    );
+
+    expect(responseMonday.status).toBe(200);
+    const resultMonday = (await responseMonday.json()) as ShoppingListItem[];
+    expect(resultMonday).toHaveLength(1);
+    expect(resultMonday[0].ingredient).toBe('Flour');
+    expect(resultMonday.some((item) => item.ingredient === 'Sugar')).toBe(false);
+  });
+
   test('should require authentication', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
 
