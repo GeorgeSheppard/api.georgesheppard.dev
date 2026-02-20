@@ -165,7 +165,7 @@ describe('getShoppingList handler', () => {
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({
-      'Ingredient A': 'Produce',
+      'Ingredient A': 'Fresh Fruit & Vegetables',
     });
 
     // Test with single-digit format
@@ -206,7 +206,7 @@ describe('getShoppingList handler', () => {
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({
-      'Ingredient B': 'Produce',
+      'Ingredient B': 'Fresh Fruit & Vegetables',
     });
 
     // Test with zero-padded format (what user sends from frontend)
@@ -267,8 +267,8 @@ describe('getShoppingList handler', () => {
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe1, recipe2]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({
-      Flour: 'Grains',
-      Sugar: 'Sweeteners',
+      Flour: 'Rice, Pasta & Grains',
+      Sugar: 'Baking',
     });
 
     // Request with both single and double-digit formats (should both work)
@@ -317,7 +317,7 @@ describe('getShoppingList handler', () => {
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({
-      'Ingredient X': 'Produce',
+      'Ingredient X': 'Fresh Fruit & Vegetables',
     });
 
     // Request Thursday 19/2/2026 which has servings: 2
@@ -442,8 +442,8 @@ describe('getShoppingList handler', () => {
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({
-      Spaghetti: 'Pasta',
-      Eggs: 'Dairy',
+      Spaghetti: 'Rice, Pasta & Grains',
+      Eggs: 'Dairy & Eggs',
     });
 
     const result = await getShoppingList(mockContext(), {
@@ -503,8 +503,8 @@ describe('getShoppingList handler', () => {
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe1, recipe2]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({
-      Pasta: 'Grains',
-      Lettuce: 'Produce',
+      Pasta: 'Rice, Pasta & Grains',
+      Lettuce: 'Fresh Fruit & Vegetables',
     });
 
     const result = await getShoppingList(mockContext(), {
@@ -556,8 +556,8 @@ describe('getShoppingList handler', () => {
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({
-      Rice: 'Grains',
-      'Soy Sauce': 'Condiments',
+      Rice: 'Rice, Pasta & Grains',
+      'Soy Sauce': 'Sauces & Condiments',
     });
 
     const result = await getShoppingList(mockContext(), {
