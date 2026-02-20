@@ -45,25 +45,19 @@ export const ImageSchema = z
   })
   .openapi('Image');
 
-export const RecipeImageInputSchema = z
-  .object({
-    key: z.string().describe('S3 object key returned from the presigned upload URL endpoint'),
-  })
-  .openapi('RecipeImageInput');
-
 export const RecipeSchema = z
   .object({
     uuid: z.string().uuid().describe('Recipe UUID'),
     name: z.string().describe('Recipe name'),
     description: z.string().describe('Recipe description'),
-    images: z.array(ImageSchema).describe('Recipe images'),
+    image: ImageSchema.optional().describe('Recipe image'),
     components: z.array(ComponentSchema).describe('Recipe components'),
   })
   .openapi('Recipe');
 
-// Schemas for OpenAI parsing (without UUIDs or images - we generate those on the backend)
+// Schemas for OpenAI parsing (without UUID or image - we set those on the backend)
 export const OpenAIComponentSchema = ComponentSchema.omit({ uuid: true });
-export const OpenAIRecipeSchema = RecipeSchema.omit({ uuid: true, images: true });
+export const OpenAIRecipeSchema = RecipeSchema.omit({ uuid: true, image: true });
 
 export const MealPlanEntrySchema = z
   .object({

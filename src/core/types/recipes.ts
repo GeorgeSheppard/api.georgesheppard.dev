@@ -76,7 +76,7 @@ export interface IRecipe {
   uuid: RecipeUuid;
   name: string;
   description: string;
-  images: Image[];
+  image?: Image;
   components: IRecipeComponent[];
 }
 

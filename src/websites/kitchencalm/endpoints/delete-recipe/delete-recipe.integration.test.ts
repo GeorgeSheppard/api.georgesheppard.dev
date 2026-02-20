@@ -20,7 +20,6 @@ describe('Delete Recipe Endpoint', () => {
       uuid: recipeId as any,
       name: 'Recipe to Delete',
       description: 'This will be deleted',
-      images: [],
       components: [
         {
           name: 'Component',

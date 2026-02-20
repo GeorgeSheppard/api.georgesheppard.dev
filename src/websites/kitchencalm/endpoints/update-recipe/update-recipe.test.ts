@@ -31,7 +31,6 @@ describe('updateRecipe handler', () => {
       uuid: 'existing-uuid',
       name: 'Pasta',
       description: 'Classic pasta',
-      images: [],
       components: [],
     };
 
@@ -46,7 +45,6 @@ describe('updateRecipe handler', () => {
     const recipe: UpdateRecipeRequest = {
       name: 'New Recipe',
       description: 'A brand new recipe',
-      images: [],
       components: [],
     };
 
@@ -55,7 +53,7 @@ describe('updateRecipe handler', () => {
     expect(result).toEqual({ uuid: 'generated-uuid-1234', success: true });
   });
 
-  it('should pass complete recipe to DynamoDB utility with server-generated timestamp', async () => {
+  it('should pass recipe with image to DynamoDB utility with server-generated timestamp', async () => {
     const mockClient = { client: { put: 'mock' } };
     const c = createMockContext<ContextWithUserId>({
       userId: validUserId,
@@ -68,7 +66,7 @@ describe('updateRecipe handler', () => {
       uuid: 'recipe-uuid',
       name: 'Pasta',
       description: 'Classic pasta',
-      images: [{ key: 'user/image.jpg' }],
+      image: 'user/image.jpg',
       components: [],
     };
 
@@ -78,7 +76,33 @@ describe('updateRecipe handler', () => {
       uuid: 'recipe-uuid',
       name: 'Pasta',
       description: 'Classic pasta',
-      images: [{ key: 'user/image.jpg', timestamp: 1700000000000 }],
+      image: { key: 'user/image.jpg', timestamp: 1700000000000 },
+      components: [],
+    });
+  });
+
+  it('should pass recipe without image to DynamoDB when no image provided', async () => {
+    const mockClient = { client: { put: 'mock' } };
+    const c = createMockContext<ContextWithUserId>({
+      userId: validUserId,
+      dynamoClient: mockClient,
+    });
+    vi.mocked(updateRecipeInDynamo).mockResolvedValue();
+
+    const recipe: UpdateRecipeRequest = {
+      uuid: 'recipe-uuid',
+      name: 'Pasta',
+      description: 'Classic pasta',
+      components: [],
+    };
+
+    await updateRecipe(c, recipe);
+
+    expect(updateRecipeInDynamo).toHaveBeenCalledWith(mockClient.client, validUserId, {
+      uuid: 'recipe-uuid',
+      name: 'Pasta',
+      description: 'Classic pasta',
+      image: undefined,
       components: [],
     });
   });
@@ -89,7 +113,6 @@ describe('updateRecipe handler', () => {
     const recipe: UpdateRecipeRequest = {
       name: 'Recipe',
       description: 'desc',
-      images: [],
       components: [],
     };
 
