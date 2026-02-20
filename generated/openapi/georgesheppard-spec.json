@@ -202,18 +202,6 @@
           "text"
         ]
       },
-      "RecipeImageInput": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "S3 object key returned from the presigned upload URL endpoint"
-          }
-        },
-        "required": [
-          "key"
-        ]
-      },
       "MealPlanEntry": {
         "type": "object",
         "properties": {
@@ -794,147 +782,6 @@
                   "additionalProperties": {
                     "$ref": "#/components/schemas/Recipe"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing JWT token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "kitchencalm",
-          "recipes"
-        ],
-        "description": "Create or update a recipe for the authenticated user",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "uuid": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Recipe UUID (omit to generate new)"
-                  },
-                  "name": {
-                    "type": "string",
-                    "description": "Recipe name"
-                  },
-                  "description": {
-                    "type": "string",
-                    "description": "Recipe description"
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/RecipeImageInput"
-                    },
-                    "description": "Recipe images (S3 keys from presigned upload)"
-                  },
-                  "components": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/Component"
-                    },
-                    "description": "Recipe components"
-                  }
-                },
-                "required": [
-                  "name",
-                  "description",
-                  "images",
-                  "components"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Recipe updated/created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "uuid": {
-                      "type": "string",
-                      "format": "uuid",
-                      "description": "Recipe UUID (new or provided)"
-                    },
-                    "success": {
-                      "type": "boolean",
-                      "description": "Whether update was successful"
-                    }
-                  },
-                  "required": [
-                    "uuid",
-                    "success"
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request body",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
                 }
               }
             }
@@ -2208,6 +2055,13 @@
                     "type": "string",
                     "format": "uuid",
                     "description": "Recipe UUID for editing existing recipes"
+                  },
+                  "imageKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "S3 keys of images to associate with this recipe (from presigned upload endpoint)"
                   }
                 },
                 "required": [

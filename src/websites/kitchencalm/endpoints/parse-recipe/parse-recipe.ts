@@ -7,6 +7,10 @@ import { RecipeSchema } from '../../schemas.js';
 export const ParseRecipeRequestSchema = z.object({
   recipeText: z.string().min(1).describe('Natural language recipe text to parse'),
   recipeId: z.string().uuid().optional().describe('Recipe UUID for editing existing recipes'),
+  imageKeys: z
+    .array(z.string())
+    .optional()
+    .describe('S3 keys of images to associate with this recipe (from presigned upload endpoint)'),
 });
 
 export type ParseRecipeRequest = z.infer<typeof ParseRecipeRequestSchema>;
@@ -29,8 +33,10 @@ export async function parseRecipe(
     input.recipeId
   );
 
-  // Preserve existing images when editing a recipe
-  if (input.recipeId) {
+  if (input.imageKeys !== undefined) {
+    recipe.images = input.imageKeys.map((key) => ({ key, timestamp: Date.now() }));
+  } else if (input.recipeId) {
+    // Preserve existing images when editing without supplying new ones
     const existingRecipe = await getRecipeByUuid(dynamoClient.client, userId, input.recipeId);
     if (existingRecipe) {
       recipe.images = existingRecipe.images;

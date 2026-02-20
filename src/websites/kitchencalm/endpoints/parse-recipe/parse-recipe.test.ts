@@ -171,4 +171,42 @@ describe('parseRecipe handler', () => {
 
     expect(getRecipeByUuid).not.toHaveBeenCalled();
   });
+
+  it('should set images from imageKeys with server-generated timestamps', async () => {
+    vi.mocked(parseRecipeWithOpenAI).mockResolvedValue({ ...validParsedRecipe, images: [] });
+    vi.mocked(updateRecipeInDynamo).mockResolvedValue();
+    vi.spyOn(Date, 'now').mockReturnValue(1700000000000);
+
+    const input: ParseRecipeRequest = {
+      recipeText: 'New recipe',
+      imageKeys: ['user/image1.jpg', 'user/image2.jpg'],
+    };
+    const result = await parseRecipe(mockContext(), input);
+
+    expect(result.images).toEqual([
+      { key: 'user/image1.jpg', timestamp: 1700000000000 },
+      { key: 'user/image2.jpg', timestamp: 1700000000000 },
+    ]);
+    expect(getRecipeByUuid).not.toHaveBeenCalled();
+  });
+
+  it('should replace existing images with imageKeys when editing', async () => {
+    const existingImages = [{ timestamp: 1234567890, key: 'old-image.jpg' }];
+    const existingRecipe = { ...validParsedRecipe, images: existingImages };
+
+    vi.mocked(parseRecipeWithOpenAI).mockResolvedValue({ ...validParsedRecipe, images: [] });
+    vi.mocked(getRecipeByUuid).mockResolvedValue(existingRecipe);
+    vi.mocked(updateRecipeInDynamo).mockResolvedValue();
+    vi.spyOn(Date, 'now').mockReturnValue(1700000000000);
+
+    const input: ParseRecipeRequest = {
+      recipeText: 'Updated recipe',
+      recipeId: RECIPE_UUID,
+      imageKeys: ['user/new-image.jpg'],
+    };
+    const result = await parseRecipe(mockContext(), input);
+
+    expect(result.images).toEqual([{ key: 'user/new-image.jpg', timestamp: 1700000000000 }]);
+    expect(getRecipeByUuid).not.toHaveBeenCalled();
+  });
 });
