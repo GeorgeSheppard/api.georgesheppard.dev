@@ -106,6 +106,8 @@ describe('Get Shopping List Endpoint', () => {
     expect(spaghetti.quantities[0].unit).toBe(Unit.GRAM);
     expect(eggs.quantities[0].value).toBe(3);
     expect(eggs.quantities[0].unit).toBe(Unit.NUMBER);
+    expect(spaghetti.meals).toEqual(['Pasta Carbonara']);
+    expect(eggs.meals).toEqual(['Pasta Carbonara']);
   });
 
   test('should scale quantities based on servings', async ({ dynamoClient }) => {
@@ -259,6 +261,8 @@ describe('Get Shopping List Endpoint', () => {
     expect(eggs).toBeDefined();
     expect(eggs.quantities[0].value).toBe(9);
     expect(eggs.quantities[0].unit).toBe(Unit.NUMBER);
+    expect(eggs.meals).toContain('Pasta Carbonara');
+    expect(eggs.meals).toContain('Frittata');
   });
 
   test('should filter by single date', async ({ dynamoClient }) => {
