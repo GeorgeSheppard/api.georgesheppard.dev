@@ -41,42 +41,23 @@
         ]
       },
       "Recipe": {
-        "type": "object",
-        "properties": {
-          "uuid": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Recipe UUID"
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OpenAIRecipe"
           },
-          "name": {
-            "type": "string",
-            "description": "Recipe name"
-          },
-          "description": {
-            "type": "string",
-            "description": "Recipe description"
-          },
-          "images": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Image"
+          {
+            "type": "object",
+            "properties": {
+              "uuid": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Recipe UUID"
+              }
             },
-            "description": "Recipe images"
-          },
-          "components": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Component"
-            },
-            "description": "Recipe components"
+            "required": [
+              "uuid"
+            ]
           }
-        },
-        "required": [
-          "uuid",
-          "name",
-          "description",
-          "images",
-          "components"
         ]
       },
       "Image": {
@@ -101,17 +82,12 @@
           "key"
         ]
       },
-      "Component": {
+      "OpenAIComponent": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
             "description": "Component name"
-          },
-          "uuid": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Component UUID"
           },
           "ingredients": {
             "type": "array",
@@ -138,7 +114,6 @@
         },
         "required": [
           "name",
-          "uuid",
           "ingredients",
           "instructions"
         ]
@@ -200,6 +175,59 @@
         },
         "required": [
           "text"
+        ]
+      },
+      "OpenAIRecipe": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Recipe name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Recipe description"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Image"
+            },
+            "description": "Recipe images"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpenAIComponent"
+            },
+            "description": "Recipe components"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "images",
+          "components"
+        ]
+      },
+      "Component": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OpenAIComponent"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "uuid": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Component UUID"
+              }
+            },
+            "required": [
+              "uuid"
+            ]
+          }
         ]
       },
       "MealPlanEntry": {

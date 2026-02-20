@@ -22,16 +22,16 @@ export const InstructionSchema = z
   })
   .openapi('Instruction');
 
-export const ComponentSchema = z
+// Schemas for OpenAI parsing (without UUIDs - we generate those on the backend)
+export const OpenAIComponentSchema = z
   .object({
     name: z.string().describe('Component name'),
-    uuid: z.string().uuid().describe('Component UUID'),
     ingredients: z.array(IngredientSchema).describe('List of ingredients'),
     instructions: z.array(InstructionSchema).describe('List of instructions'),
     storeable: z.boolean().optional().describe('Whether component can be made ahead'),
     servings: z.number().optional().describe('Number of servings'),
   })
-  .openapi('Component');
+  .openapi('OpenAIComponent');
 
 export const ImageSchema = z
   .object({
@@ -45,19 +45,22 @@ export const ImageSchema = z
   })
   .openapi('Image');
 
-export const RecipeSchema = z
+export const OpenAIRecipeSchema = z
   .object({
-    uuid: z.string().uuid().describe('Recipe UUID'),
     name: z.string().describe('Recipe name'),
     description: z.string().describe('Recipe description'),
     images: z.array(ImageSchema).describe('Recipe images'),
-    components: z.array(ComponentSchema).describe('Recipe components'),
+    components: z.array(OpenAIComponentSchema).describe('Recipe components'),
   })
-  .openapi('Recipe');
+  .openapi('OpenAIRecipe');
 
-// Schemas for OpenAI parsing (without UUIDs - we generate those on the backend)
-export const OpenAIComponentSchema = ComponentSchema.omit({ uuid: true });
-export const OpenAIRecipeSchema = RecipeSchema.omit({ uuid: true });
+export const ComponentSchema = OpenAIComponentSchema.extend({
+  uuid: z.string().uuid().describe('Component UUID'),
+}).openapi('Component');
+
+export const RecipeSchema = OpenAIRecipeSchema.extend({
+  uuid: z.string().uuid().describe('Recipe UUID'),
+}).openapi('Recipe');
 
 export const MealPlanEntrySchema = z
   .object({
