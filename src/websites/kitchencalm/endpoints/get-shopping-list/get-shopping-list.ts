@@ -68,6 +68,9 @@ export async function getShoppingList(
         })
       );
 
+      console.log('DEBUG: Requested dates (normalized):', Array.from(normalizedRequestedDates));
+      console.log('DEBUG: Meal plan keys:', Object.keys(mealPlan));
+
       for (const mealPlanKey of Object.keys(mealPlan)) {
         // Extract date from format "DayName - D/M/YYYY" or "DayName - DD/MM/YYYY"
         const dateMatch = mealPlanKey.match(/(\d{1,2}\/\d{1,2}\/\d{4})$/);
@@ -75,11 +78,14 @@ export async function getShoppingList(
           // Normalize meal plan date for comparison
           const parts = dateMatch[1].split('/');
           const normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+          console.log(`DEBUG: Checking "${mealPlanKey}" -> "${normalizedDate}"`);
           if (normalizedRequestedDates.has(normalizedDate)) {
+            console.log(`DEBUG: MATCH! Adding "${mealPlanKey}" to selectedDates`);
             selectedDates.add(mealPlanKey);
           }
         }
       }
+      console.log('DEBUG: Selected dates:', Array.from(selectedDates));
     }
 
     const quantityAndMeals = createShoppingListData(recipes, mealPlan, selectedDates);
