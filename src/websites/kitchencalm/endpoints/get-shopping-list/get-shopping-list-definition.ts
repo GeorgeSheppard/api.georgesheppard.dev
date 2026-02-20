@@ -14,7 +14,7 @@ export const getShoppingListRoute = createRoute({
   request: {
     query: z.object({
       dates: z
-        .array(z.string())
+        .union([z.string().transform((val) => [val]), z.array(z.string())])
         .optional()
         .describe('Array of dates to include in shopping list (format: DD/MM/YYYY)'),
     }),

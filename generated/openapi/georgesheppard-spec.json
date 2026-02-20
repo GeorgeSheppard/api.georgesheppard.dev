@@ -1438,10 +1438,17 @@
         "parameters": [
           {
             "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
               "description": "Array of dates to include in shopping list (format: DD/MM/YYYY)"
             },
             "required": false,
