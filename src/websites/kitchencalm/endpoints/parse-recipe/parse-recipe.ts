@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
-import { updateRecipe as updateRecipeInDynamo } from '@core/dynamodb/utilities.js';
+import { getRecipeByUuid, updateRecipe as updateRecipeInDynamo } from '@core/dynamodb/utilities.js';
 import { parseRecipeWithOpenAI } from '../../utils/openai-recipe-parser.js';
 import { RecipeSchema } from '../../schemas.js';
 
@@ -28,6 +28,14 @@ export async function parseRecipe(
     openaiClient.getClient(),
     input.recipeId
   );
+
+  // Preserve existing images when editing a recipe
+  if (input.recipeId) {
+    const existingRecipe = await getRecipeByUuid(dynamoClient.client, userId, input.recipeId);
+    if (existingRecipe) {
+      recipe.images = existingRecipe.images;
+    }
+  }
 
   await updateRecipeInDynamo(dynamoClient.client, userId, recipe);
 

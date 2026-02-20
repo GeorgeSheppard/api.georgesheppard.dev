@@ -7,7 +7,7 @@ import { Unit } from '@core/types/recipes.js';
 vi.mock('@core/dynamodb/utilities.js');
 vi.mock('../../utils/openai-recipe-parser.js');
 
-import { updateRecipe as updateRecipeInDynamo } from '@core/dynamodb/utilities.js';
+import { updateRecipe as updateRecipeInDynamo, getRecipeByUuid } from '@core/dynamodb/utilities.js';
 import { parseRecipeWithOpenAI } from '../../utils/openai-recipe-parser.js';
 
 const validUserId = '550e8400-e29b-41d4-a716-446655440000';
@@ -129,5 +129,46 @@ describe('parseRecipe handler', () => {
       context.get('openaiClient').getClient(),
       undefined
     );
+  });
+
+  it('should preserve existing images when editing a recipe', async () => {
+    const existingImages = [{ timestamp: 1234567890, key: 'image-key-1' }];
+    const existingRecipe = { ...validParsedRecipe, images: existingImages };
+    const parsedWithoutImages = { ...validParsedRecipe, images: [] };
+
+    vi.mocked(parseRecipeWithOpenAI).mockResolvedValue(parsedWithoutImages);
+    vi.mocked(getRecipeByUuid).mockResolvedValue(existingRecipe);
+    vi.mocked(updateRecipeInDynamo).mockResolvedValue();
+
+    const input: ParseRecipeRequest = { recipeText: 'Updated recipe', recipeId: RECIPE_UUID };
+    const result = await parseRecipe(mockContext(), input);
+
+    expect(result.images).toEqual(existingImages);
+    expect(getRecipeByUuid).toHaveBeenCalledWith({}, validUserId, RECIPE_UUID);
+    expect(updateRecipeInDynamo).toHaveBeenCalledWith(
+      {},
+      validUserId,
+      expect.objectContaining({ images: existingImages })
+    );
+  });
+
+  it('should use empty images when editing a recipe with no existing record', async () => {
+    vi.mocked(parseRecipeWithOpenAI).mockResolvedValue({ ...validParsedRecipe, images: [] });
+    vi.mocked(getRecipeByUuid).mockResolvedValue(null);
+    vi.mocked(updateRecipeInDynamo).mockResolvedValue();
+
+    const input: ParseRecipeRequest = { recipeText: 'New recipe', recipeId: RECIPE_UUID };
+    const result = await parseRecipe(mockContext(), input);
+
+    expect(result.images).toEqual([]);
+  });
+
+  it('should not call getRecipeByUuid when creating a new recipe', async () => {
+    vi.mocked(parseRecipeWithOpenAI).mockResolvedValue(validParsedRecipe);
+    vi.mocked(updateRecipeInDynamo).mockResolvedValue();
+
+    await parseRecipe(mockContext(), { recipeText: 'New recipe' });
+
+    expect(getRecipeByUuid).not.toHaveBeenCalled();
   });
 });
