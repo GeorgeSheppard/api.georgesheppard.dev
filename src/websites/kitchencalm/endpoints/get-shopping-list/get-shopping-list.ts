@@ -15,6 +15,7 @@ export const ShoppingListItemSchema = z.object({
     )
     .describe('Array of quantities with units'),
   category: z.string().describe('Shopping category for the ingredient'),
+  meals: z.array(z.string()).describe('List of meals this ingredient belongs to'),
 });
 
 export const ShoppingListResponseSchema = z
@@ -91,13 +92,14 @@ export async function getShoppingList(
     }
 
     const items: ShoppingListItem[] = Object.entries(quantityAndMeals).map(
-      ([ingredient, { quantities }]) => ({
+      ([ingredient, { quantities, meals }]) => ({
         ingredient,
         quantities: quantities.map((q) => ({
           value: q.value,
           unit: q.unit,
         })),
         category: categories?.[ingredient] ?? 'Other',
+        meals: Array.from(meals),
       })
     );
 
@@ -114,10 +116,11 @@ export async function getShoppingListMcp(
 ): Promise<GetShoppingListMcpResponse> {
   const items = await getShoppingList(c, input);
   const content = items
-    .map(
-      (item) =>
-        `${item.ingredient} - ${item.quantities.map((q) => `${q.value || ''}${q.unit}`).join(', ')} (${item.category})`
-    )
+    .map((item) => {
+      const quantityStr = item.quantities.map((q) => `${q.value || ''}${q.unit}`).join(', ');
+      const mealStr = item.meals.length > 0 ? ` [${item.meals.join(', ')}]` : '';
+      return `${item.ingredient} - ${quantityStr}${mealStr} (${item.category})`;
+    })
     .join('\n');
   return { content };
 }

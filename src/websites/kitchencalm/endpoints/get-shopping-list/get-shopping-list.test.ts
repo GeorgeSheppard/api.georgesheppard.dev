@@ -80,11 +80,13 @@ describe('getShoppingList handler', () => {
       ingredient: 'Spaghetti',
       quantities: [{ value: 400, unit: Unit.GRAM }],
       category: 'Rice, Pasta & Grains',
+      meals: ['Pasta'],
     });
     expect(eggs).toEqual({
       ingredient: 'Eggs',
       quantities: [{ value: 3, unit: Unit.NUMBER }],
       category: 'Dairy & Eggs',
+      meals: ['Pasta'],
     });
   });
 

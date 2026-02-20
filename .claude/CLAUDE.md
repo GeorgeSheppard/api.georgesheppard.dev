@@ -27,9 +27,12 @@ After making code changes, always run these steps before committing:
 
 1. `pnpm lint:fix` - Fix TypeScript and ESLint issues
 2. `pnpm format` - Format code with Prettier
-3. `pnpm generate:openapi` - Regenerate OpenAPI spec (if endpoints changed)
-4. `pnpm test` - Verify unit tests pass
-5. Commit with a clear message
+3. `pnpm generate:openapi` - Regenerate OpenAPI spec (if endpoints, request/response schemas changed)
+4. `pnpm format` - Format code after OpenAPI generation
+5. `pnpm test` - Verify unit tests pass
+6. Commit with a clear message
+
+**Important:** Always regenerate the OpenAPI spec when modifying endpoint response schemas, as this updates the API documentation.
 
 ## Environment Variables
 

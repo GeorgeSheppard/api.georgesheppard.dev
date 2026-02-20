@@ -1494,12 +1494,20 @@
                       "category": {
                         "type": "string",
                         "description": "Shopping category for the ingredient"
+                      },
+                      "meals": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "List of meals this ingredient belongs to"
                       }
                     },
                     "required": [
                       "ingredient",
                       "quantities",
-                      "category"
+                      "category",
+                      "meals"
                     ]
                   },
                   "description": "Array of shopping list items with ingredient, quantity, and category"
