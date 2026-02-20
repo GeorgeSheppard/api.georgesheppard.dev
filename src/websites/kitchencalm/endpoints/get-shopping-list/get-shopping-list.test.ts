@@ -88,7 +88,7 @@ describe('getShoppingList handler', () => {
     });
   });
 
-  it('should pass date range to filter dates', async () => {
+  it('should filter ingredients by specific dates', async () => {
     const recipeId = 'recipe-1';
     const componentId = 'comp-1';
     const recipe: IRecipe = {
@@ -120,8 +120,7 @@ describe('getShoppingList handler', () => {
     vi.mocked(categoriseIngredients).mockResolvedValue({ Flour: 'Baking' });
 
     await getShoppingList(mockContext(), {
-      startDate: 'Monday - 01/08/2024',
-      endDate: 'Monday - 01/08/2024',
+      dates: ['01/08/2024'],
     });
 
     expect(categoriseIngredients).toHaveBeenCalledWith(['Flour']);

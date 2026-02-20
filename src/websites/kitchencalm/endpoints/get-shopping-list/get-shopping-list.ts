@@ -26,8 +26,7 @@ export const GetShoppingListMcpSchema = z.object({
 });
 
 export const GetShoppingListRequestSchema = z.object({
-  startDate: z.string().optional().describe('Start date (format: DayName - DD/MM/YYYY)'),
-  endDate: z.string().optional().describe('End date (format: DayName - DD/MM/YYYY)'),
+  dates: z.array(z.string()).optional().describe('Array of dates to include (format: DD/MM/YYYY)'),
 });
 
 export type ShoppingListItem = z.infer<typeof ShoppingListItemSchema>;
@@ -43,9 +42,9 @@ export async function getShoppingList(
   const userId = c.get('userId');
   const dynamoClient = c.get('dynamoClient');
 
-  const dateRange =
-    input && typeof input === 'object' && ('startDate' in input || 'endDate' in input)
-      ? (input as { startDate?: string; endDate?: string })
+  const requestInput =
+    input && typeof input === 'object' && 'dates' in input
+      ? (input as { dates?: string[] })
       : undefined;
 
   try {
@@ -55,12 +54,15 @@ export async function getShoppingList(
     ]);
 
     let selectedDates: Set<string> | undefined;
-    if (dateRange?.startDate || dateRange?.endDate) {
+    if (requestInput?.dates && requestInput.dates.length > 0) {
       selectedDates = new Set<string>();
-      for (const date of Object.keys(mealPlan)) {
-        if (dateRange.startDate && date < dateRange.startDate) continue;
-        if (dateRange.endDate && date > dateRange.endDate) continue;
-        selectedDates.add(date);
+      const dateSet = new Set(requestInput.dates);
+      for (const mealPlanKey of Object.keys(mealPlan)) {
+        // Extract date from format "DayName - DD/MM/YYYY" -> "DD/MM/YYYY"
+        const dateMatch = mealPlanKey.match(/(\d{2}\/\d{2}\/\d{4})$/);
+        if (dateMatch && dateSet.has(dateMatch[1])) {
+          selectedDates.add(mealPlanKey);
+        }
       }
     }
 
@@ -92,7 +94,7 @@ export async function getShoppingList(
 
 export async function getShoppingListMcp(
   c: ContextWithUserId,
-  input: { startDate?: string; endDate?: string }
+  input: { dates?: string[] }
 ): Promise<GetShoppingListMcpResponse> {
   const items = await getShoppingList(c, input);
   const content = items
