@@ -45,6 +45,12 @@ export const ImageSchema = z
   })
   .openapi('Image');
 
+export const RecipeImageInputSchema = z
+  .object({
+    key: z.string().describe('S3 object key returned from the presigned upload URL endpoint'),
+  })
+  .openapi('RecipeImageInput');
+
 export const RecipeSchema = z
   .object({
     uuid: z.string().uuid().describe('Recipe UUID'),

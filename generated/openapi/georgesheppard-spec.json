@@ -202,6 +202,18 @@
           "text"
         ]
       },
+      "RecipeImageInput": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "S3 object key returned from the presigned upload URL endpoint"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
       "MealPlanEntry": {
         "type": "object",
         "properties": {
@@ -860,9 +872,9 @@
                   "images": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Image"
+                      "$ref": "#/components/schemas/RecipeImageInput"
                     },
-                    "description": "Recipe images"
+                    "description": "Recipe images (S3 keys from presigned upload)"
                   },
                   "components": {
                     "type": "array",

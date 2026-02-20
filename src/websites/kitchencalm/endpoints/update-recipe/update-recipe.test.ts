@@ -55,19 +55,20 @@ describe('updateRecipe handler', () => {
     expect(result).toEqual({ uuid: 'generated-uuid-1234', success: true });
   });
 
-  it('should pass complete recipe to DynamoDB utility', async () => {
+  it('should pass complete recipe to DynamoDB utility with server-generated timestamp', async () => {
     const mockClient = { client: { put: 'mock' } };
     const c = createMockContext<ContextWithUserId>({
       userId: validUserId,
       dynamoClient: mockClient,
     });
     vi.mocked(updateRecipeInDynamo).mockResolvedValue();
+    vi.spyOn(Date, 'now').mockReturnValue(1700000000000);
 
     const recipe: UpdateRecipeRequest = {
       uuid: 'recipe-uuid',
       name: 'Pasta',
       description: 'Classic pasta',
-      images: [{ timestamp: 1234567890, key: 'user/image.jpg' }],
+      images: [{ key: 'user/image.jpg' }],
       components: [],
     };
 
@@ -77,7 +78,7 @@ describe('updateRecipe handler', () => {
       uuid: 'recipe-uuid',
       name: 'Pasta',
       description: 'Classic pasta',
-      images: [{ timestamp: 1234567890, key: 'user/image.jpg' }],
+      images: [{ key: 'user/image.jpg', timestamp: 1700000000000 }],
       components: [],
     });
   });
