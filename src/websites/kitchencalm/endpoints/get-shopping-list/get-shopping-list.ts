@@ -26,10 +26,7 @@ export const GetShoppingListMcpSchema = z.object({
 });
 
 export const GetShoppingListRequestSchema = z.object({
-  dates: z
-    .array(z.string())
-    .optional()
-    .describe('Array of dates to include (format: DD/MM/YYYY)'),
+  dates: z.array(z.string()).optional().describe('Array of dates to include (format: DD/MM/YYYY)'),
 });
 
 export type ShoppingListItem = z.infer<typeof ShoppingListItemSchema>;

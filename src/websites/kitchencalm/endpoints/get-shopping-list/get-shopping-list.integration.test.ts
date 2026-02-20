@@ -471,12 +471,15 @@ describe('Get Shopping List Endpoint', () => {
 
     // Filter to Monday and Tuesday using dates array
     const responseRange = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list?dates=01%2F08%2F2024&dates=02%2F08%2F2024', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      new Request(
+        'http://localhost/kitchencalm/shopping-list?dates=01%2F08%2F2024&dates=02%2F08%2F2024',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
     );
 
     expect(responseRange.status).toBe(200);
@@ -591,12 +594,15 @@ describe('Get Shopping List Endpoint', () => {
 
     // Filter with dates that do not match any meal plan dates
     const responseNoMatch = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list?dates=15%2F08%2F2024&dates=20%2F08%2F2024', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      new Request(
+        'http://localhost/kitchencalm/shopping-list?dates=15%2F08%2F2024&dates=20%2F08%2F2024',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
     );
 
     expect(responseNoMatch.status).toBe(200);

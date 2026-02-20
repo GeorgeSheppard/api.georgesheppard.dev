@@ -1438,22 +1438,15 @@
         "parameters": [
           {
             "schema": {
-              "type": "string",
-              "description": "Filter shopping list from this date (format: DayName - DD/MM/YYYY)"
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Array of dates to include in shopping list (format: DD/MM/YYYY)"
             },
             "required": false,
-            "description": "Filter shopping list from this date (format: DayName - DD/MM/YYYY)",
-            "name": "startDate",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Filter shopping list until this date (format: DayName - DD/MM/YYYY)"
-            },
-            "required": false,
-            "description": "Filter shopping list until this date (format: DayName - DD/MM/YYYY)",
-            "name": "endDate",
+            "description": "Array of dates to include in shopping list (format: DD/MM/YYYY)",
+            "name": "dates",
             "in": "query"
           }
         ],
