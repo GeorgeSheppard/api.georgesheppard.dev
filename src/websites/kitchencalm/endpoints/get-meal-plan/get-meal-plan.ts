@@ -53,26 +53,39 @@ function updateMealPlanDatesToCurrentWindow(mealPlan: IMealPlan): IMealPlan {
     date: parseDateFromString(dateStr),
   }));
 
-  // Find the earliest date
+  // Find the earliest and latest dates
   const earliestDate = dates.reduce((min, current) =>
     current.date < min.date ? current : min
   ).date;
+
+  const latestDate = dates.reduce((max, current) => (current.date > max.date ? current : max)).date;
 
   // If earliest date is not stale, return original meal plan
   if (!isDateStale(earliestDate)) {
     return mealPlan;
   }
 
-  // Calculate the shift needed to bring the earliest date to 7 days ago
-  // This ensures the meal plan shows 1 week of history + future dates
+  // Calculate shifts needed to satisfy both constraints:
+  // 1. Earliest date becomes 7 days ago (1 week backward)
+  // 2. Latest date becomes 14 days from now (2 weeks forward)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const sevenDaysAgo = new Date(today);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const timeDiff = sevenDaysAgo.getTime() - earliestDate.getTime();
-  const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+  const twoWeeksFromNow = new Date(today);
+  twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+
+  const shift1Days = Math.floor(
+    (sevenDaysAgo.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const shift2Days = Math.floor(
+    (twoWeeksFromNow.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  // Use the larger shift to satisfy both constraints
+  const daysDiff = Math.max(shift1Days, shift2Days);
 
   // Create updated meal plan with shifted dates
   const updatedMealPlan: IMealPlan = {};

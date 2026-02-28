@@ -91,7 +91,10 @@ describe('Get Meal Plan Endpoint', () => {
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Create a meal plan from 30 days ago
+    const twoWeeksFromNow = new Date(today);
+    twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+
+    // Create a meal plan from 30 days ago (single day)
     const oldDate = new Date(today);
     oldDate.setDate(oldDate.getDate() - 30);
     const oldDateStr = `Monday - ${String(oldDate.getDate()).padStart(2, '0')}/${String(oldDate.getMonth() + 1).padStart(2, '0')}/${oldDate.getFullYear()}`;
@@ -132,14 +135,17 @@ describe('Get Meal Plan Endpoint', () => {
       ],
     });
 
-    // The date should have been updated to 7 days ago
+    // The date should have been shifted to satisfy both constraints:
+    // 1. At or after 7 days ago (1 week backward)
+    // 2. At or after 14 days from now (2 weeks forward)
     const resultDate = result[0].date;
     const parts = resultDate.split(' - ');
     const [day, month, year] = parts[1].split('/').map(Number);
     const parsedDate = new Date(year, month - 1, day);
     parsedDate.setHours(0, 0, 0, 0);
 
-    expect(parsedDate.getTime()).toBe(sevenDaysAgo.getTime());
+    // Should be at or after 14 days from now (since that's the larger shift needed)
+    expect(parsedDate.getTime()).toBeGreaterThanOrEqual(twoWeeksFromNow.getTime());
 
     // Verify the database was updated
     const updatedMealPlan = await getMealPlanForUser(dynamoClient.client, userId);

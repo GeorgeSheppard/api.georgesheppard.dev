@@ -121,7 +121,10 @@ describe('getMealPlan handler', () => {
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Create dates from 30 days ago
+    const twoWeeksFromNow = new Date(today);
+    twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+
+    // Create dates from 30 days ago (spanning 2 days)
     const oldDate1 = new Date(today);
     oldDate1.setDate(oldDate1.getDate() - 30);
     const oldDate2 = new Date(today);
@@ -146,20 +149,26 @@ describe('getMealPlan handler', () => {
     // Should have updated the dates in DynamoDB
     expect(putMealPlanForUser).toHaveBeenCalled();
 
-    // The result should have updated dates with earliest date shifted to 7 days ago
+    // The result should have updated dates spanning 1 week backward to 2 weeks forward
     expect(result.length).toBe(2);
     const resultDates = result.map((entry) => entry.date);
-    for (const dateStr of resultDates) {
+
+    // Get the earliest and latest from results
+    const parsedDates = resultDates.map((dateStr) => {
       const parts = dateStr.split(' - ');
       const [day, month, year] = parts[1].split('/').map(Number);
       const resultDate = new Date(year, month - 1, day);
       resultDate.setHours(0, 0, 0, 0);
+      return resultDate;
+    });
 
-      // Result dates should be within 1 week of past to present (7 days ago to today)
-      const daysDiff = (resultDate.getTime() - sevenDaysAgo.getTime()) / (1000 * 60 * 60 * 24);
-      expect(daysDiff).toBeGreaterThanOrEqual(0); // At or after 7 days ago
-      expect(daysDiff).toBeLessThanOrEqual(8); // Within the historical range
-    }
+    const resultEarliest = new Date(Math.min(...parsedDates.map((d) => d.getTime())));
+    const resultLatest = new Date(Math.max(...parsedDates.map((d) => d.getTime())));
+
+    // Earliest should be at or after 7 days ago
+    expect(resultEarliest.getTime()).toBeGreaterThanOrEqual(sevenDaysAgo.getTime());
+    // Latest should be at or after 14 days from now
+    expect(resultLatest.getTime()).toBeGreaterThanOrEqual(twoWeeksFromNow.getTime());
   });
 
   it('should not update recent meal plan dates', async () => {
