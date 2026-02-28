@@ -11,6 +11,7 @@ const mockRecipe: IRecipe = {
   uuid: 'recipe-uuid-1',
   name: 'Pasta Carbonara',
   description: 'Classic Italian pasta',
+  images: [],
   components: [],
 };
 
