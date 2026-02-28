@@ -21,7 +21,7 @@ export async function getRecipes(c: ContextWithUserId): Promise<GetRecipesRespon
       recipes.map(async (recipe) => ({
         ...recipe,
         images: await Promise.all(
-          recipe.images.map(async (image) => ({
+          (recipe.images || []).map(async (image) => ({
             ...image,
             presignedUrl: await getSignedGetUrl(s3Client.client, image.key).catch((error) => {
               console.error(`Failed to generate presigned URL for image ${image.key}:`, error);
