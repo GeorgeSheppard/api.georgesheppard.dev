@@ -118,6 +118,9 @@ describe('getMealPlan handler', () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     // Create dates from 30 days ago
     const oldDate1 = new Date(today);
     oldDate1.setDate(oldDate1.getDate() - 30);
@@ -143,7 +146,7 @@ describe('getMealPlan handler', () => {
     // Should have updated the dates in DynamoDB
     expect(putMealPlanForUser).toHaveBeenCalled();
 
-    // The result should have updated dates that are recent
+    // The result should have updated dates with earliest date shifted to 7 days ago
     expect(result.length).toBe(2);
     const resultDates = result.map((entry) => entry.date);
     for (const dateStr of resultDates) {
@@ -152,9 +155,10 @@ describe('getMealPlan handler', () => {
       const resultDate = new Date(year, month - 1, day);
       resultDate.setHours(0, 0, 0, 0);
 
-      // Result dates should be close to today (within 30 days)
-      const daysDiff = Math.abs((resultDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      expect(daysDiff).toBeLessThan(10); // Should be shifted to be recent
+      // Result dates should be within 1 week of past to present (7 days ago to today)
+      const daysDiff = (resultDate.getTime() - sevenDaysAgo.getTime()) / (1000 * 60 * 60 * 24);
+      expect(daysDiff).toBeGreaterThanOrEqual(0); // At or after 7 days ago
+      expect(daysDiff).toBeLessThanOrEqual(8); // Within the historical range
     }
   });
 

@@ -88,6 +88,9 @@ describe('Get Meal Plan Endpoint', () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     // Create a meal plan from 30 days ago
     const oldDate = new Date(today);
     oldDate.setDate(oldDate.getDate() - 30);
@@ -129,15 +132,14 @@ describe('Get Meal Plan Endpoint', () => {
       ],
     });
 
-    // The date should have been updated to be recent
+    // The date should have been updated to 7 days ago
     const resultDate = result[0].date;
     const parts = resultDate.split(' - ');
     const [day, month, year] = parts[1].split('/').map(Number);
     const parsedDate = new Date(year, month - 1, day);
     parsedDate.setHours(0, 0, 0, 0);
 
-    const daysDiff = Math.abs((parsedDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    expect(daysDiff).toBeLessThan(10); // Should be shifted to be recent
+    expect(parsedDate.getTime()).toBe(sevenDaysAgo.getTime());
 
     // Verify the database was updated
     const updatedMealPlan = await getMealPlanForUser(dynamoClient.client, userId);

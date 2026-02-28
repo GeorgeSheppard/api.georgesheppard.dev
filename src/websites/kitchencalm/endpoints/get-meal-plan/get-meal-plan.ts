@@ -63,11 +63,15 @@ function updateMealPlanDatesToCurrentWindow(mealPlan: IMealPlan): IMealPlan {
     return mealPlan;
   }
 
-  // Calculate the shift needed to bring the earliest date to today
+  // Calculate the shift needed to bring the earliest date to 7 days ago
+  // This ensures the meal plan shows 1 week of history + future dates
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const timeDiff = today.getTime() - earliestDate.getTime();
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const timeDiff = sevenDaysAgo.getTime() - earliestDate.getTime();
   const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
 
   // Create updated meal plan with shifted dates
