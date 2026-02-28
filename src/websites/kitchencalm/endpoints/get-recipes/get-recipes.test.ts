@@ -39,6 +39,7 @@ describe('getRecipes handler', () => {
       uuid: 'recipe-1',
       name: 'Pasta Carbonara',
       description: 'Classic Italian pasta',
+      images: [],
       components: [],
     };
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
@@ -50,8 +51,8 @@ describe('getRecipes handler', () => {
 
   it('should map multiple recipes by uuid', async () => {
     const recipes: IRecipe[] = [
-      { uuid: 'recipe-1', name: 'Pasta', description: 'desc', components: [] },
-      { uuid: 'recipe-2', name: 'Pizza', description: 'desc', components: [] },
+      { uuid: 'recipe-1', name: 'Pasta', description: 'desc', images: [], components: [] },
+      { uuid: 'recipe-2', name: 'Pizza', description: 'desc', images: [], components: [] },
     ];
     vi.mocked(getAllRecipesForUser).mockResolvedValue(recipes);
 
@@ -68,7 +69,7 @@ describe('getRecipes handler', () => {
       uuid: 'recipe-1',
       name: 'Test Recipe',
       description: 'A test recipe',
-      image: { timestamp: 1234567890, key: 'user/image.jpg' },
+      images: [{ timestamp: 1234567890, key: 'user/image.jpg' }],
       components: [
         {
           uuid: 'comp-1',
@@ -84,7 +85,7 @@ describe('getRecipes handler', () => {
     const result = await getRecipes(mockContext());
 
     expect(result['recipe-1'].components[0].ingredients[0].quantity.unit).toBe(Unit.CUP);
-    expect(result['recipe-1'].image?.presignedUrl).toBe(
+    expect(result['recipe-1'].images[0].presignedUrl).toBe(
       'https://example.s3.amazonaws.com/signed-url'
     );
   });
@@ -118,12 +119,12 @@ describe('getRecipes handler', () => {
     await expect(getRecipes(mockContext())).rejects.toThrow('DynamoDB error');
   });
 
-  it('should add presigned URL to recipe image', async () => {
+  it('should add presigned URL to recipe images', async () => {
     const recipe: IRecipe = {
       uuid: 'recipe-1',
       name: 'Test Recipe',
       description: 'A test recipe',
-      image: { timestamp: 1234567890, key: 'user/image.jpg' },
+      images: [{ timestamp: 1234567890, key: 'user/image.jpg' }],
       components: [],
     };
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
@@ -131,24 +132,25 @@ describe('getRecipes handler', () => {
 
     const result = await getRecipes(mockContext());
 
-    expect(result['recipe-1'].image?.presignedUrl).toBe(
+    expect(result['recipe-1'].images[0].presignedUrl).toBe(
       'https://example.s3.amazonaws.com/signed-url'
     );
     expect(vi.mocked(getSignedGetUrl)).toHaveBeenCalledTimes(1);
   });
 
-  it('should leave image undefined when recipe has no image', async () => {
+  it('should return empty images array when recipe has no images', async () => {
     const recipe: IRecipe = {
       uuid: 'recipe-1',
       name: 'Test Recipe',
       description: 'A test recipe',
+      images: [],
       components: [],
     };
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
 
     const result = await getRecipes(mockContext());
 
-    expect(result['recipe-1'].image).toBeUndefined();
+    expect(result['recipe-1'].images).toEqual([]);
     expect(vi.mocked(getSignedGetUrl)).not.toHaveBeenCalled();
   });
 
@@ -157,7 +159,7 @@ describe('getRecipes handler', () => {
       uuid: 'recipe-1',
       name: 'Test Recipe',
       description: 'A test recipe',
-      image: { timestamp: 1234567890, key: 'user/image.jpg' },
+      images: [{ timestamp: 1234567890, key: 'user/image.jpg' }],
       components: [],
     };
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
@@ -165,6 +167,6 @@ describe('getRecipes handler', () => {
 
     const result = await getRecipes(mockContext());
 
-    expect(result['recipe-1'].image?.presignedUrl).toBeUndefined();
+    expect(result['recipe-1'].images[0].presignedUrl).toBeUndefined();
   });
 });

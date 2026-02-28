@@ -43,6 +43,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'Pasta',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -96,6 +97,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'Pasta',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -140,6 +142,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'Test Recipe',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -183,6 +186,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'Test Recipe',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -225,6 +229,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId1,
       name: 'Recipe 1',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -240,6 +245,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId2,
       name: 'Recipe 2',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -285,6 +291,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'User Recipe',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -334,6 +341,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'Recipe 1',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -373,6 +381,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'Recipe 1',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -411,6 +420,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'Pasta Carbonara',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -457,6 +467,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId1,
       name: 'Pasta',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId1,
@@ -472,6 +483,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId2,
       name: 'Salad',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId2,
@@ -515,6 +527,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'Complex Recipe',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId1,
@@ -565,6 +578,7 @@ describe('getShoppingList handler', () => {
       uuid: recipeId,
       name: 'Pasta',
       description: '',
+      images: [],
       components: [
         {
           uuid: componentId,

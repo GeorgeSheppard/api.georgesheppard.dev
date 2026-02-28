@@ -50,6 +50,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId,
       name: 'Pasta Carbonara',
       description: 'Classic Italian pasta',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -120,6 +121,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId,
       name: 'Risotto',
       description: 'Italian rice dish',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -182,6 +184,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId1,
       name: 'Pasta Carbonara',
       description: 'Classic Italian pasta',
+      images: [],
       components: [
         {
           uuid: componentId1,
@@ -202,6 +205,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId2,
       name: 'Frittata',
       description: 'Italian egg dish',
+      images: [],
       components: [
         {
           uuid: componentId2,
@@ -274,6 +278,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId1,
       name: 'Monday Recipe',
       description: 'Recipe for Monday',
+      images: [],
       components: [
         {
           uuid: componentId1,
@@ -294,6 +299,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId2,
       name: 'Wednesday Recipe',
       description: 'Recipe for Wednesday',
+      images: [],
       components: [
         {
           uuid: componentId2,
@@ -376,6 +382,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId1,
       name: 'Recipe Monday',
       description: 'Recipe for Monday',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -396,6 +403,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId2,
       name: 'Recipe Tuesday',
       description: 'Recipe for Tuesday',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -416,6 +424,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId3,
       name: 'Recipe Wednesday',
       description: 'Recipe for Wednesday',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -496,6 +505,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId,
       name: 'Test Recipe',
       description: 'Test',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -555,6 +565,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId,
       name: 'Test Recipe',
       description: 'Test',
+      images: [],
       components: [
         {
           uuid: componentId,
@@ -616,6 +627,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId1,
       name: 'Monday Recipe',
       description: 'Recipe for Monday',
+      images: [],
       components: [
         {
           uuid: componentId1,
@@ -636,6 +648,7 @@ describe('Get Shopping List Endpoint', () => {
       uuid: recipeId2,
       name: 'Wednesday Recipe',
       description: 'Recipe for Wednesday',
+      images: [],
       components: [
         {
           uuid: componentId2,

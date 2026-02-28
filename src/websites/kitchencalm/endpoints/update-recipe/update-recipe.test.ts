@@ -53,7 +53,7 @@ describe('updateRecipe handler', () => {
     expect(result).toEqual({ uuid: 'generated-uuid-1234', success: true });
   });
 
-  it('should pass recipe with image to DynamoDB utility with server-generated timestamp', async () => {
+  it('should pass recipe with images to DynamoDB utility with server-generated timestamps', async () => {
     const mockClient = { client: { put: 'mock' } };
     const c = createMockContext<ContextWithUserId>({
       userId: validUserId,
@@ -66,7 +66,7 @@ describe('updateRecipe handler', () => {
       uuid: 'recipe-uuid',
       name: 'Pasta',
       description: 'Classic pasta',
-      image: 'user/image.jpg',
+      images: ['user/image1.jpg', 'user/image2.jpg'],
       components: [],
     };
 
@@ -76,12 +76,15 @@ describe('updateRecipe handler', () => {
       uuid: 'recipe-uuid',
       name: 'Pasta',
       description: 'Classic pasta',
-      image: { key: 'user/image.jpg', timestamp: 1700000000000 },
+      images: [
+        { key: 'user/image1.jpg', timestamp: 1700000000000 },
+        { key: 'user/image2.jpg', timestamp: 1700000000000 },
+      ],
       components: [],
     });
   });
 
-  it('should pass recipe without image to DynamoDB when no image provided', async () => {
+  it('should pass recipe with empty images array to DynamoDB when no images provided', async () => {
     const mockClient = { client: { put: 'mock' } };
     const c = createMockContext<ContextWithUserId>({
       userId: validUserId,
@@ -102,7 +105,7 @@ describe('updateRecipe handler', () => {
       uuid: 'recipe-uuid',
       name: 'Pasta',
       description: 'Classic pasta',
-      image: undefined,
+      images: [],
       components: [],
     });
   });

@@ -56,8 +56,12 @@
             "type": "string",
             "description": "Recipe description"
           },
-          "image": {
-            "$ref": "#/components/schemas/Image"
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Image"
+            },
+            "description": "Recipe images"
           },
           "components": {
             "type": "array",
@@ -71,6 +75,7 @@
           "uuid",
           "name",
           "description",
+          "images",
           "components"
         ]
       },
@@ -94,8 +99,7 @@
         "required": [
           "timestamp",
           "key"
-        ],
-        "description": "Recipe image"
+        ]
       },
       "Component": {
         "type": "object",
