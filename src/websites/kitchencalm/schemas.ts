@@ -57,7 +57,13 @@ export const RecipeSchema = z
 
 // Schemas for OpenAI parsing (without UUID or images - we set those on the backend)
 export const OpenAIComponentSchema = ComponentSchema.omit({ uuid: true });
-export const OpenAIRecipeSchema = RecipeSchema.omit({ uuid: true, images: true });
+export const OpenAIRecipeSchema = z
+  .object({
+    name: z.string().describe('Recipe name'),
+    description: z.string().describe('Recipe description'),
+    components: z.array(OpenAIComponentSchema).describe('Recipe components'),
+  })
+  .openapi('OpenAIRecipe');
 
 export const MealPlanEntrySchema = z
   .object({
