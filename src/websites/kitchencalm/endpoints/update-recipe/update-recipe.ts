@@ -3,13 +3,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { ContextWithUserId } from '@core/types/context.js';
 import { updateRecipe as updateRecipeInDynamo } from '@core/dynamodb/utilities.js';
 import { IRecipe } from '@core/types/recipes.js';
-import { ComponentSchema, ImageSchema } from '../../schemas.js';
+import { ComponentSchema } from '../../schemas.js';
 
 export const UpdateRecipeRequestSchema = z.object({
   uuid: z.string().uuid().optional().describe('Recipe UUID (omit to generate new)'),
   name: z.string().describe('Recipe name'),
   description: z.string().describe('Recipe description'),
-  images: z.array(ImageSchema).describe('Recipe images'),
+  image: z.string().optional().describe('S3 key of the recipe image'),
   components: z.array(ComponentSchema).describe('Recipe components'),
 });
 
@@ -36,7 +36,7 @@ export async function updateRecipe(
       uuid: recipeUuid,
       name: recipe.name,
       description: recipe.description,
-      images: recipe.images,
+      image: recipe.image ? { key: recipe.image, timestamp: Date.now() } : undefined,
       components: recipe.components,
     };
 

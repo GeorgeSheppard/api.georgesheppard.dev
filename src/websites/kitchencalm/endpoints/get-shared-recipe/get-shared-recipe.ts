@@ -13,12 +13,12 @@ export const GetSharedRecipeResponseSchema = z
     uuid: z.string().uuid().describe('Recipe UUID'),
     name: z.string().describe('Recipe name'),
     description: z.string().describe('Recipe description'),
-    images: z.array(
-      z.object({
+    image: z
+      .object({
         timestamp: z.number().describe('Image timestamp'),
         key: z.string().describe('S3 object key'),
       })
-    ),
+      .optional(),
     components: z
       .array(
         z.object({

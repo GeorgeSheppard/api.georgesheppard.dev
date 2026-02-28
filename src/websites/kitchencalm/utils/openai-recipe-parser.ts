@@ -41,11 +41,10 @@ export async function parseRecipeWithOpenAI(
 
   const parsed = openAIResult.data;
 
-  // Add UUIDs and empty images array (images are managed separately)
+  // Add UUIDs (image is set separately via imageKey in the parse-recipe request)
   const recipe = {
     ...parsed,
     uuid: recipeId ?? uuidv4(),
-    images: [],
     components: parsed.components.map((component) => ({
       ...component,
       uuid: uuidv4(),

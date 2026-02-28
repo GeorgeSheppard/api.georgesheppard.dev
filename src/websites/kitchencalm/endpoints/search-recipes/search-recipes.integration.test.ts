@@ -44,7 +44,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(100) as any,
       name: 'Test Recipe',
       description: 'A test recipe',
-      images: [],
       components: [
         {
           uuid: generateUUID(101) as any,
@@ -88,7 +87,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(102) as any,
       name: 'Pasta Carbonara',
       description: 'Classic Italian pasta dish',
-      images: [],
       components: [
         {
           uuid: '550e8400-e29b-41d4-a716-446655440103' as any,
@@ -133,7 +131,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(105) as any,
       name: 'Carbonara',
       description: 'Italian pasta',
-      images: [],
       components: [
         {
           uuid: generateUUID(106) as any,
@@ -182,7 +179,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(107) as any,
       name: 'Simple Pasta',
       description: 'A delicious vegetarian pasta dish',
-      images: [],
       components: [],
     };
 
@@ -220,7 +216,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(108) as any,
       name: 'Baked Salmon',
       description: 'Fresh salmon recipe',
-      images: [],
       components: [
         {
           uuid: generateUUID(109) as any,
@@ -265,7 +260,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(110) as any,
       name: 'Pasta Bread',
       description: 'Bread recipe',
-      images: [],
       components: [
         {
           uuid: generateUUID(111) as any,
@@ -342,7 +336,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(112) as any,
       name: 'User 1 Pasta',
       description: 'User 1 pasta recipe',
-      images: [],
       components: [],
     };
 
@@ -350,7 +343,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(113) as any,
       name: 'User 2 Pasta',
       description: 'User 2 pasta recipe',
-      images: [],
       components: [],
     };
 
@@ -394,7 +386,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(114) as any,
       name: 'Pasta Carbonara',
       description: 'Italian pasta',
-      images: [],
       components: [],
     };
 
@@ -402,7 +393,6 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(115) as any,
       name: 'Pasta Alfredo',
       description: 'Creamy pasta',
-      images: [],
       components: [],
     };
 
@@ -446,7 +436,7 @@ describe('GET /kitchencalm/recipes/search', () => {
       uuid: generateUUID(116) as any,
       name: 'Test Recipe',
       description: 'A test recipe with images',
-      images: [{ timestamp: Date.now(), key: 'image.jpg' }],
+      image: { timestamp: Date.now(), key: 'image.jpg' },
       components: [
         {
           uuid: generateUUID(117) as any,
