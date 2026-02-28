@@ -19,6 +19,7 @@ const validParsedRecipe = {
   uuid: RECIPE_UUID,
   name: 'Pasta Carbonara',
   description: 'Classic Italian pasta dish',
+  images: [],
   components: [
     {
       name: 'Main',
@@ -130,9 +131,9 @@ describe('parseRecipe handler', () => {
     );
   });
 
-  it('should preserve existing image when editing a recipe', async () => {
-    const existingImage = { timestamp: 1234567890, key: 'image-key-1' };
-    const existingRecipe = { ...validParsedRecipe, image: existingImage };
+  it('should preserve existing images when editing a recipe', async () => {
+    const existingImages = [{ timestamp: 1234567890, key: 'image-key-1' }];
+    const existingRecipe = { ...validParsedRecipe, images: existingImages };
 
     vi.mocked(parseRecipeWithOpenAI).mockResolvedValue({ ...validParsedRecipe });
     vi.mocked(getRecipeByUuid).mockResolvedValue(existingRecipe);
@@ -141,16 +142,16 @@ describe('parseRecipe handler', () => {
     const input: ParseRecipeRequest = { recipeText: 'Updated recipe', recipeId: RECIPE_UUID };
     const result = await parseRecipe(mockContext(), input);
 
-    expect(result.image).toEqual(existingImage);
+    expect(result.images).toEqual(existingImages);
     expect(getRecipeByUuid).toHaveBeenCalledWith({}, validUserId, RECIPE_UUID);
     expect(updateRecipeInDynamo).toHaveBeenCalledWith(
       {},
       validUserId,
-      expect.objectContaining({ image: existingImage })
+      expect.objectContaining({ images: existingImages })
     );
   });
 
-  it('should have no image when editing a recipe with no existing record', async () => {
+  it('should have empty images when editing a recipe with no existing record', async () => {
     vi.mocked(parseRecipeWithOpenAI).mockResolvedValue({ ...validParsedRecipe });
     vi.mocked(getRecipeByUuid).mockResolvedValue(null);
     vi.mocked(updateRecipeInDynamo).mockResolvedValue();
@@ -158,7 +159,7 @@ describe('parseRecipe handler', () => {
     const input: ParseRecipeRequest = { recipeText: 'New recipe', recipeId: RECIPE_UUID };
     const result = await parseRecipe(mockContext(), input);
 
-    expect(result.image).toBeUndefined();
+    expect(result.images).toEqual([]);
   });
 
   it('should not call getRecipeByUuid when creating a new recipe', async () => {
@@ -170,7 +171,7 @@ describe('parseRecipe handler', () => {
     expect(getRecipeByUuid).not.toHaveBeenCalled();
   });
 
-  it('should set image from imageKey with server-generated timestamp', async () => {
+  it('should add image from imageKey with server-generated timestamp', async () => {
     vi.mocked(parseRecipeWithOpenAI).mockResolvedValue({ ...validParsedRecipe });
     vi.mocked(updateRecipeInDynamo).mockResolvedValue();
     vi.spyOn(Date, 'now').mockReturnValue(1700000000000);
@@ -181,14 +182,15 @@ describe('parseRecipe handler', () => {
     };
     const result = await parseRecipe(mockContext(), input);
 
-    expect(result.image).toEqual({ key: 'user/image1.jpg', timestamp: 1700000000000 });
+    expect(result.images).toEqual([{ key: 'user/image1.jpg', timestamp: 1700000000000 }]);
     expect(getRecipeByUuid).not.toHaveBeenCalled();
   });
 
-  it('should replace existing image with imageKey when editing', async () => {
+  it('should add imageKey to existing images when editing', async () => {
+    const existingImages = [{ timestamp: 1234567890, key: 'old-image.jpg' }];
     const existingRecipe = {
       ...validParsedRecipe,
-      image: { timestamp: 1234567890, key: 'old-image.jpg' },
+      images: existingImages,
     };
 
     vi.mocked(parseRecipeWithOpenAI).mockResolvedValue({ ...validParsedRecipe });
@@ -203,7 +205,10 @@ describe('parseRecipe handler', () => {
     };
     const result = await parseRecipe(mockContext(), input);
 
-    expect(result.image).toEqual({ key: 'user/new-image.jpg', timestamp: 1700000000000 });
-    expect(getRecipeByUuid).not.toHaveBeenCalled();
+    expect(result.images).toEqual([
+      { key: 'user/new-image.jpg', timestamp: 1700000000000 },
+      { timestamp: 1234567890, key: 'old-image.jpg' },
+    ]);
+    expect(getRecipeByUuid).toHaveBeenCalledWith({}, validUserId, RECIPE_UUID);
   });
 });

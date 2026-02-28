@@ -50,14 +50,14 @@ export const RecipeSchema = z
     uuid: z.string().uuid().describe('Recipe UUID'),
     name: z.string().describe('Recipe name'),
     description: z.string().describe('Recipe description'),
-    image: ImageSchema.optional().describe('Recipe image'),
+    images: z.array(ImageSchema).describe('Recipe images'),
     components: z.array(ComponentSchema).describe('Recipe components'),
   })
   .openapi('Recipe');
 
-// Schemas for OpenAI parsing (without UUID or image - we set those on the backend)
+// Schemas for OpenAI parsing (without UUID or images - we set those on the backend)
 export const OpenAIComponentSchema = ComponentSchema.omit({ uuid: true });
-export const OpenAIRecipeSchema = RecipeSchema.omit({ uuid: true, image: true });
+export const OpenAIRecipeSchema = RecipeSchema.omit({ uuid: true, images: true });
 
 export const MealPlanEntrySchema = z
   .object({

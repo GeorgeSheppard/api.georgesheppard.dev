@@ -9,7 +9,7 @@ export const UpdateRecipeRequestSchema = z.object({
   uuid: z.string().uuid().optional().describe('Recipe UUID (omit to generate new)'),
   name: z.string().describe('Recipe name'),
   description: z.string().describe('Recipe description'),
-  image: z.string().optional().describe('S3 key of the recipe image'),
+  images: z.array(z.string()).optional().describe('S3 keys of the recipe images'),
   components: z.array(ComponentSchema).describe('Recipe components'),
 });
 
@@ -36,7 +36,7 @@ export async function updateRecipe(
       uuid: recipeUuid,
       name: recipe.name,
       description: recipe.description,
-      image: recipe.image ? { key: recipe.image, timestamp: Date.now() } : undefined,
+      images: recipe.images ? recipe.images.map((key) => ({ key, timestamp: Date.now() })) : [],
       components: recipe.components,
     };
 

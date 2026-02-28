@@ -20,20 +20,15 @@ export async function getRecipes(c: ContextWithUserId): Promise<GetRecipesRespon
     const recipesWithPresignedUrls: IRecipe[] = await Promise.all(
       recipes.map(async (recipe) => ({
         ...recipe,
-        image: recipe.image
-          ? {
-              ...recipe.image,
-              presignedUrl: await getSignedGetUrl(s3Client.client, recipe.image.key).catch(
-                (error) => {
-                  console.error(
-                    `Failed to generate presigned URL for image ${recipe.image!.key}:`,
-                    error
-                  );
-                  return undefined;
-                }
-              ),
-            }
-          : undefined,
+        images: await Promise.all(
+          recipe.images.map(async (image) => ({
+            ...image,
+            presignedUrl: await getSignedGetUrl(s3Client.client, image.key).catch((error) => {
+              console.error(`Failed to generate presigned URL for image ${image.key}:`, error);
+              return undefined;
+            }),
+          }))
+        ),
       }))
     );
 

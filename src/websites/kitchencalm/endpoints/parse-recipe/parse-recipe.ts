@@ -33,14 +33,17 @@ export async function parseRecipe(
     input.recipeId
   );
 
-  if (input.imageKey !== undefined) {
-    recipe.image = { key: input.imageKey, timestamp: Date.now() };
-  } else if (input.recipeId) {
-    // Preserve existing image when editing without supplying a new one
+  // Handle images: preserve existing images when editing, add new image if provided
+  if (input.recipeId) {
     const existingRecipe = await getRecipeByUuid(dynamoClient.client, userId, input.recipeId);
     if (existingRecipe) {
-      recipe.image = existingRecipe.image;
+      recipe.images = existingRecipe.images;
     }
+  }
+
+  // Add new image if imageKey is provided
+  if (input.imageKey !== undefined) {
+    recipe.images = [{ key: input.imageKey, timestamp: Date.now() }, ...recipe.images];
   }
 
   await updateRecipeInDynamo(dynamoClient.client, userId, recipe);

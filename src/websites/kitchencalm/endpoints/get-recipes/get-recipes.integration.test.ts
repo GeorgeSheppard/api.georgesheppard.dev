@@ -40,6 +40,7 @@ describe('GET /kitchencalm/recipes', () => {
       uuid: '550e8400-e29b-41d4-a716-446655440100' as any,
       name: 'Test Recipe',
       description: 'A test recipe',
+      images: [],
       components: [
         {
           uuid: '550e8400-e29b-41d4-a716-446655440101' as any,
@@ -116,6 +117,7 @@ describe('GET /kitchencalm/recipes', () => {
       uuid: '550e8400-e29b-41d4-a716-446655440102' as any,
       name: 'User 1 Recipe',
       description: 'Recipe for user 1',
+      images: [],
       components: [],
     };
 
@@ -123,6 +125,7 @@ describe('GET /kitchencalm/recipes', () => {
       uuid: '550e8400-e29b-41d4-a716-446655440103' as any,
       name: 'User 2 Recipe',
       description: 'Recipe for user 2',
+      images: [],
       components: [],
     };
 
@@ -179,6 +182,7 @@ describe('GET /kitchencalm/recipes', () => {
       uuid: '550e8400-e29b-41d4-a716-446655440104' as any,
       name: 'Pasta Carbonara',
       description: 'Classic Italian pasta',
+      images: [],
       components: [],
     };
 
@@ -186,6 +190,7 @@ describe('GET /kitchencalm/recipes', () => {
       uuid: '550e8400-e29b-41d4-a716-446655440105' as any,
       name: 'Margherita Pizza',
       description: 'Classic Italian pizza',
+      images: [],
       components: [],
     };
 
@@ -234,7 +239,7 @@ describe('GET /kitchencalm/recipes', () => {
       uuid: '550e8400-e29b-41d4-a716-446655440106' as any,
       name: 'Test Recipe with Images',
       description: 'Recipe with images',
-      image: { timestamp: 1234567890, key: `${validUserId}/image1.jpg` },
+      images: [{ timestamp: 1234567890, key: `${validUserId}/image1.jpg` }],
       components: [],
     };
 
@@ -262,6 +267,6 @@ describe('GET /kitchencalm/recipes', () => {
     const body = (await response.json()) as Record<string, IRecipe>;
     const recipe = body['550e8400-e29b-41d4-a716-446655440106'];
     // presignedUrl can be either present or undefined - we're testing graceful degradation
-    expect(recipe.image).toHaveProperty('key');
+    expect(recipe.images[0]).toHaveProperty('key');
   });
 });
