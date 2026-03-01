@@ -1309,10 +1309,10 @@
                   }
                 }
               ],
-              "description": "Array of dates to include in shopping list (format: DD/MM/YYYY)"
+              "description": "Array of Unix timestamps (milliseconds) to include in shopping list"
             },
             "required": false,
-            "description": "Array of dates to include in shopping list (format: DD/MM/YYYY)",
+            "description": "Array of Unix timestamps (milliseconds) to include in shopping list",
             "name": "dates",
             "in": "query"
           }
