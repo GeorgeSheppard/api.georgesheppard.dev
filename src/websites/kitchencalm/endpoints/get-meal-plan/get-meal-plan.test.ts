@@ -45,17 +45,15 @@ describe('getMealPlan handler', () => {
     }
   });
 
-  it('should keep historical entries and add future entries for 2-week window', async () => {
+  it('should keep historical entries within 1 week and add future entries for 2-week window', async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTimestamp = today.getTime();
-
-    const yesterday = todayTimestamp - 24 * 60 * 60 * 1000;
-    const tomorrow = todayTimestamp + 24 * 60 * 60 * 1000;
+    const oneWeekAgo = todayTimestamp - 7 * 24 * 60 * 60 * 1000;
 
     const mealPlan: IMealPlan = [
       {
-        date: yesterday,
+        date: oneWeekAgo,
         plan: [{ recipeId: 'recipe-old', components: [{ componentId: 'comp-old', servings: 1 }] }],
       },
       {
@@ -73,10 +71,10 @@ describe('getMealPlan handler', () => {
 
     const result = await getMealPlan(mockContext());
 
-    // Should keep yesterday, today, and add remaining days for 2-week window
-    expect(result.some((e) => e.date === yesterday)).toBe(true);
+    // Should keep 1 week of history and generate forward 2 weeks
+    expect(result.some((e) => e.date === oneWeekAgo)).toBe(true);
     expect(result.some((e) => e.date === todayTimestamp)).toBe(true);
-    expect(result.length).toBe(15); // yesterday + today + 13 future days
+    expect(result.length).toBe(21); // 1 week past + 2 weeks future
   });
 
   it('should generate empty entries for missing days and keep 1 week past', async () => {
