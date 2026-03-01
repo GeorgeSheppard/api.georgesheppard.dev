@@ -137,7 +137,9 @@ describe('Get Meal Plan Endpoint', () => {
     expect(result[12].plan.length).toBe(1);
   });
 
-  test('should keep historical entries and add future entries for 2-week window', async ({ dynamoClient }) => {
+  test('should keep historical entries and add future entries for 2-week window', async ({
+    dynamoClient,
+  }) => {
     const app = await createTestApp({ dynamoClient });
     const userId = uuidv4();
     const token = await signJwt(userId);
