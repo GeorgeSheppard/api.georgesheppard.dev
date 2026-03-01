@@ -71,16 +71,26 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 2,
+            recipeId,
+            components: [
+              {
+                componentId,
+                servings: 2,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -138,16 +148,26 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 4,
+            recipeId,
+            components: [
+              {
+                componentId,
+                servings: 4,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -222,24 +242,40 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId: componentId1,
-            servings: 2,
+            recipeId: recipeId1,
+            components: [
+              {
+                componentId: componentId1,
+                servings: 2,
+              },
+            ],
           },
         ],
       },
-      'Tuesday - 01/09/2024': {
-        [recipeId2]: [
+      {
+        date: todayTimestamp + 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId: componentId2,
-            servings: 2,
+            recipeId: recipeId2,
+            components: [
+              {
+                componentId: componentId2,
+                servings: 2,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
@@ -316,24 +352,40 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId: componentId1,
-            servings: 1,
+            recipeId: recipeId1,
+            components: [
+              {
+                componentId: componentId1,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-      'Wednesday - 03/08/2024': {
-        [recipeId2]: [
+      {
+        date: todayTimestamp + 2 * 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId: componentId2,
-            servings: 1,
+            recipeId: recipeId2,
+            components: [
+              {
+                componentId: componentId2,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
@@ -441,32 +493,54 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId: recipeId1,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-      'Tuesday - 02/08/2024': {
-        [recipeId2]: [
+      {
+        date: todayTimestamp + 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId: recipeId2,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-      'Wednesday - 03/08/2024': {
-        [recipeId3]: [
+      {
+        date: todayTimestamp + 2 * 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId: recipeId3,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
@@ -522,16 +596,26 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -582,16 +666,26 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -665,24 +759,40 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId: componentId1,
-            servings: 1,
+            recipeId: recipeId1,
+            components: [
+              {
+                componentId: componentId1,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-      'Wednesday - 03/08/2024': {
-        [recipeId2]: [
+      {
+        date: todayTimestamp + 2 * 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId: componentId2,
-            servings: 1,
+            recipeId: recipeId2,
+            components: [
+              {
+                componentId: componentId2,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
