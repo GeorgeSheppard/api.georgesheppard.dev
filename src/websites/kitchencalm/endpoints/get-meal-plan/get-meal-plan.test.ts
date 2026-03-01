@@ -5,7 +5,7 @@ import type { ContextWithUserId } from '@core/types/context.js';
 import type { IMealPlan } from '@core/types/meal-plan.js';
 
 vi.mock('@core/dynamodb/utilities.js');
-import { getMealPlanForUser, putMealPlanForUser } from '@core/dynamodb/utilities.js';
+import { getMealPlanForUser } from '@core/dynamodb/utilities.js';
 
 const validUserId = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -16,192 +16,168 @@ function mockContext(userId = validUserId) {
   });
 }
 
+function getTodayTimestamp(): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today.getTime();
+}
+
 describe('getMealPlan handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should return empty array when no meal plan exists', async () => {
-    vi.mocked(getMealPlanForUser).mockResolvedValue({});
+  it('should return empty array when no meal plan exists, but still generate next 2 weeks', async () => {
+    vi.mocked(getMealPlanForUser).mockResolvedValue([]);
 
     const result = await getMealPlan(mockContext());
 
-    expect(result).toEqual([]);
+    expect(result.length).toBe(14);
+    expect(result[0].plan).toEqual([]);
+    expect(result[13].plan).toEqual([]);
+
+    // Verify dates are consecutive starting from today
+    const today = getTodayTimestamp();
+    for (let i = 0; i < 14; i++) {
+      expect(result[i].date).toBe(today + i * 24 * 60 * 60 * 1000);
+    }
   });
 
-  it('should return meal plan with entries as sorted array', async () => {
-    const today = new Date();
-    const dateStr = `Monday - ${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-
-    const mealPlan: IMealPlan = {
-      [dateStr]: {
-        'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
-      },
-    };
-    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
-
-    const result = await getMealPlan(mockContext());
-
-    expect(result).toEqual([
-      {
-        date: dateStr,
-        plan: {
-          'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
-        },
-      },
-    ]);
-    expect(putMealPlanForUser).not.toHaveBeenCalled();
-  });
-
-  it('should pass dynamoClient.client and userId to utility function', async () => {
-    const mockClient = { client: { get: 'mock' } };
-    const c = createMockContext<ContextWithUserId>({
-      userId: validUserId,
-      dynamoClient: mockClient,
-    });
-    vi.mocked(getMealPlanForUser).mockResolvedValue({});
-
-    await getMealPlan(c);
-
-    expect(getMealPlanForUser).toHaveBeenCalledWith(mockClient.client, validUserId);
-  });
-
-  it('should sort meal plan entries by date', async () => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date(today);
-    dayAfter.setDate(dayAfter.getDate() + 2);
-
-    const todayStr = `Monday - ${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-    const tomorrowStr = `Tuesday - ${String(tomorrow.getDate()).padStart(2, '0')}/${String(tomorrow.getMonth() + 1).padStart(2, '0')}/${tomorrow.getFullYear()}`;
-    const dayAfterStr = `Wednesday - ${String(dayAfter.getDate()).padStart(2, '0')}/${String(dayAfter.getMonth() + 1).padStart(2, '0')}/${dayAfter.getFullYear()}`;
-
-    const mealPlan: IMealPlan = {
-      [dayAfterStr]: {
-        'recipe-uuid-3': [{ componentId: 'comp-3', servings: 1 }],
-      },
-      [todayStr]: {
-        'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
-      },
-      [tomorrowStr]: {
-        'recipe-uuid-2': [{ componentId: 'comp-2', servings: 3 }],
-      },
-    };
-    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
-
-    const result = await getMealPlan(mockContext());
-
-    expect(result).toEqual([
-      {
-        date: todayStr,
-        plan: {
-          'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
-        },
-      },
-      {
-        date: tomorrowStr,
-        plan: {
-          'recipe-uuid-2': [{ componentId: 'comp-2', servings: 3 }],
-        },
-      },
-      {
-        date: dayAfterStr,
-        plan: {
-          'recipe-uuid-3': [{ componentId: 'comp-3', servings: 1 }],
-        },
-      },
-    ]);
-  });
-
-  it('should display stale meal plan dates adjusted to current window', async () => {
+  it('should filter out entries older than today', async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
 
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const yesterday = todayTimestamp - 24 * 60 * 60 * 1000;
+    const tomorrow = todayTimestamp + 24 * 60 * 60 * 1000;
 
-    const twoWeeksFromNow = new Date(today);
-    twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
-
-    // Create dates from 30 days ago (spanning 2 days)
-    const oldDate1 = new Date(today);
-    oldDate1.setDate(oldDate1.getDate() - 30);
-    const oldDate2 = new Date(today);
-    oldDate2.setDate(oldDate2.getDate() - 29);
-
-    const oldDateStr1 = `Monday - ${String(oldDate1.getDate()).padStart(2, '0')}/${String(oldDate1.getMonth() + 1).padStart(2, '0')}/${oldDate1.getFullYear()}`;
-    const oldDateStr2 = `Tuesday - ${String(oldDate2.getDate()).padStart(2, '0')}/${String(oldDate2.getMonth() + 1).padStart(2, '0')}/${oldDate2.getFullYear()}`;
-
-    const oldMealPlan: IMealPlan = {
-      [oldDateStr1]: {
-        'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: yesterday,
+        plan: [{ recipeId: 'recipe-old', components: [{ componentId: 'comp-old', servings: 1 }] }],
       },
-      [oldDateStr2]: {
-        'recipe-uuid-2': [{ componentId: 'comp-2', servings: 3 }],
+      {
+        date: todayTimestamp,
+        plan: [
+          {
+            recipeId: 'recipe-today',
+            components: [{ componentId: 'comp-today', servings: 2 }],
+          },
+        ],
       },
-    };
+      {
+        date: tomorrow,
+        plan: [
+          {
+            recipeId: 'recipe-tomorrow',
+            components: [{ componentId: 'comp-tomorrow', servings: 3 }],
+          },
+        ],
+      },
+    ];
 
-    vi.mocked(getMealPlanForUser).mockResolvedValue(oldMealPlan);
+    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
 
     const result = await getMealPlan(mockContext());
 
-    // Should NOT have saved to DynamoDB (dates are only updated for display)
-    expect(putMealPlanForUser).not.toHaveBeenCalled();
-
-    // The result should have updated dates spanning 1 week backward to 2 weeks forward
-    expect(result.length).toBe(2);
-    const resultDates = result.map((entry) => entry.date);
-
-    // Get the earliest and latest from results
-    const parsedDates = resultDates.map((dateStr) => {
-      const parts = dateStr.split(' - ');
-      const [day, month, year] = parts[1].split('/').map(Number);
-      const resultDate = new Date(year, month - 1, day);
-      resultDate.setHours(0, 0, 0, 0);
-      return resultDate;
-    });
-
-    const resultEarliest = new Date(Math.min(...parsedDates.map((d) => d.getTime())));
-    const resultLatest = new Date(Math.max(...parsedDates.map((d) => d.getTime())));
-
-    // Earliest should be at or after 7 days ago
-    expect(resultEarliest.getTime()).toBeGreaterThanOrEqual(sevenDaysAgo.getTime());
-    // Latest should be at or after 14 days from now
-    expect(resultLatest.getTime()).toBeGreaterThanOrEqual(twoWeeksFromNow.getTime());
+    // Should not include yesterday, should include today and tomorrow + rest of 2 weeks
+    expect(result.some((e) => e.date === yesterday)).toBe(false);
+    expect(result.some((e) => e.date === todayTimestamp)).toBe(true);
+    expect(result.some((e) => e.date === tomorrow)).toBe(true);
+    expect(result.length).toBe(14);
   });
 
-  it('should not update recent meal plan dates', async () => {
+  it('should generate empty entries for missing days in the next 2 weeks', async () => {
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
 
-    const todayStr = `Monday - ${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-    const tomorrowStr = `Tuesday - ${String(tomorrow.getDate()).padStart(2, '0')}/${String(tomorrow.getMonth() + 1).padStart(2, '0')}/${tomorrow.getFullYear()}`;
-
-    const recentMealPlan: IMealPlan = {
-      [todayStr]: {
-        'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
+    // Only have entries for today and day 5
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
+          {
+            recipeId: 'recipe-1',
+            components: [{ componentId: 'comp-1', servings: 1 }],
+          },
+        ],
       },
-      [tomorrowStr]: {
-        'recipe-uuid-2': [{ componentId: 'comp-2', servings: 3 }],
+      {
+        date: todayTimestamp + 5 * 24 * 60 * 60 * 1000,
+        plan: [
+          {
+            recipeId: 'recipe-6',
+            components: [{ componentId: 'comp-6', servings: 1 }],
+          },
+        ],
       },
-    };
+    ];
 
-    vi.mocked(getMealPlanForUser).mockResolvedValue(recentMealPlan);
+    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
 
     const result = await getMealPlan(mockContext());
 
-    // Should not update dates or save to DynamoDB
-    expect(putMealPlanForUser).not.toHaveBeenCalled();
-    expect(result.length).toBe(2);
-    expect(result[0].date).toBe(todayStr);
-    expect(result[1].date).toBe(tomorrowStr);
+    expect(result.length).toBe(14);
+    // Check that day 1 has content but days 2-5 are empty
+    expect(result[0].plan.length).toBeGreaterThan(0);
+    expect(result[1].plan).toEqual([]);
+    expect(result[2].plan).toEqual([]);
+    expect(result[3].plan).toEqual([]);
+    expect(result[4].plan).toEqual([]);
+    // Check that day 5 has content
+    expect(result[5].plan.length).toBeGreaterThan(0);
+  });
+
+  it('should return array sorted by date', async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    // Create entries in reverse order
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp + 2 * 24 * 60 * 60 * 1000,
+        plan: [
+          {
+            recipeId: 'recipe-3',
+            components: [{ componentId: 'comp-3', servings: 1 }],
+          },
+        ],
+      },
+      {
+        date: todayTimestamp,
+        plan: [
+          {
+            recipeId: 'recipe-1',
+            components: [{ componentId: 'comp-1', servings: 1 }],
+          },
+        ],
+      },
+      {
+        date: todayTimestamp + 1 * 24 * 60 * 60 * 1000,
+        plan: [
+          {
+            recipeId: 'recipe-2',
+            components: [{ componentId: 'comp-2', servings: 1 }],
+          },
+        ],
+      },
+    ];
+
+    vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
+
+    const result = await getMealPlan(mockContext());
+
+    // Verify sorting
+    for (let i = 0; i < result.length - 1; i++) {
+      expect(result[i].date).toBeLessThanOrEqual(result[i + 1].date);
+    }
   });
 
   it('should throw when DynamoDB fails', async () => {
     vi.mocked(getMealPlanForUser).mockRejectedValue(new Error('DynamoDB error'));
 
-    await expect(getMealPlan(mockContext())).rejects.toThrow('DynamoDB error');
+    await expect(getMealPlan(mockContext())).rejects.toThrow('Failed to fetch meal plan');
   });
 });

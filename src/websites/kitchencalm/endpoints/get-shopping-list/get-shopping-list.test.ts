@@ -14,6 +14,14 @@ import { categoriseIngredients } from '@websites/kitchencalm/utils/ingredient-ca
 
 const validUserId = '550e8400-e29b-41d4-a716-446655440000';
 
+// Helper function to convert date string (DD/M/YYYY) to Unix timestamp in milliseconds
+function dateToTimestamp(dateString: string): number {
+  const [day, month, year] = dateString.split('/').map(Number);
+  const date = new Date(year, month - 1, day);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
 function mockContext(userId = validUserId) {
   return createMockContext<ContextWithUserId>({
     userId,
@@ -28,7 +36,7 @@ describe('getShoppingList handler', () => {
 
   it('should return empty array when meal plan is empty', async () => {
     vi.mocked(getAllRecipesForUser).mockResolvedValue([]);
-    vi.mocked(getMealPlanForUser).mockResolvedValue({});
+    vi.mocked(getMealPlanForUser).mockResolvedValue([]);
 
     const result = await getShoppingList(mockContext());
 
@@ -57,11 +65,17 @@ describe('getShoppingList handler', () => {
         },
       ],
     };
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [{ componentId, servings: 2 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('1/8/2024'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 2 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
@@ -108,21 +122,33 @@ describe('getShoppingList handler', () => {
         },
       ],
     };
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [{ componentId, servings: 1 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('1/8/2024'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 1 }],
+          },
+        ],
       },
-      'Wednesday - 03/08/2024': {
-        [recipeId]: [{ componentId, servings: 1 }],
+      {
+        date: dateToTimestamp('3/8/2024'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 1 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({ Flour: 'Baking' });
 
     await getShoppingList(mockContext(), {
-      dates: ['01/08/2024'],
+      dates: [dateToTimestamp('1/8/2024')],
     });
 
     expect(categoriseIngredients).toHaveBeenCalledWith(['Flour']);
@@ -130,7 +156,7 @@ describe('getShoppingList handler', () => {
 
   it('should throw when DynamoDB fails', async () => {
     vi.mocked(getAllRecipesForUser).mockRejectedValue(new Error('DynamoDB error'));
-    vi.mocked(getMealPlanForUser).mockResolvedValue({});
+    vi.mocked(getMealPlanForUser).mockResolvedValue([]);
 
     await expect(getShoppingList(mockContext())).rejects.toThrow('DynamoDB error');
   });
@@ -155,14 +181,26 @@ describe('getShoppingList handler', () => {
     };
 
     // Meal plan with single-digit day/month format like user's actual data
-    const mealPlan: IMealPlan = {
-      'Thursday - 19/2/2026': {
-        [recipeId]: [{ componentId, servings: 2 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('19/2/2026'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 2 }],
+          },
+        ],
       },
-      'Friday - 20/2/2026': {
-        [recipeId]: [{ componentId, servings: 1 }],
+      {
+        date: dateToTimestamp('20/2/2026'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 1 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
@@ -172,7 +210,7 @@ describe('getShoppingList handler', () => {
 
     // Test with single-digit format
     const result = await getShoppingList(mockContext(), {
-      dates: ['19/2/2026'],
+      dates: [dateToTimestamp('19/2/2026')],
     });
 
     expect(result).toHaveLength(1);
@@ -199,11 +237,17 @@ describe('getShoppingList handler', () => {
     };
 
     // Meal plan with single-digit day/month format
-    const mealPlan: IMealPlan = {
-      'Thursday - 19/2/2026': {
-        [recipeId]: [{ componentId, servings: 1 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('19/2/2026'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 1 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
@@ -213,7 +257,7 @@ describe('getShoppingList handler', () => {
 
     // Test with zero-padded format (what user sends from frontend)
     const result = await getShoppingList(mockContext(), {
-      dates: ['19/02/2026'],
+      dates: [dateToTimestamp('19/2/2026')],
     });
 
     expect(result).toHaveLength(1);
@@ -257,14 +301,26 @@ describe('getShoppingList handler', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Wednesday - 18/2/2026': {
-        [recipeId1]: [{ componentId, servings: 1 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('18/2/2026'),
+        plan: [
+          {
+            recipeId: recipeId1,
+            components: [{ componentId, servings: 1 }],
+          },
+        ],
       },
-      'Thursday - 19/2/2026': {
-        [recipeId2]: [{ componentId, servings: 1 }],
+      {
+        date: dateToTimestamp('19/2/2026'),
+        plan: [
+          {
+            recipeId: recipeId2,
+            components: [{ componentId, servings: 1 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe1, recipe2]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
@@ -275,7 +331,7 @@ describe('getShoppingList handler', () => {
 
     // Request with both single and double-digit formats (should both work)
     const result = await getShoppingList(mockContext(), {
-      dates: ['18/02/2026', '19/2/2026'],
+      dates: [dateToTimestamp('18/2/2026'), dateToTimestamp('19/2/2026')],
     });
 
     expect(result).toHaveLength(2);
@@ -304,17 +360,35 @@ describe('getShoppingList handler', () => {
     };
 
     // Meal plan like user's: Thursday 19/2 has servings: 2, Friday 20/2 has servings: 0
-    const mealPlan: IMealPlan = {
-      'Wednesday - 18/2/2026': {
-        [recipeId]: [{ componentId, servings: 0 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('18/2/2026'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 0 }],
+          },
+        ],
       },
-      'Thursday - 19/2/2026': {
-        [recipeId]: [{ componentId, servings: 2 }],
+      {
+        date: dateToTimestamp('19/2/2026'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 2 }],
+          },
+        ],
       },
-      'Friday - 20/2/2026': {
-        [recipeId]: [{ componentId, servings: 0 }],
+      {
+        date: dateToTimestamp('20/2/2026'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 0 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
@@ -324,7 +398,7 @@ describe('getShoppingList handler', () => {
 
     // Request Thursday 19/2/2026 which has servings: 2
     const result = await getShoppingList(mockContext(), {
-      dates: ['19/2/2026'],
+      dates: [dateToTimestamp('19/2/2026')],
     });
 
     expect(result).toHaveLength(1);
@@ -354,18 +428,24 @@ describe('getShoppingList handler', () => {
     };
 
     // Meal plan has a recipe ID that doesn't exist
-    const mealPlan: IMealPlan = {
-      'Thursday - 19/2/2026': {
-        [unknownRecipeId]: [{ componentId, servings: 1 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('19/2/2026'),
+        plan: [
+          {
+            recipeId: unknownRecipeId,
+            components: [{ componentId, servings: 1 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({});
 
     const result = await getShoppingList(mockContext(), {
-      dates: ['19/2/2026'],
+      dates: [dateToTimestamp('19/2/2026')],
     });
 
     // Should be empty because the recipe ID doesn't match
@@ -394,18 +474,24 @@ describe('getShoppingList handler', () => {
     };
 
     // Meal plan has a component ID that doesn't exist in the recipe
-    const mealPlan: IMealPlan = {
-      'Thursday - 19/2/2026': {
-        [recipeId]: [{ componentId: unknownComponentId, servings: 1 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('19/2/2026'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId: unknownComponentId, servings: 1 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
     vi.mocked(categoriseIngredients).mockResolvedValue({});
 
     const result = await getShoppingList(mockContext(), {
-      dates: ['19/2/2026'],
+      dates: [dateToTimestamp('19/2/2026')],
     });
 
     // Should be empty because the component ID doesn't match
@@ -435,11 +521,17 @@ describe('getShoppingList handler', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Thursday - 19/2/2026': {
-        [recipeId]: [{ componentId, servings: 2 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('19/2/2026'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 2 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
@@ -449,7 +541,7 @@ describe('getShoppingList handler', () => {
     });
 
     const result = await getShoppingList(mockContext(), {
-      dates: ['19/2/2026'],
+      dates: [dateToTimestamp('19/2/2026')],
     });
 
     expect(result).toHaveLength(2);
@@ -495,12 +587,21 @@ describe('getShoppingList handler', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Thursday - 19/2/2026': {
-        [recipeId1]: [{ componentId: componentId1, servings: 1 }],
-        [recipeId2]: [{ componentId: componentId2, servings: 1 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('19/2/2026'),
+        plan: [
+          {
+            recipeId: recipeId1,
+            components: [{ componentId: componentId1, servings: 1 }],
+          },
+          {
+            recipeId: recipeId2,
+            components: [{ componentId: componentId2, servings: 1 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe1, recipe2]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
@@ -510,7 +611,7 @@ describe('getShoppingList handler', () => {
     });
 
     const result = await getShoppingList(mockContext(), {
-      dates: ['19/2/2026'],
+      dates: [dateToTimestamp('19/2/2026')],
     });
 
     expect(result).toHaveLength(2);
@@ -546,14 +647,20 @@ describe('getShoppingList handler', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Thursday - 19/2/2026': {
-        [recipeId]: [
-          { componentId: componentId1, servings: 1 },
-          { componentId: componentId2, servings: 1 },
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('19/2/2026'),
+        plan: [
+          {
+            recipeId,
+            components: [
+              { componentId: componentId1, servings: 1 },
+              { componentId: componentId2, servings: 1 },
+            ],
+          },
         ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
@@ -563,7 +670,7 @@ describe('getShoppingList handler', () => {
     });
 
     const result = await getShoppingList(mockContext(), {
-      dates: ['19/2/2026'],
+      dates: [dateToTimestamp('19/2/2026')],
     });
 
     expect(result).toHaveLength(2);
@@ -589,11 +696,17 @@ describe('getShoppingList handler', () => {
         },
       ],
     };
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [{ componentId, servings: 1 }],
+    const mealPlan: IMealPlan = [
+      {
+        date: dateToTimestamp('1/8/2024'),
+        plan: [
+          {
+            recipeId,
+            components: [{ componentId, servings: 1 }],
+          },
+        ],
       },
-    };
+    ];
 
     vi.mocked(getAllRecipesForUser).mockResolvedValue([recipe]);
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);

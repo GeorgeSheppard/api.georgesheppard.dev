@@ -159,13 +159,11 @@ export async function getMealPlanForUser(
       },
     });
 
-    if (!result.Item) {
-      return {};
+    if (!result.Item || !result.Item.data) {
+      return [];
     }
 
-    // Remove DynamoDB metadata fields (UserId, Item)
-    const { UserId: _userId, Item: _item, ...mealPlan } = result.Item;
-    return mealPlan as IMealPlan;
+    return result.Item.data as IMealPlan;
   } catch (error) {
     logger.error('Failed to get meal plan from DynamoDB:', error);
     throw error;
@@ -194,7 +192,7 @@ export async function putMealPlanForUser(
       Item: {
         UserId: userId,
         Item: 'MP',
-        ...mealPlan,
+        data: mealPlan,
       },
     });
   } catch (error) {

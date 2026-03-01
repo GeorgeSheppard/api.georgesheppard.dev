@@ -27,7 +27,7 @@ export const GetShoppingListMcpSchema = z.object({
 });
 
 export const GetShoppingListRequestSchema = z.object({
-  dates: z.array(z.string()).optional().describe('Array of dates to include (format: DD/MM/YYYY)'),
+  dates: z.array(z.number()).optional().describe('Array of Unix timestamps (milliseconds)'),
 });
 
 export type ShoppingListItem = z.infer<typeof ShoppingListItemSchema>;
@@ -54,33 +54,9 @@ export async function getShoppingList(
       getMealPlanForUser(dynamoClient.client, userId),
     ]);
 
-    let selectedDates: Set<string> | undefined;
+    let selectedDates: Set<number> | undefined;
     if (requestInput?.dates && requestInput.dates.length > 0) {
-      selectedDates = new Set<string>();
-      // Normalize requested dates to handle both formats (19/2/2026 and 19/02/2026)
-      const normalizedRequestedDates = new Set(
-        requestInput.dates.map((date) => {
-          const parts = date.split('/');
-          if (parts.length === 3) {
-            // Pad day and month with zeros for comparison
-            return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
-          }
-          return date;
-        })
-      );
-
-      for (const mealPlanKey of Object.keys(mealPlan)) {
-        // Extract date from format "DayName - D/M/YYYY" or "DayName - DD/MM/YYYY"
-        const dateMatch = mealPlanKey.match(/(\d{1,2}\/\d{1,2}\/\d{4})$/);
-        if (dateMatch) {
-          // Normalize meal plan date for comparison
-          const parts = dateMatch[1].split('/');
-          const normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
-          if (normalizedRequestedDates.has(normalizedDate)) {
-            selectedDates.add(mealPlanKey);
-          }
-        }
-      }
+      selectedDates = new Set(requestInput.dates as number[]);
     }
 
     const quantityAndMeals = createShoppingListData(recipes, mealPlan, selectedDates);

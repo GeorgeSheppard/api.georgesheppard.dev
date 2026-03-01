@@ -1,14 +1,10 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
 import { putMealPlanForUser } from '@core/dynamodb/utilities.js';
-import { MealPlanDaySchema } from '../../schemas.js';
+import { MealPlanSchema } from '../../schemas.js';
+import { IMealPlan } from '@core/types/meal-plan.js';
 
-export const MealPlanEntryItemSchema = z.object({
-  date: z.string().describe('Date string in format "DayName - DD/MM/YYYY"'),
-  plan: MealPlanDaySchema,
-});
-
-export const UpdateMealPlanRequestSchema = z.array(MealPlanEntryItemSchema);
+export const UpdateMealPlanRequestSchema = MealPlanSchema;
 
 export type UpdateMealPlanRequest = z.infer<typeof UpdateMealPlanRequestSchema>;
 
@@ -20,25 +16,23 @@ export type UpdateMealPlanResponse = z.infer<typeof UpdateMealPlanResponseSchema
 
 export async function updateMealPlan(
   c: ContextWithUserId,
-  mealPlanArray: UpdateMealPlanRequest
+  mealPlan: UpdateMealPlanRequest
 ): Promise<UpdateMealPlanResponse> {
   const userId = c.get('userId');
   const dynamoClient = c.get('dynamoClient');
 
   try {
-    // Convert array back to record object for storage
-    const mealPlan: Record<string, (typeof mealPlanArray)[0]['plan']> = {};
-    for (const entry of mealPlanArray) {
-      mealPlan[entry.date] = entry.plan;
-    }
+    // Sort by date before storing
+    const sortedMealPlan: IMealPlan = mealPlan.sort((a, b) => a.date - b.date);
 
-    await putMealPlanForUser(dynamoClient.client, userId, mealPlan as any);
+    await putMealPlanForUser(dynamoClient.client, userId, sortedMealPlan);
 
     return {
       success: true,
     };
   } catch (error) {
-    console.error('Failed to update meal plan for user', userId, error);
-    throw error;
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to update meal plan for user ${userId}`, error);
+    throw new Error(`Failed to update meal plan: ${message}`);
   }
 }

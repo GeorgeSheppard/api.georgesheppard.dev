@@ -65,16 +65,34 @@ export const OpenAIRecipeSchema = z
   })
   .openapi('OpenAIRecipe');
 
-export const MealPlanEntrySchema = z
+export const MealPlanComponentSchema = z
   .object({
     componentId: z.string().uuid().describe('Recipe component UUID'),
     servings: z.number().describe('Number of servings'),
   })
-  .openapi('MealPlanEntry');
+  .openapi('MealPlanComponent');
 
-// MealPlanDaySchema cannot use .openapi() directly because it's nested in z.record()
-// which causes type incompatibility. Will be extracted by the library automatically.
+export const MealPlanRecipeSchema = z
+  .object({
+    recipeId: z.string().uuid().describe('Recipe UUID'),
+    components: z.array(MealPlanComponentSchema).describe('Recipe components'),
+  })
+  .openapi('MealPlanRecipe');
+
+export const MealPlanDayEntrySchema = z
+  .object({
+    date: z.number().describe('Unix timestamp in milliseconds'),
+    plan: z.array(MealPlanRecipeSchema).describe('Recipes for this day'),
+  })
+  .openapi('MealPlanDayEntry');
+
+export const MealPlanSchema = z.array(MealPlanDayEntrySchema).openapi('MealPlan');
+
+// Deprecated: kept for backwards compatibility
+export const MealPlanEntrySchema = MealPlanComponentSchema;
+
+// Deprecated: kept for backwards compatibility - this was the old nested structure
 export const MealPlanDaySchema = z.record(
   z.string().uuid().describe('Recipe UUID'),
-  z.array(MealPlanEntrySchema).describe('Array of component servings for this recipe')
+  z.array(MealPlanComponentSchema).describe('Array of component servings for this recipe')
 );
