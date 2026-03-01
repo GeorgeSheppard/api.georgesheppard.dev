@@ -311,74 +311,11 @@ void
 
 ---
 
-#### 4. **recipes.createSharedRecipe**
-
-Create a shareable recipe with public access (no authentication required).
-
-**Authentication:** Not required (public)
-
-**Input:**
-
-```typescript
-{
-  recipe: IRecipe; // Full recipe object
-}
-```
-
-**Output:**
-
-```typescript
-{
-  shareId: string; // Unique share ID (UUID)
-}
-```
-
-**Services Used:**
-
-- DynamoDB (put shared recipe with special UserId)
-
-**Notes:**
-
-- Creates new UUID for shareId
-- Stores with special UserId (the shareId itself)
-- User ID: actual user ID → Sort key: `S` (shared marker)
-- ShareId UserId: shareId value → Sort key: `S-{sharedRecipeId}`
-
----
-
-#### 5. **recipes.getSharedRecipe**
-
-Get a shared recipe by ID (public, no authentication).
-
-**Authentication:** Not required
-
-**Input:**
-
-```typescript
-{
-  shareId: string;
-}
-```
-
-**Output:**
-
-```typescript
-IRecipe | null;
-```
-
-**Response Example:** (Same structure as `getRecipes` single recipe)
-
-**Services Used:**
-
-- DynamoDB (get item with shareId as UserId)
-
----
-
 ### Meal Plan Router
 
 **Base Path:** `/api/trpc/mealPlan.*`
 
-#### 6. **mealPlan.getMealPlan**
+#### 4. **mealPlan.getMealPlan**
 
 Get meal plan for authenticated user (14 days past + 14 days future).
 
@@ -435,7 +372,7 @@ Get meal plan for authenticated user (14 days past + 14 days future).
 
 ---
 
-#### 7. **mealPlan.updateMealPlan**
+#### 5. **mealPlan.updateMealPlan**
 
 Update/save meal plan for authenticated user.
 
@@ -472,7 +409,6 @@ void
 
 - Replaces entire meal plan with provided data
 - Validates meal plan structure before saving
-- Special handling: `shared` user write operations silently fail (returns empty array)
 
 ---
 
@@ -480,7 +416,7 @@ void
 
 **Base Path:** `/api/trpc/s3.*`
 
-#### 8. **s3.getSignedUrl**
+#### 6. **s3.getSignedUrl**
 
 Get signed URL for downloading file from S3.
 
@@ -513,7 +449,7 @@ Get signed URL for downloading file from S3.
 
 ---
 
-#### 9. **s3.delete**
+#### 7. **s3.delete**
 
 Delete file from S3.
 
@@ -544,7 +480,7 @@ void
 
 ---
 
-#### 10. **s3.put**
+#### 8. **s3.put**
 
 Get signed URL for uploading file to S3.
 
@@ -616,13 +552,11 @@ Get signed URL for uploading file to S3.
 - `Item` = Sort key with type prefix:
   - Recipes: `R-{recipeUuid}`
   - Meal plan: `MP`
-  - Shared recipes: `S-{sharedRecipeId}` (UserId also set to shareId)
 
 **Item Storage:**
 
 - Recipe items stored as JSON with all nested components and ingredients
 - Meal plan stored as nested date → recipe → components mapping
-- Shared recipes accessible via special UserId = shareId
 
 ---
 
@@ -648,8 +582,6 @@ Get signed URL for uploading file to S3.
 ├── {UserId}/
 │   ├── {fileName}
 │   └── {fileName}
-└── shared/
-    └── {fileName}
 ```
 
 **Features:**
@@ -924,11 +856,6 @@ enum Unit {
    - Save entire meal plan
    - Returns: `Promise<void>`
 
-**Special User Handling:**
-
-- `shared` user can read recipes but write operations silently fail
-- Used for public/demo access without authentication
-
 ---
 
 ### S3 Operations
@@ -1023,9 +950,6 @@ enum Unit {
 1. **getRecipesForUser(userId)**
    - Returns: `Map<RecipeUuid, IRecipe>`
 
-2. **getSharedRecipe(shareId)**
-   - Returns: `IRecipe | null`
-
 **Mutation Functions:** `server/routers/recipes/mutations.ts`
 
 1. **updateRecipe(userId, recipe)**
@@ -1035,11 +959,6 @@ enum Unit {
 
 2. **deleteRecipe(userId, recipeUuid)**
    - Deletes recipe item from DynamoDB
-
-3. **shareRecipe(userId, recipe)**
-   - Creates shareable recipe with unique ID
-   - Returns: `{ shareId: string }`
-   - Stores with special UserId (the shareId)
 
 ---
 
@@ -1424,17 +1343,6 @@ export const authedProcedure = t.procedure.use(async (opts) => {
    ├─ Server queries: DynamoDB (UserId + R-* sort keys)
    ├─ Returns: Map<RecipeUuid, IRecipe>
    └─ Frontend: Maps S3 keys to signed GET URLs for display
-
-3. USER SHARES RECIPE
-   ├─ Frontend: trpc.recipes.createSharedRecipe({ recipe })
-   ├─ Server generates: New UUID for shareId
-   ├─ Server saves: Recipe with UserId = shareId
-   └─ Frontend: Displays link: /food/shareId
-
-4. ANOTHER USER ACCESSES SHARED RECIPE
-   ├─ Frontend: trpc.recipes.getSharedRecipe({ shareId })
-   ├─ Server queries: DynamoDB (UserId = shareId)
-   └─ Returns: IRecipe (no authentication required)
 ```
 
 ### Meal Planning Flow
@@ -1482,12 +1390,6 @@ export const authedProcedure = t.procedure.use(async (opts) => {
    ├─ Server middleware: Extracts session → gets userId
    ├─ Query DynamoDB: With authenticated userId
    └─ Returns: User's recipes only
-
-4. USER ACCESSES PUBLIC tRPC CALL
-   ├─ Frontend: trpc.recipes.getSharedRecipe({ shareId }) (unauthed)
-   ├─ Client sends: Request (no session required)
-   ├─ Server: No auth check
-   └─ Returns: Shared recipe data
 ```
 
 ---
@@ -1560,22 +1462,17 @@ npm run lint
    - Drag-and-drop recipe components to dates
    - Multiple servings of same recipe supported
 
-3. **Recipe Sharing**
-   - Generate shareable links with unique IDs
-   - Public access without authentication
-   - Separate storage for shared recipes
-
-4. **Smart Recipe Extraction**
+3. **Smart Recipe Extraction**
    - Upload recipe text or images
    - GPT-3.5-turbo parses into structured format
    - Automatic ingredient unit detection
 
-5. **Authentication**
+4. **Authentication**
    - Cognito + NextAuth.js
    - Google OAuth support
    - Session-based security
 
-6. **Data Persistence**
+5. **Data Persistence**
    - DynamoDB for recipes and meal plans
    - S3 for images
    - User-scoped data isolation

@@ -18,10 +18,6 @@ import { putSignedUrl } from './endpoints/s3-put-signed-url/s3-put-signed-url.js
 import { s3PutSignedUrlRoute } from './endpoints/s3-put-signed-url/s3-put-signed-url-definition.js';
 import { deleteFile } from './endpoints/s3-delete/s3-delete.js';
 import { s3DeleteRoute } from './endpoints/s3-delete/s3-delete-definition.js';
-import { shareRecipe } from './endpoints/share-recipe/share-recipe.js';
-import { shareRecipeRoute } from './endpoints/share-recipe/share-recipe-definition.js';
-import { getSharedRecipe } from './endpoints/get-shared-recipe/get-shared-recipe.js';
-import { getSharedRecipeRoute } from './endpoints/get-shared-recipe/get-shared-recipe-definition.js';
 import {
   getShoppingList,
   getShoppingListMcp,
@@ -158,21 +154,6 @@ export function registerRoutes(app: OpenAPIHono) {
   app.openapi(s3DeleteRoute, async (c) => {
     const { key } = c.req.valid('json');
     const result = await deleteFile(c as ContextWithUserId, key);
-    return c.json(result, 200);
-  });
-
-  app.openapi(shareRecipeRoute, async (c) => {
-    const { recipe } = c.req.valid('json');
-    const result = await shareRecipe(c as ContextWithUserId, recipe as any);
-    return c.json(result, 200);
-  });
-
-  app.openapi(getSharedRecipeRoute, async (c) => {
-    const { shareId } = c.req.valid('param');
-    const result = await getSharedRecipe(c as ContextWithUserId, shareId);
-    if (!result) {
-      return c.json({ error: 'Recipe not found' }, 404);
-    }
     return c.json(result, 200);
   });
 
