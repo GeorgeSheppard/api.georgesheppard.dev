@@ -8,6 +8,7 @@ import { createTestApp } from '@test/utils/app.js';
 import { signJwt } from '@core/utils/jwt.js';
 import { putMealPlanForUser, getMealPlanForUser } from '@core/dynamodb/utilities.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
+import { GetMealPlanResponse } from './get-meal-plan.js';
 
 describe('Get Meal Plan Endpoint', () => {
   test('should return empty array when no meal plan exists', async ({ dynamoClient }) => {
@@ -122,7 +123,7 @@ describe('Get Meal Plan Endpoint', () => {
     );
 
     expect(response.status).toBe(200);
-    const result = await response.json();
+    const result = (await response.json()) as GetMealPlanResponse;
 
     // Result should have been updated
     expect(result.length).toBe(1);
