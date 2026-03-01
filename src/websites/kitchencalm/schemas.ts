@@ -68,7 +68,7 @@ export const OpenAIRecipeSchema = z
 export const MealPlanComponentSchema = z
   .object({
     componentId: z.string().uuid().describe('Recipe component UUID'),
-    servings: z.number().describe('Number of servings'),
+    servings: z.number().positive().describe('Number of servings'),
   })
   .openapi('MealPlanComponent');
 
