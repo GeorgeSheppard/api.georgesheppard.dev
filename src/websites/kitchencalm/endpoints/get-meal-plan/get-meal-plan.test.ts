@@ -114,7 +114,7 @@ describe('getMealPlan handler', () => {
     ]);
   });
 
-  it('should update stale meal plan dates and save to DynamoDB', async () => {
+  it('should display stale meal plan dates adjusted to current window', async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -146,8 +146,8 @@ describe('getMealPlan handler', () => {
 
     const result = await getMealPlan(mockContext());
 
-    // Should have updated the dates in DynamoDB
-    expect(putMealPlanForUser).toHaveBeenCalled();
+    // Should NOT have saved to DynamoDB (dates are only updated for display)
+    expect(putMealPlanForUser).not.toHaveBeenCalled();
 
     // The result should have updated dates spanning 1 week backward to 2 weeks forward
     expect(result.length).toBe(2);

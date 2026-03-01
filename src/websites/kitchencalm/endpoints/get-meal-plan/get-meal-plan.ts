@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
-import { getMealPlanForUser, putMealPlanForUser } from '@core/dynamodb/utilities.js';
+import { getMealPlanForUser } from '@core/dynamodb/utilities.js';
 import { MealPlanDaySchema } from '../../schemas.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
 
@@ -104,19 +104,13 @@ export async function getMealPlan(c: ContextWithUserId): Promise<GetMealPlanResp
   const dynamoClient = c.get('dynamoClient');
 
   try {
-    let mealPlan = await getMealPlanForUser(dynamoClient.client, userId);
+    const mealPlan = await getMealPlanForUser(dynamoClient.client, userId);
 
-    // Update meal plan dates if stale
-    const updatedMealPlan = updateMealPlanDatesToCurrentWindow(mealPlan);
-
-    // If dates were updated, save the new meal plan to DynamoDB
-    if (JSON.stringify(updatedMealPlan) !== JSON.stringify(mealPlan)) {
-      await putMealPlanForUser(dynamoClient.client, userId, updatedMealPlan);
-      mealPlan = updatedMealPlan;
-    }
+    // Update meal plan dates if stale (for display only)
+    const displayMealPlan = updateMealPlanDatesToCurrentWindow(mealPlan);
 
     // Convert record to array and sort by date
-    const entries = Object.entries(mealPlan)
+    const entries = Object.entries(displayMealPlan)
       .map(([date, plan]) => ({
         date,
         plan,

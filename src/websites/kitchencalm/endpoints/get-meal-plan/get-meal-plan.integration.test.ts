@@ -148,18 +148,9 @@ describe('Get Meal Plan Endpoint', () => {
     // Should be at or after 14 days from now (since that's the larger shift needed)
     expect(parsedDate.getTime()).toBeGreaterThanOrEqual(twoWeeksFromNow.getTime());
 
-    // Verify the database was updated
-    const updatedMealPlan = await getMealPlanForUser(dynamoClient.client, userId);
-    expect(updatedMealPlan).toEqual({
-      [resultDate]: {
-        [recipeId]: [
-          {
-            componentId,
-            servings: 2,
-          },
-        ],
-      },
-    });
+    // Verify the database still has the original dates (not persisted)
+    const dbMealPlan = await getMealPlanForUser(dynamoClient.client, userId);
+    expect(dbMealPlan).toEqual(oldMealPlan);
   });
 
   test('should require authentication', async ({ dynamoClient }) => {
