@@ -45,7 +45,7 @@ export async function getShoppingList(
 
   const requestInput =
     input && typeof input === 'object' && 'dates' in input
-      ? (input as { dates?: string[] })
+      ? (input as { dates?: number[] })
       : undefined;
 
   try {
@@ -56,7 +56,7 @@ export async function getShoppingList(
 
     let selectedDates: Set<number> | undefined;
     if (requestInput?.dates && requestInput.dates.length > 0) {
-      selectedDates = new Set(requestInput.dates as number[]);
+      selectedDates = new Set(requestInput.dates);
     }
 
     const quantityAndMeals = createShoppingListData(recipes, mealPlan, selectedDates);
@@ -88,7 +88,7 @@ export async function getShoppingList(
 
 export async function getShoppingListMcp(
   c: ContextWithUserId,
-  input: { dates?: string[] }
+  input: { dates?: number[] }
 ): Promise<GetShoppingListMcpResponse> {
   const items = await getShoppingList(c, input);
   const content = items
