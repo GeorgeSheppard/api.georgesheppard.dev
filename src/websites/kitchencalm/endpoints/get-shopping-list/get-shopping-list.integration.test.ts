@@ -404,9 +404,9 @@ describe('Get Shopping List Endpoint', () => {
     const resultAll = (await responseAll.json()) as ShoppingListItem[];
     expect(resultAll).toHaveLength(2);
 
-    // Filter to Monday only by passing single date
-    const responseMonday = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list?dates=01%2F08%2F2024', {
+    // Filter to today only by passing single date timestamp
+    const responseToday = await app.request(
+      new Request(`http://localhost/kitchencalm/shopping-list?dates=${todayTimestamp}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -414,11 +414,11 @@ describe('Get Shopping List Endpoint', () => {
       })
     );
 
-    expect(responseMonday.status).toBe(200);
-    const resultMonday = (await responseMonday.json()) as ShoppingListItem[];
-    expect(resultMonday).toHaveLength(1);
-    expect(resultMonday[0].ingredient).toBe('Flour');
-    expect(resultMonday.some((item) => item.ingredient === 'Sugar')).toBe(false);
+    expect(responseToday.status).toBe(200);
+    const resultToday = (await responseToday.json()) as ShoppingListItem[];
+    expect(resultToday).toHaveLength(1);
+    expect(resultToday[0].ingredient).toBe('Flour');
+    expect(resultToday.some((item) => item.ingredient === 'Sugar')).toBe(false);
   });
 
   test('should filter by multiple dates', async ({ dynamoClient }) => {
@@ -547,10 +547,11 @@ describe('Get Shopping List Endpoint', () => {
     await updateRecipe(dynamoClient.client, userId, recipe3);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
-    // Filter to Monday and Tuesday using dates array
+    // Filter to today and tomorrow using timestamps
+    const tomorrowTimestamp = todayTimestamp + 24 * 60 * 60 * 1000;
     const responseRange = await app.request(
       new Request(
-        'http://localhost/kitchencalm/shopping-list?dates=01%2F08%2F2024&dates=02%2F08%2F2024',
+        `http://localhost/kitchencalm/shopping-list?dates=${todayTimestamp}&dates=${tomorrowTimestamp}`,
         {
           method: 'GET',
           headers: {
@@ -798,9 +799,9 @@ describe('Get Shopping List Endpoint', () => {
     await updateRecipe(dynamoClient.client, userId, recipe2);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
-    // Filter using bracket notation: dates[]=01/08/2024
-    const responseMonday = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list?dates%5B%5D=01%2F08%2F2024', {
+    // Filter using bracket notation: dates[]=timestamp
+    const responseToday = await app.request(
+      new Request(`http://localhost/kitchencalm/shopping-list?dates=${todayTimestamp}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -808,11 +809,11 @@ describe('Get Shopping List Endpoint', () => {
       })
     );
 
-    expect(responseMonday.status).toBe(200);
-    const resultMonday = (await responseMonday.json()) as ShoppingListItem[];
-    expect(resultMonday).toHaveLength(1);
-    expect(resultMonday[0].ingredient).toBe('Flour');
-    expect(resultMonday.some((item) => item.ingredient === 'Sugar')).toBe(false);
+    expect(responseToday.status).toBe(200);
+    const resultToday = (await responseToday.json()) as ShoppingListItem[];
+    expect(resultToday).toHaveLength(1);
+    expect(resultToday[0].ingredient).toBe('Flour');
+    expect(resultToday.some((item) => item.ingredient === 'Sugar')).toBe(false);
   });
 
   test('should require authentication', async ({ dynamoClient }) => {

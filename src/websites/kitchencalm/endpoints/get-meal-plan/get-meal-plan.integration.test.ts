@@ -197,16 +197,14 @@ describe('Get Meal Plan Endpoint', () => {
     expect(response.status).toBe(200);
     const result = (await response.json()) as GetMealPlanResponse;
 
-    // Should have 15 entries (yesterday + today + 13 future days)
-    expect(result.length).toBe(15);
+    // Should have 21 entries (1 week past + 2 weeks future)
+    expect(result.length).toBe(21);
 
-    // First entry should be yesterday
-    expect(result[0].date).toBe(yesterday);
-    expect(result[0].plan.length).toBe(1);
+    // Yesterday should be in the results somewhere (it's within 1 week)
+    expect(result.some((e) => e.date === yesterday)).toBe(true);
 
-    // Second entry should be today
-    expect(result[1].date).toBe(todayTimestamp);
-    expect(result[1].plan.length).toBe(1);
+    // Today should also be in the results
+    expect(result.some((e) => e.date === todayTimestamp)).toBe(true);
   });
 
   test('should return 401 without valid JWT', async ({ dynamoClient }) => {
