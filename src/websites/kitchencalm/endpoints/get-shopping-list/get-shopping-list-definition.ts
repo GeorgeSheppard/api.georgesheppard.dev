@@ -26,8 +26,9 @@ export const getShoppingListRoute = createRoute({
       z.object({
         dates: z
           .union([z.string().transform((val) => [val]), z.array(z.string())])
+          .transform((val) => val?.map((v) => Number(v)))
           .optional()
-          .describe('Array of dates to include in shopping list (format: DD/MM/YYYY)'),
+          .describe('Array of Unix timestamps (milliseconds) to include in shopping list'),
       })
     ),
   },

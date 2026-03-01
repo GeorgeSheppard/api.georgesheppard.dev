@@ -15,70 +15,105 @@ function mockContext(userId = validUserId) {
   });
 }
 
+function getTodayTimestamp(): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today.getTime();
+}
+
 describe('updateMealPlan handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should return success on update', async () => {
+  it('should save meal plan to DynamoDB', async () => {
     vi.mocked(putMealPlanForUser).mockResolvedValue();
 
+    const today = getTodayTimestamp();
     const mealPlan: UpdateMealPlanRequest = [
       {
-        date: 'Monday - 01/08/2024',
-        plan: {
-          'recipe-uuid-1': [{ componentId: 'comp-1', servings: 2 }],
-        },
+        date: today,
+        plan: [
+          {
+            recipeId: 'recipe-uuid-1',
+            components: [{ componentId: 'comp-1', servings: 2 }],
+          },
+        ],
+      },
+      {
+        date: today + 24 * 60 * 60 * 1000,
+        plan: [
+          {
+            recipeId: 'recipe-uuid-2',
+            components: [{ componentId: 'comp-2', servings: 3 }],
+          },
+        ],
       },
     ];
 
     const result = await updateMealPlan(mockContext(), mealPlan);
 
-    expect(result).toEqual({ success: true });
+    expect(result.success).toBe(true);
+    expect(putMealPlanForUser).toHaveBeenCalledWith(expect.anything(), validUserId, mealPlan);
   });
 
-  it('should pass dynamoClient.client, userId, and meal plan to utility function', async () => {
-    const mockClient = { client: { put: 'mock' } };
-    const c = createMockContext<ContextWithUserId>({
-      userId: validUserId,
-      dynamoClient: mockClient,
-    });
+  it('should sort meal plan by date before saving', async () => {
     vi.mocked(putMealPlanForUser).mockResolvedValue();
 
-    const mealPlanArray: UpdateMealPlanRequest = [
+    const today = getTodayTimestamp();
+    // Create unsorted meal plan
+    const mealPlan: UpdateMealPlanRequest = [
       {
-        date: 'Tuesday - 01/09/2024',
-        plan: {
-          'recipe-uuid-2': [{ componentId: 'comp-2', servings: 4 }],
-        },
+        date: today + 24 * 60 * 60 * 1000,
+        plan: [
+          {
+            recipeId: 'recipe-uuid-2',
+            components: [{ componentId: 'comp-2', servings: 1 }],
+          },
+        ],
+      },
+      {
+        date: today,
+        plan: [
+          {
+            recipeId: 'recipe-uuid-1',
+            components: [{ componentId: 'comp-1', servings: 1 }],
+          },
+        ],
       },
     ];
 
-    await updateMealPlan(c, mealPlanArray);
+    await updateMealPlan(mockContext(), mealPlan);
 
-    const expectedMealPlan = {
-      'Tuesday - 01/09/2024': {
-        'recipe-uuid-2': [{ componentId: 'comp-2', servings: 4 }],
-      },
-    };
-    expect(putMealPlanForUser).toHaveBeenCalledWith(
-      mockClient.client,
-      validUserId,
-      expectedMealPlan
-    );
+    // Verify that the saved meal plan is sorted
+    const savedMealPlan = vi.mocked(putMealPlanForUser).mock.calls[0][2];
+    expect(savedMealPlan[0].date).toBeLessThan(savedMealPlan[1].date);
   });
 
-  it('should handle empty meal plan', async () => {
+  it('should accept empty meal plan', async () => {
     vi.mocked(putMealPlanForUser).mockResolvedValue();
 
-    const result = await updateMealPlan(mockContext(), []);
+    const mealPlan: UpdateMealPlanRequest = [];
 
-    expect(result).toEqual({ success: true });
+    const result = await updateMealPlan(mockContext(), mealPlan);
+
+    expect(result.success).toBe(true);
+    expect(putMealPlanForUser).toHaveBeenCalledWith(expect.anything(), validUserId, []);
   });
 
   it('should throw when DynamoDB fails', async () => {
     vi.mocked(putMealPlanForUser).mockRejectedValue(new Error('DynamoDB error'));
 
-    await expect(updateMealPlan(mockContext(), [])).rejects.toThrow('DynamoDB error');
+    const today = getTodayTimestamp();
+    const mealPlan: UpdateMealPlanRequest = [
+      {
+        date: today,
+        plan: [],
+      },
+    ];
+
+    await expect(updateMealPlan(mockContext(), mealPlan)).rejects.toThrow(
+      'Failed to update meal plan'
+    );
   });
 });

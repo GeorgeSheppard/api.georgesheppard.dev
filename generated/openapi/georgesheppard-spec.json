@@ -202,7 +202,54 @@
           "text"
         ]
       },
-      "MealPlanEntry": {
+      "MealPlan": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/MealPlanDayEntry"
+        }
+      },
+      "MealPlanDayEntry": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "number",
+            "description": "Unix timestamp in milliseconds"
+          },
+          "plan": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MealPlanRecipe"
+            },
+            "description": "Recipes for this day"
+          }
+        },
+        "required": [
+          "date",
+          "plan"
+        ]
+      },
+      "MealPlanRecipe": {
+        "type": "object",
+        "properties": {
+          "recipeId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Recipe UUID"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MealPlanComponent"
+            },
+            "description": "Recipe components"
+          }
+        },
+        "required": [
+          "recipeId",
+          "components"
+        ]
+      },
+      "MealPlanComponent": {
         "type": "object",
         "properties": {
           "componentId": {
@@ -1090,30 +1137,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "date": {
-                        "type": "string",
-                        "description": "Date string in format \"DayName - DD/MM/YYYY\""
-                      },
-                      "plan": {
-                        "type": "object",
-                        "additionalProperties": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/MealPlanEntry"
-                          },
-                          "description": "Array of component servings for this recipe"
-                        }
-                      }
-                    },
-                    "required": [
-                      "date",
-                      "plan"
-                    ]
-                  }
+                  "$ref": "#/components/schemas/MealPlan"
                 }
               }
             }
@@ -1174,30 +1198,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "date": {
-                      "type": "string",
-                      "description": "Date string in format \"DayName - DD/MM/YYYY\""
-                    },
-                    "plan": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/components/schemas/MealPlanEntry"
-                        },
-                        "description": "Array of component servings for this recipe"
-                      }
-                    }
-                  },
-                  "required": [
-                    "date",
-                    "plan"
-                  ]
-                }
+                "$ref": "#/components/schemas/MealPlan"
               }
             }
           }
@@ -1308,10 +1309,10 @@
                   }
                 }
               ],
-              "description": "Array of dates to include in shopping list (format: DD/MM/YYYY)"
+              "description": "Array of Unix timestamps (milliseconds) to include in shopping list"
             },
             "required": false,
-            "description": "Array of dates to include in shopping list (format: DD/MM/YYYY)",
+            "description": "Array of Unix timestamps (milliseconds) to include in shopping list",
             "name": "dates",
             "in": "query"
           }

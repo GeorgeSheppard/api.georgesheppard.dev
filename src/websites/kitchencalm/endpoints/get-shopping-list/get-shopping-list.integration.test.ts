@@ -71,16 +71,26 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 2,
+            recipeId,
+            components: [
+              {
+                componentId,
+                servings: 2,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -138,16 +148,26 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 4,
+            recipeId,
+            components: [
+              {
+                componentId,
+                servings: 4,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -222,24 +242,40 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId: componentId1,
-            servings: 2,
+            recipeId: recipeId1,
+            components: [
+              {
+                componentId: componentId1,
+                servings: 2,
+              },
+            ],
           },
         ],
       },
-      'Tuesday - 01/09/2024': {
-        [recipeId2]: [
+      {
+        date: todayTimestamp + 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId: componentId2,
-            servings: 2,
+            recipeId: recipeId2,
+            components: [
+              {
+                componentId: componentId2,
+                servings: 2,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
@@ -316,24 +352,40 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId: componentId1,
-            servings: 1,
+            recipeId: recipeId1,
+            components: [
+              {
+                componentId: componentId1,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-      'Wednesday - 03/08/2024': {
-        [recipeId2]: [
+      {
+        date: todayTimestamp + 2 * 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId: componentId2,
-            servings: 1,
+            recipeId: recipeId2,
+            components: [
+              {
+                componentId: componentId2,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
@@ -352,9 +404,9 @@ describe('Get Shopping List Endpoint', () => {
     const resultAll = (await responseAll.json()) as ShoppingListItem[];
     expect(resultAll).toHaveLength(2);
 
-    // Filter to Monday only by passing single date
-    const responseMonday = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list?dates=01%2F08%2F2024', {
+    // Filter to today only by passing single date timestamp
+    const responseToday = await app.request(
+      new Request(`http://localhost/kitchencalm/shopping-list?dates=${todayTimestamp}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -362,11 +414,11 @@ describe('Get Shopping List Endpoint', () => {
       })
     );
 
-    expect(responseMonday.status).toBe(200);
-    const resultMonday = (await responseMonday.json()) as ShoppingListItem[];
-    expect(resultMonday).toHaveLength(1);
-    expect(resultMonday[0].ingredient).toBe('Flour');
-    expect(resultMonday.some((item) => item.ingredient === 'Sugar')).toBe(false);
+    expect(responseToday.status).toBe(200);
+    const resultToday = (await responseToday.json()) as ShoppingListItem[];
+    expect(resultToday).toHaveLength(1);
+    expect(resultToday[0].ingredient).toBe('Flour');
+    expect(resultToday.some((item) => item.ingredient === 'Sugar')).toBe(false);
   });
 
   test('should filter by multiple dates', async ({ dynamoClient }) => {
@@ -441,42 +493,65 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId: recipeId1,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-      'Tuesday - 02/08/2024': {
-        [recipeId2]: [
+      {
+        date: todayTimestamp + 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId: recipeId2,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-      'Wednesday - 03/08/2024': {
-        [recipeId3]: [
+      {
+        date: todayTimestamp + 2 * 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId: recipeId3,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
     await updateRecipe(dynamoClient.client, userId, recipe3);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
-    // Filter to Monday and Tuesday using dates array
+    // Filter to today and tomorrow using timestamps
+    const tomorrowTimestamp = todayTimestamp + 24 * 60 * 60 * 1000;
     const responseRange = await app.request(
       new Request(
-        'http://localhost/kitchencalm/shopping-list?dates=01%2F08%2F2024&dates=02%2F08%2F2024',
+        `http://localhost/kitchencalm/shopping-list?dates=${todayTimestamp}&dates=${tomorrowTimestamp}`,
         {
           method: 'GET',
           headers: {
@@ -522,16 +597,26 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -582,16 +667,26 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId,
-            servings: 1,
+            recipeId,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -665,32 +760,48 @@ describe('Get Shopping List Endpoint', () => {
       ],
     };
 
-    const mealPlan: IMealPlan = {
-      'Monday - 01/08/2024': {
-        [recipeId1]: [
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    const mealPlan: IMealPlan = [
+      {
+        date: todayTimestamp,
+        plan: [
           {
-            componentId: componentId1,
-            servings: 1,
+            recipeId: recipeId1,
+            components: [
+              {
+                componentId: componentId1,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-      'Wednesday - 03/08/2024': {
-        [recipeId2]: [
+      {
+        date: todayTimestamp + 2 * 24 * 60 * 60 * 1000,
+        plan: [
           {
-            componentId: componentId2,
-            servings: 1,
+            recipeId: recipeId2,
+            components: [
+              {
+                componentId: componentId2,
+                servings: 1,
+              },
+            ],
           },
         ],
       },
-    };
+    ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
-    // Filter using bracket notation: dates[]=01/08/2024
-    const responseMonday = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list?dates%5B%5D=01%2F08%2F2024', {
+    // Filter using bracket notation: dates[]=timestamp
+    const responseToday = await app.request(
+      new Request(`http://localhost/kitchencalm/shopping-list?dates=${todayTimestamp}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -698,11 +809,11 @@ describe('Get Shopping List Endpoint', () => {
       })
     );
 
-    expect(responseMonday.status).toBe(200);
-    const resultMonday = (await responseMonday.json()) as ShoppingListItem[];
-    expect(resultMonday).toHaveLength(1);
-    expect(resultMonday[0].ingredient).toBe('Flour');
-    expect(resultMonday.some((item) => item.ingredient === 'Sugar')).toBe(false);
+    expect(responseToday.status).toBe(200);
+    const resultToday = (await responseToday.json()) as ShoppingListItem[];
+    expect(resultToday).toHaveLength(1);
+    expect(resultToday[0].ingredient).toBe('Flour');
+    expect(resultToday.some((item) => item.ingredient === 'Sugar')).toBe(false);
   });
 
   test('should require authentication', async ({ dynamoClient }) => {

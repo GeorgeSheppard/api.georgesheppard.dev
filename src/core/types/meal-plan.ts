@@ -5,29 +5,47 @@
 import { RecipeUuid } from './recipes.js';
 
 /**
- * Single serving entry for a recipe component in meal plan
+ * Single component serving entry in a recipe meal plan
  */
-export interface IMealPlanEntry {
+export interface IMealPlanComponent {
   componentId: string;
   servings: number;
 }
 
 /**
- * All entries for a single recipe on a single date
+ * Recipe entry with its components in a meal plan
  */
-export type RecipeMealEntries = IMealPlanEntry[];
-
-/**
- * All recipes on a single date
- */
-export interface IMealPlanDay {
-  [recipeUuid: RecipeUuid]: RecipeMealEntries;
+export interface IMealPlanRecipe {
+  recipeId: RecipeUuid;
+  components: IMealPlanComponent[];
 }
 
 /**
- * Complete meal plan: date string -> recipes on that date
- * Date format: "DayName - MM/DD/YYYY" (e.g., "Monday - 01/08/2024")
+ * Single day entry in the meal plan array
  */
-export interface IMealPlan {
-  [dateString: string]: IMealPlanDay;
+export interface IMealPlanDayEntry {
+  date: number; // Unix timestamp in milliseconds
+  plan: IMealPlanRecipe[];
+}
+
+/**
+ * Complete meal plan: array of day entries sorted by date
+ */
+export type IMealPlan = IMealPlanDayEntry[];
+
+/**
+ * @deprecated Use IMealPlanComponent instead
+ */
+export type IMealPlanEntry = IMealPlanComponent;
+
+/**
+ * @deprecated No longer used with new array-based structure
+ */
+export type RecipeMealEntries = IMealPlanComponent[];
+
+/**
+ * @deprecated No longer used with new array-based structure
+ */
+export interface IMealPlanDay {
+  [recipeUuid: RecipeUuid]: RecipeMealEntries;
 }

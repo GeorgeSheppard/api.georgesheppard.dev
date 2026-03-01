@@ -15,31 +15,30 @@ export interface IQuantitiesAndMeals {
 export function createShoppingListData(
   recipes: IRecipe[],
   mealPlan: IMealPlan,
-  selectedDates?: Set<string>
+  selectedDates?: Set<number>
 ): IQuantitiesAndMeals {
   const quantityAndMeals: IQuantitiesAndMeals = {};
 
   // If no dates selected, use all dates from meal plan
-  const datesToProcess = selectedDates || new Set(Object.keys(mealPlan));
+  const datesToProcess = selectedDates || new Set(mealPlan.map((day) => day.date));
 
-  for (const date of Object.keys(mealPlan)) {
-    if (!datesToProcess.has(date)) {
+  for (const dayEntry of mealPlan) {
+    if (!datesToProcess.has(dayEntry.date)) {
       continue;
     }
 
-    const dayMealPlan = mealPlan[date];
-    for (const [recipeId, components] of Object.entries(dayMealPlan)) {
-      const recipe = recipes.find((rec) => rec.uuid === recipeId);
-      if (!recipe) {
+    for (const recipe of dayEntry.plan) {
+      const recipeData = recipes.find((rec) => rec.uuid === recipe.recipeId);
+      if (!recipeData) {
         continue;
       }
 
-      for (const component of components) {
+      for (const component of recipe.components) {
         if (component.servings === 0) {
           continue;
         }
 
-        const recipeComponent = recipe.components.find(
+        const recipeComponent = recipeData.components.find(
           (comp) => comp.uuid === component.componentId
         );
         if (!recipeComponent) {
@@ -59,7 +58,7 @@ export function createShoppingListData(
 
           const ratio = component.servings / servings;
 
-          quantityAndMeals[name].meals.add(recipe.name);
+          quantityAndMeals[name].meals.add(recipeData.name);
           const currentQuantities = quantityAndMeals[name].quantities;
 
           const quantityIndex = currentQuantities.findIndex(
