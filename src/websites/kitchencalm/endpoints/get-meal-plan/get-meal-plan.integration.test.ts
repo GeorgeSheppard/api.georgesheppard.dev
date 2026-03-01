@@ -11,7 +11,9 @@ import { IMealPlan } from '@core/types/meal-plan.js';
 import { GetMealPlanResponse } from './get-meal-plan.js';
 
 describe('Get Meal Plan Endpoint', () => {
-  test('should return meal plan entries for next 2 weeks when empty', async ({ dynamoClient }) => {
+  test('should return meal plan entries for 1 week past to 2 weeks future when empty', async ({
+    dynamoClient,
+  }) => {
     const app = await createTestApp({ dynamoClient });
     const userId = uuidv4();
     const token = await signJwt(userId);
@@ -28,23 +30,24 @@ describe('Get Meal Plan Endpoint', () => {
     expect(response.status).toBe(200);
     const result = (await response.json()) as GetMealPlanResponse;
 
-    // Should have 14 empty entries (2 weeks)
-    expect(result.length).toBe(14);
+    // Should have 21 empty entries (1 week past + 2 weeks future)
+    expect(result.length).toBe(21);
     for (const entry of result) {
       expect(entry.plan).toEqual([]);
     }
 
-    // Verify dates are consecutive starting from today
+    // Verify dates are consecutive starting from 1 week ago
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTimestamp = today.getTime();
+    const oneWeekAgo = todayTimestamp - 7 * 24 * 60 * 60 * 1000;
 
-    for (let i = 0; i < 14; i++) {
-      expect(result[i].date).toBe(todayTimestamp + i * 24 * 60 * 60 * 1000);
+    for (let i = 0; i < 21; i++) {
+      expect(result[i].date).toBe(oneWeekAgo + i * 24 * 60 * 60 * 1000);
     }
   });
 
-  test('should return existing meal plan entries plus generated empty ones for 2 weeks', async ({
+  test('should return existing meal plan entries plus generated empty ones for 1 week past to 2 weeks future', async ({
     dynamoClient,
   }) => {
     const app = await createTestApp({ dynamoClient });
@@ -56,9 +59,24 @@ describe('Get Meal Plan Endpoint', () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTimestamp = today.getTime();
+    const oneWeekAgo = todayTimestamp - 7 * 24 * 60 * 60 * 1000;
 
-    // Create a meal plan with entries for today and day 5
+    // Create a meal plan with entries from 1 week ago and a few future days
     const mealPlan: IMealPlan = [
+      {
+        date: oneWeekAgo,
+        plan: [
+          {
+            recipeId,
+            components: [
+              {
+                componentId,
+                servings: 1,
+              },
+            ],
+          },
+        ],
+      },
       {
         date: todayTimestamp,
         plan: [
@@ -103,29 +121,23 @@ describe('Get Meal Plan Endpoint', () => {
     expect(response.status).toBe(200);
     const result = (await response.json()) as GetMealPlanResponse;
 
-    // Should have 14 entries total
-    expect(result.length).toBe(14);
+    // Should have 21 entries (1 week past + 2 weeks future)
+    expect(result.length).toBe(21);
 
-    // Today should have the recipe
+    // First day (1 week ago) should have the recipe
+    expect(result[0].date).toBe(oneWeekAgo);
     expect(result[0].plan.length).toBe(1);
-    expect(result[0].plan[0].recipeId).toBe(recipeId);
 
-    // Days 1-4 should be empty
-    for (let i = 1; i < 5; i++) {
-      expect(result[i].plan).toEqual([]);
-    }
+    // Day at index 7 should be today with the recipe
+    expect(result[7].date).toBe(todayTimestamp);
+    expect(result[7].plan.length).toBe(1);
 
-    // Day 5 should have the recipe
-    expect(result[5].plan.length).toBe(1);
-    expect(result[5].plan[0].recipeId).toBe(recipeId);
-
-    // Days 6-13 should be empty
-    for (let i = 6; i < 14; i++) {
-      expect(result[i].plan).toEqual([]);
-    }
+    // Day at index 12 (5 days from today) should have the recipe
+    expect(result[12].date).toBe(todayTimestamp + 5 * 24 * 60 * 60 * 1000);
+    expect(result[12].plan.length).toBe(1);
   });
 
-  test('should filter out entries older than today', async ({ dynamoClient }) => {
+  test('should keep historical entries and add future entries for 2-week window', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
     const userId = uuidv4();
     const token = await signJwt(userId);
@@ -183,17 +195,16 @@ describe('Get Meal Plan Endpoint', () => {
     expect(response.status).toBe(200);
     const result = (await response.json()) as GetMealPlanResponse;
 
-    // Should have 14 entries (no yesterday)
-    expect(result.length).toBe(14);
+    // Should have 15 entries (yesterday + today + 13 future days)
+    expect(result.length).toBe(15);
 
-    // All dates should be >= today
-    for (const entry of result) {
-      expect(entry.date).toBeGreaterThanOrEqual(todayTimestamp);
-    }
-
-    // First entry should be today
-    expect(result[0].date).toBe(todayTimestamp);
+    // First entry should be yesterday
+    expect(result[0].date).toBe(yesterday);
     expect(result[0].plan.length).toBe(1);
+
+    // Second entry should be today
+    expect(result[1].date).toBe(todayTimestamp);
+    expect(result[1].plan.length).toBe(1);
   });
 
   test('should return 401 without valid JWT', async ({ dynamoClient }) => {

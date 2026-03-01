@@ -27,23 +27,25 @@ describe('getMealPlan handler', () => {
     vi.clearAllMocks();
   });
 
-  it('should return empty array when no meal plan exists, but still generate next 2 weeks', async () => {
+  it('should return empty array when no meal plan exists, but still generate 1 week past to 2 weeks future', async () => {
     vi.mocked(getMealPlanForUser).mockResolvedValue([]);
 
     const result = await getMealPlan(mockContext());
 
-    expect(result.length).toBe(14);
+    // 1 week past + today + 2 weeks future = 21 days
+    expect(result.length).toBe(21);
     expect(result[0].plan).toEqual([]);
-    expect(result[13].plan).toEqual([]);
+    expect(result[20].plan).toEqual([]);
 
-    // Verify dates are consecutive starting from today
+    // Verify dates are consecutive starting from 7 days ago
     const today = getTodayTimestamp();
-    for (let i = 0; i < 14; i++) {
-      expect(result[i].date).toBe(today + i * 24 * 60 * 60 * 1000);
+    const oneWeekAgo = today - 7 * 24 * 60 * 60 * 1000;
+    for (let i = 0; i < 21; i++) {
+      expect(result[i].date).toBe(oneWeekAgo + i * 24 * 60 * 60 * 1000);
     }
   });
 
-  it('should filter out entries older than today', async () => {
+  it('should keep historical entries and add future entries for 2-week window', async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTimestamp = today.getTime();
@@ -65,35 +67,35 @@ describe('getMealPlan handler', () => {
           },
         ],
       },
-      {
-        date: tomorrow,
-        plan: [
-          {
-            recipeId: 'recipe-tomorrow',
-            components: [{ componentId: 'comp-tomorrow', servings: 3 }],
-          },
-        ],
-      },
     ];
 
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
 
     const result = await getMealPlan(mockContext());
 
-    // Should not include yesterday, should include today and tomorrow + rest of 2 weeks
-    expect(result.some((e) => e.date === yesterday)).toBe(false);
+    // Should keep yesterday, today, and add remaining days for 2-week window
+    expect(result.some((e) => e.date === yesterday)).toBe(true);
     expect(result.some((e) => e.date === todayTimestamp)).toBe(true);
-    expect(result.some((e) => e.date === tomorrow)).toBe(true);
-    expect(result.length).toBe(14);
+    expect(result.length).toBe(15); // yesterday + today + 13 future days
   });
 
-  it('should generate empty entries for missing days in the next 2 weeks', async () => {
+  it('should generate empty entries for missing days and keep 1 week past', async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTimestamp = today.getTime();
+    const oneWeekAgo = todayTimestamp - 7 * 24 * 60 * 60 * 1000;
 
-    // Only have entries for today and day 5
+    // Only have entries for a few days
     const mealPlan: IMealPlan = [
+      {
+        date: oneWeekAgo,
+        plan: [
+          {
+            recipeId: 'recipe-past',
+            components: [{ componentId: 'comp-past', servings: 1 }],
+          },
+        ],
+      },
       {
         date: todayTimestamp,
         plan: [
@@ -103,30 +105,20 @@ describe('getMealPlan handler', () => {
           },
         ],
       },
-      {
-        date: todayTimestamp + 5 * 24 * 60 * 60 * 1000,
-        plan: [
-          {
-            recipeId: 'recipe-6',
-            components: [{ componentId: 'comp-6', servings: 1 }],
-          },
-        ],
-      },
     ];
 
     vi.mocked(getMealPlanForUser).mockResolvedValue(mealPlan);
 
     const result = await getMealPlan(mockContext());
 
-    expect(result.length).toBe(14);
-    // Check that day 1 has content but days 2-5 are empty
+    // 1 week past + 2 weeks future = 21 days
+    expect(result.length).toBe(21);
+    // First day should be from 1 week ago
+    expect(result[0].date).toBe(oneWeekAgo);
     expect(result[0].plan.length).toBeGreaterThan(0);
-    expect(result[1].plan).toEqual([]);
-    expect(result[2].plan).toEqual([]);
-    expect(result[3].plan).toEqual([]);
-    expect(result[4].plan).toEqual([]);
-    // Check that day 5 has content
-    expect(result[5].plan.length).toBeGreaterThan(0);
+    // Day at index 7 should be today
+    expect(result[7].date).toBe(todayTimestamp);
+    expect(result[7].plan.length).toBeGreaterThan(0);
   });
 
   it('should return array sorted by date', async () => {

@@ -17,18 +17,22 @@ function getDayStartTimestamp(date: Date): number {
 function ensureNextTwoWeeks(mealPlan: IMealPlan): IMealPlan {
   const today = new Date();
   const todayTimestamp = getDayStartTimestamp(today);
+  const oneWeekAgo = todayTimestamp - 7 * 24 * 60 * 60 * 1000;
+  const twoWeeksFromNow = todayTimestamp + 14 * 24 * 60 * 60 * 1000;
 
   const planMap = new Map<number, IMealPlan[0]>();
 
-  // Add existing entries
+  // Add existing entries, but only keep entries from the past week onwards
   for (const entry of mealPlan) {
-    planMap.set(entry.date, entry);
+    if (entry.date >= oneWeekAgo) {
+      planMap.set(entry.date, entry);
+    }
   }
 
-  // Generate empty entries for missing days in the next 2 weeks
-  for (let i = 0; i < 14; i++) {
+  // Generate empty entries for missing days in the 1-week past to 2-weeks forward window
+  for (let i = -7; i < 14; i++) {
     const date = todayTimestamp + i * 24 * 60 * 60 * 1000;
-    if (!planMap.has(date)) {
+    if (!planMap.has(date) && date >= oneWeekAgo && date < twoWeeksFromNow) {
       planMap.set(date, { date, plan: [] });
     }
   }
@@ -44,14 +48,8 @@ export async function getMealPlan(c: ContextWithUserId): Promise<GetMealPlanResp
   try {
     const mealPlan = await getMealPlanForUser(dynamoClient.client, userId);
 
-    // Filter out entries older than today
-    const today = new Date();
-    const todayTimestamp = getDayStartTimestamp(today);
-
-    const filteredPlan = mealPlan.filter((entry) => entry.date >= todayTimestamp);
-
-    // Ensure we have entries for the next 2 weeks
-    const completePlan = ensureNextTwoWeeks(filteredPlan);
+    // Ensure we have entries for the next 2 weeks from today
+    const completePlan = ensureNextTwoWeeks(mealPlan);
 
     return completePlan;
   } catch (error) {

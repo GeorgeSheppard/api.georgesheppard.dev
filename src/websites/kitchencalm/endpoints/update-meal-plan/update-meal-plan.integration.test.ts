@@ -66,7 +66,7 @@ describe('Update Meal Plan Endpoint', () => {
     );
 
     expect(response.status).toBe(200);
-    const result = await response.json();
+    const result = (await response.json()) as { success: boolean };
     expect(result.success).toBe(true);
 
     // Verify the meal plan was saved to DynamoDB

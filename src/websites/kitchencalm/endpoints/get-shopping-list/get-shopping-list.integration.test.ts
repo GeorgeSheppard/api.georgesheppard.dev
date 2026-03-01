@@ -79,8 +79,10 @@ describe('Get Shopping List Endpoint', () => {
             servings: 2,
           },
         ],
-      },
-    };
+      }
+      ]
+    }
+  ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -146,8 +148,10 @@ describe('Get Shopping List Endpoint', () => {
             servings: 4,
           },
         ],
-      },
-    };
+      }
+      ]
+    }
+  ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -238,8 +242,10 @@ describe('Get Shopping List Endpoint', () => {
             servings: 2,
           },
         ],
-      },
-    };
+      }
+      ]
+    }
+  ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
@@ -332,8 +338,10 @@ describe('Get Shopping List Endpoint', () => {
             servings: 1,
           },
         ],
-      },
-    };
+      }
+      ]
+    }
+  ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
@@ -465,8 +473,10 @@ describe('Get Shopping List Endpoint', () => {
             servings: 1,
           },
         ],
-      },
-    };
+      }
+      ]
+    }
+  ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
@@ -530,8 +540,10 @@ describe('Get Shopping List Endpoint', () => {
             servings: 1,
           },
         ],
-      },
-    };
+      }
+      ]
+    }
+  ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -590,8 +602,10 @@ describe('Get Shopping List Endpoint', () => {
             servings: 1,
           },
         ],
-      },
-    };
+      }
+      ]
+    }
+  ];
 
     await updateRecipe(dynamoClient.client, userId, recipe);
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
@@ -681,8 +695,10 @@ describe('Get Shopping List Endpoint', () => {
             servings: 1,
           },
         ],
-      },
-    };
+      }
+      ]
+    }
+  ];
 
     await updateRecipe(dynamoClient.client, userId, recipe1);
     await updateRecipe(dynamoClient.client, userId, recipe2);
