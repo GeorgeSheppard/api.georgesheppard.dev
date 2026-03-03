@@ -10,7 +10,11 @@ const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided na
 2. "description": A brief description of the dish (required, string)
 3. "components": An array of recipe components/sections. Each component has:
    - "name": Component name (e.g., "Main", "Sauce", "Topping") (required, string)
-   - "ingredients": Array of ingredients with name and quantity (unit and optional value)
+   - "ingredients": Array of ingredients with name and quantity. Each ingredient has:
+     * "name": Ingredient name (string)
+     * "quantity": Object with "unit" and optional "value":
+       - "unit": The unit of measurement. Use "none" for ingredients without a specific quantity (e.g., "mayonnaise", "salt to taste")
+       - "value": Only include this property if there is a numeric quantity. Never use 0 as a value.
    - "instructions": Array of cooking steps with text and optional "optional" boolean
    - "storeable": Whether this component can be made ahead (optional, boolean)
    - "servings": Number of servings for this component (optional, number)
