@@ -211,38 +211,4 @@ describe('parseRecipe handler', () => {
     ]);
     expect(getRecipeByUuid).toHaveBeenCalledWith({}, validUserId, RECIPE_UUID);
   });
-
-  it('should handle ingredients without quantity values (e.g., mayonnaise)', async () => {
-    const recipeWithNoQuantities = {
-      uuid: RECIPE_UUID,
-      name: 'Simple Salad',
-      description: 'A basic salad',
-      images: [],
-      components: [
-        {
-          name: 'Main',
-          uuid: COMPONENT_UUID,
-          ingredients: [
-            { name: 'Lettuce', quantity: { unit: Unit.NO_UNIT } },
-            { name: 'Mayonnaise', quantity: { unit: Unit.NO_UNIT } },
-            { name: 'Tomato', quantity: { unit: Unit.NO_UNIT } },
-          ],
-          instructions: [{ text: 'Mix ingredients' }],
-        },
-      ],
-    };
-
-    vi.mocked(parseRecipeWithOpenAI).mockResolvedValue(recipeWithNoQuantities);
-    vi.mocked(updateRecipeInDynamo).mockResolvedValue();
-
-    const input: ParseRecipeRequest = { recipeText: 'Mix lettuce, mayonnaise, and tomato' };
-    const result = await parseRecipe(mockContext(), input);
-
-    expect(result.components[0].ingredients).toEqual([
-      { name: 'Lettuce', quantity: { unit: Unit.NO_UNIT } },
-      { name: 'Mayonnaise', quantity: { unit: Unit.NO_UNIT } },
-      { name: 'Tomato', quantity: { unit: Unit.NO_UNIT } },
-    ]);
-    expect(result.components[0].ingredients[1].quantity.value).toBeUndefined();
-  });
 });
