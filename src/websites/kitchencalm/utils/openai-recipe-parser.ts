@@ -4,7 +4,18 @@ import { z } from 'zod';
 import { IRecipe } from '@core/types/recipes.js';
 import { OpenAIRecipeSchema, RecipeSchema } from '../schemas.js';
 
-const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided natural language recipe text into a structured JSON format. Do not include any image or images field in the response - images are managed separately by the backend.`;
+const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided natural language recipe text into a structured JSON format with the following fields:
+
+1. "name": The name/title of the recipe (required, string)
+2. "description": A brief description of the dish (required, string)
+3. "components": An array of recipe components/sections. Each component has:
+   - "name": Component name (e.g., "Main", "Sauce", "Topping") (required, string)
+   - "ingredients": Array of ingredients with name and quantity (unit and optional value)
+   - "instructions": Array of cooking steps with text and optional "optional" boolean
+   - "storeable": Whether this component can be made ahead (optional, boolean)
+   - "servings": Number of servings for this component (optional, number)
+
+Do not include any image or images field in the response - images are managed separately by the backend.`;
 
 export async function parseRecipeWithOpenAI(
   recipeText: string,
@@ -36,7 +47,15 @@ export async function parseRecipeWithOpenAI(
   const rawParsed: unknown = JSON.parse(content);
   const openAIResult = OpenAIRecipeSchema.safeParse(rawParsed);
   if (!openAIResult.success) {
-    throw new Error(`OpenAI returned invalid recipe format: ${openAIResult.error.message}`);
+    throw new Error(
+      `OpenAI returned invalid recipe format: ${JSON.stringify(
+        openAIResult.error.issues.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+          received: (rawParsed as Record<string, unknown>)[issue.path[0] as string],
+        }))
+      )}`
+    );
   }
 
   const parsed = openAIResult.data;
