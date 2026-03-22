@@ -4,6 +4,51 @@ import { z } from 'zod';
 import { IRecipe } from '@core/types/recipes.js';
 import { OpenAIRecipeSchema, RecipeSchema } from '../schemas.js';
 
+// Recursively ensure schema meets strict mode requirements:
+// - additionalProperties must be false on all objects
+// - all properties must be in required array
+function makeSchemaStrict(schema: Record<string, unknown>): Record<string, unknown> {
+  const result = { ...schema };
+
+  if (result.type === 'object' && typeof result.properties === 'object') {
+    result.additionalProperties = false;
+    const props = result.properties as Record<string, unknown>;
+    result.required = Object.keys(props);
+  }
+
+  // Recursively process nested schemas
+  if (typeof result.properties === 'object' && result.properties !== null) {
+    const props = result.properties as Record<string, Record<string, unknown>>;
+    result.properties = Object.fromEntries(
+      Object.entries(props).map(([key, value]) => [
+        key,
+        typeof value === 'object' && value !== null ? makeSchemaStrict(value) : value,
+      ])
+    );
+  }
+
+  if (Array.isArray(result.items) && typeof result.items[0] === 'object') {
+    result.items = result.items.map((item) =>
+      typeof item === 'object' && item !== null ? makeSchemaStrict(item) : item
+    );
+  }
+
+  if (typeof result.items === 'object' && result.items !== null) {
+    result.items = makeSchemaStrict(result.items as Record<string, unknown>);
+  }
+
+  // Handle anyOf, oneOf, allOf
+  for (const key of ['anyOf', 'oneOf', 'allOf']) {
+    if (Array.isArray(result[key])) {
+      result[key] = (result[key] as Record<string, unknown>[]).map((item) =>
+        typeof item === 'object' && item !== null ? makeSchemaStrict(item) : item
+      );
+    }
+  }
+
+  return result;
+}
+
 const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided natural language recipe text into a structured JSON format with the following fields:
 
 1. "name": The name/title of the recipe (required, string)
@@ -46,6 +91,9 @@ export async function parseRecipeWithOpenAI(
   openaiClient: OpenAI,
   recipeId?: string
 ): Promise<IRecipe> {
+  const baseSchema = z.toJSONSchema(OpenAIRecipeSchema) as Record<string, unknown>;
+  const strictSchema = makeSchemaStrict(baseSchema);
+
   const completion = await openaiClient.chat.completions.create({
     model: 'gpt-4o',
     messages: [
@@ -56,8 +104,8 @@ export async function parseRecipeWithOpenAI(
       type: 'json_schema',
       json_schema: {
         name: 'recipe',
-        strict: false,
-        schema: z.toJSONSchema(OpenAIRecipeSchema),
+        strict: true,
+        schema: strictSchema,
       },
     },
     temperature: 0.2,
