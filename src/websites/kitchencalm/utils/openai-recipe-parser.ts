@@ -13,18 +13,33 @@ const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided na
    - "ingredients": Array of ingredients with name and quantity. Each ingredient has:
      * "name": Ingredient name (string)
      * "quantity": Object with "unit" and optional "value":
-       - "unit": The unit of measurement. Valid units are: "none" (for unmeasured ingredients like salt to taste), "mL", "L", "g", "kg", "oz", "lb", "fl oz", "cup", "tsp", "tbsp", "pinch", "dash", "quantity" (for countable items like "2 eggs")
+       - "unit": The unit of measurement. MUST use only these units: "none" (for unmeasured), "mL", "L", "g", "kg", "cup", "tsp", "tbsp", "quantity" (for countable items)
        - "value": Only include this property if there is a numeric quantity. Never use 0 as a value.
-       - IMPORTANT: If an ingredient is specified as a "tin", "can", "jar", or other container, convert it to the standard weight/volume equivalent:
-         * Standard tin of coconut milk (400mL) → 400mL
-         * Standard can of tomatoes (400g) → 400g
-         * Standard jar of pesto (190g) → 190g
-         * Always use measurable units (g, mL, etc), not container names
+       - CRITICAL: If an ingredient is specified as a "tin", "can", "jar", "bottle", or other container, convert it to the standard weight/volume equivalent:
+         * 1 tin coconut milk → 400mL
+         * 1 can tomatoes → 400g
+         * 1 jar pesto → 190g
+         * Always convert containers to one of the allowed units (g, mL, etc)
    - "instructions": Array of cooking steps with text and optional "optional" boolean
    - "storeable": Whether this component can be made ahead (optional, boolean)
    - "servings": Number of servings for this component (optional, number)
 
 Do not include any image or images field in the response - images are managed separately by the backend.`;
+
+const FIX_PROMPT = `You are a recipe JSON fixer. The following recipe JSON has validation errors. Fix only the invalid parts according to these rules:
+
+Valid units are ONLY: "none", "mL", "L", "g", "kg", "cup", "tsp", "tbsp", "quantity"
+
+If you see any other unit like "tin", "can", "oz", "lb", etc:
+- Convert "tin" of liquid (coconut milk, etc) to "mL" with standard sizes (400mL for coconut milk)
+- Convert "can" of solids (tomatoes, etc) to "g" with standard sizes (400g for tomatoes)
+- Convert "oz" to "g" (1 oz ≈ 28g)
+- Convert "lb" to "g" (1 lb ≈ 454g)
+- Convert "fl oz" to "mL" (1 fl oz ≈ 30mL)
+- For "pinch" or "dash", use "none" unit with no value
+- Never invent units
+
+Return ONLY the corrected JSON, no explanations.`;
 
 export async function parseRecipeWithOpenAI(
   recipeText: string,
@@ -56,17 +71,48 @@ export async function parseRecipeWithOpenAI(
   const rawParsed: unknown = JSON.parse(content);
   console.log('OpenAI recipe response:', JSON.stringify(rawParsed, null, 2));
 
-  const openAIResult = OpenAIRecipeSchema.safeParse(rawParsed);
+  let openAIResult = OpenAIRecipeSchema.safeParse(rawParsed);
+
+  // If validation fails, try to fix with a second LLM call
   if (!openAIResult.success) {
-    throw new Error(
-      `OpenAI returned invalid recipe format: ${JSON.stringify(
-        openAIResult.error.issues.map((issue) => ({
-          path: issue.path.join('.'),
-          message: issue.message,
-          received: (rawParsed as Record<string, unknown>)[issue.path[0] as string],
-        }))
-      )}`
-    );
+    console.log('Initial validation failed, attempting to fix with second LLM call...');
+    const fixCompletion = await openaiClient.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: FIX_PROMPT },
+        {
+          role: 'user',
+          content: `Fix this recipe JSON:\n\n${JSON.stringify(rawParsed, null, 2)}\n\nErrors: ${JSON.stringify(
+            openAIResult.error.issues.map((issue) => ({
+              path: issue.path.join('.'),
+              message: issue.message,
+            }))
+          )}`,
+        },
+      ],
+      temperature: 0.2,
+    });
+
+    const fixedContent = fixCompletion.choices[0]?.message?.content;
+    if (!fixedContent) {
+      throw new Error('No response from OpenAI fix attempt');
+    }
+
+    const fixedParsed: unknown = JSON.parse(fixedContent);
+    console.log('Fixed recipe response:', JSON.stringify(fixedParsed, null, 2));
+
+    openAIResult = OpenAIRecipeSchema.safeParse(fixedParsed);
+    if (!openAIResult.success) {
+      throw new Error(
+        `OpenAI returned invalid recipe format after fix attempt: ${JSON.stringify(
+          openAIResult.error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+            received: (fixedParsed as Record<string, unknown>)[issue.path[0] as string],
+          }))
+        )}`
+      );
+    }
   }
 
   const parsed = openAIResult.data;

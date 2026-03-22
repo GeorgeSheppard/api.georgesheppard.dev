@@ -15,11 +15,6 @@ export enum Unit {
   TEASPOON = 'tsp',
   TABLESPOON = 'tbsp',
   NUMBER = 'quantity',
-  OUNCE = 'oz',
-  POUND = 'lb',
-  FLUID_OUNCE = 'fl oz',
-  PINCH = 'pinch',
-  DASH = 'dash',
 }
 
 /**
