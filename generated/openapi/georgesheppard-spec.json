@@ -173,7 +173,12 @@
               "cup",
               "tsp",
               "tbsp",
-              "quantity"
+              "quantity",
+              "oz",
+              "lb",
+              "fl oz",
+              "pinch",
+              "dash"
             ],
             "description": "Unit of measurement"
           },

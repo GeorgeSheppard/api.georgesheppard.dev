@@ -13,8 +13,13 @@ const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided na
    - "ingredients": Array of ingredients with name and quantity. Each ingredient has:
      * "name": Ingredient name (string)
      * "quantity": Object with "unit" and optional "value":
-       - "unit": The unit of measurement. Use "none" for ingredients without a specific quantity (e.g., "mayonnaise", "salt to taste")
+       - "unit": The unit of measurement. Valid units are: "none" (for unmeasured ingredients like salt to taste), "mL", "L", "g", "kg", "oz", "lb", "fl oz", "cup", "tsp", "tbsp", "pinch", "dash", "quantity" (for countable items like "2 eggs")
        - "value": Only include this property if there is a numeric quantity. Never use 0 as a value.
+       - IMPORTANT: If an ingredient is specified as a "tin", "can", "jar", or other container, convert it to the standard weight/volume equivalent:
+         * Standard tin of coconut milk (400mL) → 400mL
+         * Standard can of tomatoes (400g) → 400g
+         * Standard jar of pesto (190g) → 190g
+         * Always use measurable units (g, mL, etc), not container names
    - "instructions": Array of cooking steps with text and optional "optional" boolean
    - "storeable": Whether this component can be made ahead (optional, boolean)
    - "servings": Number of servings for this component (optional, number)
@@ -49,6 +54,8 @@ export async function parseRecipeWithOpenAI(
   }
 
   const rawParsed: unknown = JSON.parse(content);
+  console.log('OpenAI recipe response:', JSON.stringify(rawParsed, null, 2));
+
   const openAIResult = OpenAIRecipeSchema.safeParse(rawParsed);
   if (!openAIResult.success) {
     throw new Error(
