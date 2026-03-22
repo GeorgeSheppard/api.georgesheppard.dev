@@ -86,14 +86,15 @@ If you see any other unit like "tin", "can", "oz", "lb", etc:
 
 Return ONLY the corrected JSON, no explanations.`;
 
+const STRICT_SCHEMA = makeSchemaStrict(
+  z.toJSONSchema(OpenAIRecipeSchema) as Record<string, unknown>
+);
+
 export async function parseRecipeWithOpenAI(
   recipeText: string,
   openaiClient: OpenAI,
   recipeId?: string
 ): Promise<IRecipe> {
-  const baseSchema = z.toJSONSchema(OpenAIRecipeSchema) as Record<string, unknown>;
-  const strictSchema = makeSchemaStrict(baseSchema);
-
   const completion = await openaiClient.chat.completions.create({
     model: 'gpt-4o',
     messages: [
@@ -105,7 +106,7 @@ export async function parseRecipeWithOpenAI(
       json_schema: {
         name: 'recipe',
         strict: true,
-        schema: strictSchema,
+        schema: STRICT_SCHEMA,
       },
     },
     temperature: 0.2,
