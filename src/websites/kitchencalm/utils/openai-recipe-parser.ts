@@ -1,53 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import OpenAI from 'openai';
-import { z } from 'zod';
 import { IRecipe } from '@core/types/recipes.js';
 import { OpenAIRecipeSchema, RecipeSchema } from '../schemas.js';
-
-// Recursively ensure schema meets strict mode requirements:
-// - additionalProperties must be false on all objects
-// - all properties must be in required array
-function makeSchemaStrict(schema: Record<string, unknown>): Record<string, unknown> {
-  const result = { ...schema };
-
-  if (result.type === 'object' && typeof result.properties === 'object') {
-    result.additionalProperties = false;
-    const props = result.properties as Record<string, unknown>;
-    result.required = Object.keys(props);
-  }
-
-  // Recursively process nested schemas
-  if (typeof result.properties === 'object' && result.properties !== null) {
-    const props = result.properties as Record<string, Record<string, unknown>>;
-    result.properties = Object.fromEntries(
-      Object.entries(props).map(([key, value]) => [
-        key,
-        typeof value === 'object' && value !== null ? makeSchemaStrict(value) : value,
-      ])
-    );
-  }
-
-  if (Array.isArray(result.items) && typeof result.items[0] === 'object') {
-    result.items = result.items.map((item) =>
-      typeof item === 'object' && item !== null ? makeSchemaStrict(item) : item
-    );
-  }
-
-  if (typeof result.items === 'object' && result.items !== null) {
-    result.items = makeSchemaStrict(result.items as Record<string, unknown>);
-  }
-
-  // Handle anyOf, oneOf, allOf
-  for (const key of ['anyOf', 'oneOf', 'allOf']) {
-    if (Array.isArray(result[key])) {
-      result[key] = (result[key] as Record<string, unknown>[]).map((item) =>
-        typeof item === 'object' && item !== null ? makeSchemaStrict(item) : item
-      );
-    }
-  }
-
-  return result;
-}
 
 const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided natural language recipe text into a structured JSON format with the following fields:
 
@@ -86,9 +40,72 @@ If you see any other unit like "tin", "can", "oz", "lb", etc:
 
 Return ONLY the corrected JSON, no explanations.`;
 
-const STRICT_SCHEMA = makeSchemaStrict(
-  z.toJSONSchema(OpenAIRecipeSchema) as Record<string, unknown>
-);
+// OpenAI strict mode schema - explicitly defined to ensure additionalProperties: false
+// and all properties in required array for OpenAI's constrained sampling
+const STRICT_SCHEMA = {
+  type: 'object',
+  properties: {
+    name: { type: 'string' },
+    description: { type: 'string' },
+    components: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          ingredients: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                quantity: {
+                  type: 'object',
+                  properties: {
+                    unit: {
+                      enum: ['none', 'mL', 'L', 'g', 'kg', 'cup', 'tsp', 'tbsp', 'quantity'],
+                    },
+                    value: {
+                      type: ['number', 'null'],
+                    },
+                  },
+                  required: ['unit', 'value'],
+                  additionalProperties: false,
+                },
+              },
+              required: ['name', 'quantity'],
+              additionalProperties: false,
+            },
+          },
+          instructions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                text: { type: 'string' },
+                optional: {
+                  type: ['boolean', 'null'],
+                },
+              },
+              required: ['text', 'optional'],
+              additionalProperties: false,
+            },
+          },
+          storeable: {
+            type: ['boolean', 'null'],
+          },
+          servings: {
+            type: ['number', 'null'],
+          },
+        },
+        required: ['name', 'ingredients', 'instructions', 'storeable', 'servings'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['name', 'description', 'components'],
+  additionalProperties: false,
+};
 
 export async function parseRecipeWithOpenAI(
   recipeText: string,
