@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import OpenAI from 'openai';
 import { IRecipe } from '@core/types/recipes.js';
+import { logger } from '@core/telemetry/logger.js';
 import { OpenAIRecipeSchema, RecipeSchema } from '../schemas.js';
 
 const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided natural language recipe text into a structured JSON format with the following fields:
@@ -135,13 +136,13 @@ export async function parseRecipeWithOpenAI(
   }
 
   const rawParsed: unknown = JSON.parse(content);
-  console.log('OpenAI recipe response:', JSON.stringify(rawParsed, null, 2));
+  logger.info('OpenAI recipe response:', JSON.stringify(rawParsed, null, 2));
 
   let openAIResult = OpenAIRecipeSchema.safeParse(rawParsed);
 
   // If validation fails, try to fix with a second LLM call
   if (!openAIResult.success) {
-    console.log('Initial validation failed, attempting to fix with second LLM call...');
+    logger.info('Initial validation failed, attempting to fix with second LLM call...');
     const fixCompletion = await openaiClient.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -165,7 +166,7 @@ export async function parseRecipeWithOpenAI(
     }
 
     const fixedParsed: unknown = JSON.parse(fixedContent);
-    console.log('Fixed recipe response:', JSON.stringify(fixedParsed, null, 2));
+    logger.info('Fixed recipe response:', JSON.stringify(fixedParsed, null, 2));
 
     openAIResult = OpenAIRecipeSchema.safeParse(fixedParsed);
     if (!openAIResult.success) {
