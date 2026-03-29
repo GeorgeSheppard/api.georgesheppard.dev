@@ -4,7 +4,7 @@ import { Unit } from '@core/types/recipes.js';
 const QuantitySchema = z
   .object({
     unit: z.nativeEnum(Unit).describe('Unit of measurement'),
-    value: z.number().nullable().describe('Numeric value'),
+    value: z.number().nullable().optional().describe('Numeric value'),
   })
   .openapi('Quantity');
 
@@ -18,7 +18,7 @@ export const IngredientSchema = z
 export const InstructionSchema = z
   .object({
     text: z.string().describe('Instruction text'),
-    optional: z.boolean().nullable().describe('Whether this step is optional'),
+    optional: z.boolean().nullable().optional().describe('Whether this step is optional'),
   })
   .openapi('Instruction');
 
@@ -28,8 +28,8 @@ export const ComponentSchema = z
     uuid: z.string().uuid().describe('Component UUID'),
     ingredients: z.array(IngredientSchema).describe('List of ingredients'),
     instructions: z.array(InstructionSchema).describe('List of instructions'),
-    storeable: z.boolean().nullable().describe('Whether component can be made ahead'),
-    servings: z.number().nullable().describe('Number of servings'),
+    storeable: z.boolean().nullable().optional().describe('Whether component can be made ahead'),
+    servings: z.number().nullable().optional().describe('Number of servings'),
   })
   .openapi('Component');
 
