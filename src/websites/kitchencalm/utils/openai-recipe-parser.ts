@@ -26,21 +26,6 @@ const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided na
 
 Do not include any image or images field in the response - images are managed separately by the backend.`;
 
-const FIX_PROMPT = `You are a recipe JSON fixer. The following recipe JSON has validation errors. Fix only the invalid parts according to these rules:
-
-Valid units are ONLY: "none", "mL", "L", "g", "kg", "cup", "tsp", "tbsp", "quantity"
-
-If you see any other unit like "tin", "can", "oz", "lb", etc:
-- Convert "tin" of liquid (coconut milk, etc) to "mL" with standard sizes (400mL for coconut milk)
-- Convert "can" of solids (tomatoes, etc) to "g" with standard sizes (400g for tomatoes)
-- Convert "oz" to "g" (1 oz ≈ 28g)
-- Convert "lb" to "g" (1 lb ≈ 454g)
-- Convert "fl oz" to "mL" (1 fl oz ≈ 30mL)
-- For "pinch" or "dash", use "none" unit with no value
-- Never invent units
-
-Return ONLY the corrected JSON, no explanations.`;
-
 // OpenAI strict mode schema - explicitly defined to ensure additionalProperties: false
 // and all properties in required array for OpenAI's constrained sampling
 const STRICT_SCHEMA = {
@@ -138,48 +123,16 @@ export async function parseRecipeWithOpenAI(
   const rawParsed: unknown = JSON.parse(content);
   logger.info('OpenAI recipe response:', JSON.stringify(rawParsed, null, 2));
 
-  let openAIResult = OpenAIRecipeSchema.safeParse(rawParsed);
-
-  // If validation fails, try to fix with a second LLM call
+  const openAIResult = OpenAIRecipeSchema.safeParse(rawParsed);
   if (!openAIResult.success) {
-    logger.info('Initial validation failed, attempting to fix with second LLM call...');
-    const fixCompletion = await openaiClient.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: FIX_PROMPT },
-        {
-          role: 'user',
-          content: `Fix this recipe JSON:\n\n${JSON.stringify(rawParsed, null, 2)}\n\nErrors: ${JSON.stringify(
-            openAIResult.error.issues.map((issue) => ({
-              path: issue.path.join('.'),
-              message: issue.message,
-            }))
-          )}`,
-        },
-      ],
-      temperature: 0.2,
-    });
-
-    const fixedContent = fixCompletion.choices[0]?.message?.content;
-    if (!fixedContent) {
-      throw new Error('No response from OpenAI fix attempt');
-    }
-
-    const fixedParsed: unknown = JSON.parse(fixedContent);
-    logger.info('Fixed recipe response:', JSON.stringify(fixedParsed, null, 2));
-
-    openAIResult = OpenAIRecipeSchema.safeParse(fixedParsed);
-    if (!openAIResult.success) {
-      throw new Error(
-        `OpenAI returned invalid recipe format after fix attempt: ${JSON.stringify(
-          openAIResult.error.issues.map((issue) => ({
-            path: issue.path.join('.'),
-            message: issue.message,
-            received: (fixedParsed as Record<string, unknown>)[issue.path[0] as string],
-          }))
-        )}`
-      );
-    }
+    throw new Error(
+      `OpenAI returned invalid recipe format: ${JSON.stringify(
+        openAIResult.error.issues.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        }))
+      )}`
+    );
   }
 
   const parsed = openAIResult.data;
