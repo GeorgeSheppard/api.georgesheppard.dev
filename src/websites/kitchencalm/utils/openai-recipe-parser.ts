@@ -12,17 +12,19 @@ const SYSTEM_PROMPT = `You are a recipe parsing assistant. Parse the provided na
    - "name": Component name (e.g., "Main", "Sauce", "Topping") (required, string)
    - "ingredients": Array of ingredients with name and quantity. Each ingredient has:
      * "name": Ingredient name (string)
-     * "quantity": Object with "unit" and optional "value":
+     * "quantity": Object with "unit" and "value":
        - "unit": The unit of measurement. MUST use only these units: "none" (for unmeasured), "mL", "L", "g", "kg", "cup", "tsp", "tbsp", "quantity" (for countable items)
-       - "value": Only include this property if there is a numeric quantity. Never use 0 as a value.
+       - "value": Include numeric value if quantity is measured, otherwise use null. Never use 0 as a value.
        - CRITICAL: If an ingredient is specified as a "tin", "can", "jar", "bottle", or other container, convert it to the standard weight/volume equivalent:
          * 1 tin coconut milk → 400mL
          * 1 can tomatoes → 400g
          * 1 jar pesto → 190g
          * Always convert containers to one of the allowed units (g, mL, etc)
-   - "instructions": Array of cooking steps with text and optional "optional" boolean
-   - "storeable": Whether this component can be made ahead (optional, boolean)
-   - "servings": Number of servings for this component (optional, number)
+   - "instructions": Array of cooking steps with text and optional boolean:
+     * "text": Step description (required, string)
+     * "optional": Include if this step is optional, otherwise use null (boolean or null)
+   - "storeable": Whether this component can be made ahead, use null if unknown (boolean or null)
+   - "servings": Number of servings for this component, use null if unknown (number or null)
 
 Do not include any image or images field in the response - images are managed separately by the backend.`;
 
