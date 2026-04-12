@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { chatApiKeys } from '@core/database/schema/index.js';
+import { chatApiKeys } from '@core/database/schema/kitchencalm.schema.js';
 import { encryption } from '@core/utils/encryption.js';
 import type { DatabaseClient } from '@core/database/client.js';
 
