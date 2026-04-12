@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
-import { getChatApiKey } from '../../queries/chat-api-keys.js';
 import { callOpenAIChat } from '../../utils/openai-chat.js';
+import { config } from '@config/index.js';
 
 export const ChatMessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -22,23 +22,7 @@ export const ChatResponseSchema = z.object({
 
 export type ChatResponse = z.infer<typeof ChatResponseSchema>;
 
-export type ChatResult =
-  | { status: 200; body: ChatResponse }
-  | { status: 400; body: { error: string } };
-
-export async function chat(c: ContextWithUserId, input: ChatRequest): Promise<ChatResult> {
-  const userId = c.get('userId');
-  const { db } = c.get('databaseClient');
-
-  const apiKey = await getChatApiKey(db, userId);
-  if (!apiKey) {
-    return {
-      status: 400,
-      body: { error: 'No OpenAI API key configured. Please add your API key first.' },
-    };
-  }
-
-  const message = await callOpenAIChat(apiKey, input.messages, c);
-
-  return { status: 200, body: { message } };
+export async function chat(c: ContextWithUserId, input: ChatRequest): Promise<ChatResponse> {
+  const message = await callOpenAIChat(config.OPENAI_API_KEY, input.messages, c);
+  return { message };
 }

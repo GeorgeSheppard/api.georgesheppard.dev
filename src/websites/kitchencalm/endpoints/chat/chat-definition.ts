@@ -8,7 +8,7 @@ export const chatRoute = createRoute({
   path: '/kitchencalm/chat',
   tags: ['kitchencalm', 'chat'],
   description:
-    'Send a message to the KitchenCalm AI cooking assistant. Uses the stored OpenAI API key. Supports web search for finding recipes.',
+    'Send a message to the KitchenCalm AI cooking assistant. Supports web search for finding recipes.',
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
@@ -29,14 +29,6 @@ export const chatRoute = createRoute({
         },
       },
       description: 'AI response returned',
-    },
-    400: {
-      content: {
-        'application/json': {
-          schema: z.object({ error: z.string() }),
-        },
-      },
-      description: 'No API key configured or invalid request',
     },
     401: {
       content: {

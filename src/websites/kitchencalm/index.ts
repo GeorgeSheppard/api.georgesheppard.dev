@@ -47,12 +47,6 @@ import {
 } from './endpoints/search-recipes/search-recipes.js';
 import { parseRecipe } from './endpoints/parse-recipe/parse-recipe.js';
 import { parseRecipeRoute } from './endpoints/parse-recipe/parse-recipe-definition.js';
-import { isChatAvailable } from './endpoints/is-chat-available/is-chat-available.js';
-import { isChatAvailableRoute } from './endpoints/is-chat-available/is-chat-available-definition.js';
-import { putOpenAIKey } from './endpoints/openai-key/put-openai-key.js';
-import { putOpenAIKeyRoute } from './endpoints/openai-key/put-openai-key-definition.js';
-import { deleteOpenAIKey } from './endpoints/openai-key/delete-openai-key.js';
-import { deleteOpenAIKeyRoute } from './endpoints/openai-key/delete-openai-key-definition.js';
 import { chat } from './endpoints/chat/chat.js';
 import { chatRoute } from './endpoints/chat/chat-definition.js';
 
@@ -171,30 +165,9 @@ export function registerRoutes(app: OpenAPIHono) {
     return c.json(result, 200);
   });
 
-  app.openapi(isChatAvailableRoute, async (c) => {
-    const result = await isChatAvailable(c as ContextWithUserId);
-    return c.json(result, 200);
-  });
-
-  app.openapi(putOpenAIKeyRoute, async (c) => {
-    const input = c.req.valid('json');
-    const result = await putOpenAIKey(c as ContextWithUserId, input);
-    return c.json(result, 200);
-  });
-
-  app.openapi(deleteOpenAIKeyRoute, async (c) => {
-    const result = await deleteOpenAIKey(c as ContextWithUserId);
-    return c.json(result, 200);
-  });
-
   app.openapi(chatRoute, async (c) => {
     const input = c.req.valid('json');
     const result = await chat(c as ContextWithUserId, input);
-    switch (result.status) {
-      case 200:
-        return c.json(result.body, 200);
-      case 400:
-        return c.json(result.body, 400);
-    }
+    return c.json(result, 200);
   });
 }
