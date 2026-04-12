@@ -4,15 +4,26 @@ import { eq } from 'drizzle-orm';
 
 describe('Database Migrations', () => {
   test('should run migrations successfully on test container', async ({ dbClient }) => {
+    console.log('[integration] Node version:', process.version);
+    console.log('[integration] Platform:', process.platform);
+    console.log('[integration] dbClient obtained, running migration checks...');
+
     // Verify tables exist by querying the database
+    console.log('[integration] Querying requests table...');
     const requestsResult = await dbClient.db.select().from(requests).limit(1);
+    console.log('[integration] requests query ok, rows:', requestsResult.length);
     expect(Array.isArray(requestsResult)).toBe(true);
 
+    console.log('[integration] Querying images table...');
     const imagesResult = await dbClient.db.select().from(images).limit(1);
+    console.log('[integration] images query ok, rows:', imagesResult.length);
     expect(Array.isArray(imagesResult)).toBe(true);
 
+    console.log('[integration] Querying recommendations table...');
     const recommendationsResult = await dbClient.db.select().from(recommendations).limit(1);
+    console.log('[integration] recommendations query ok, rows:', recommendationsResult.length);
     expect(Array.isArray(recommendationsResult)).toBe(true);
+    console.log('[integration] Migration checks passed');
   });
 
   test('should allow inserting and querying data after migration', async ({ dbClient }) => {
