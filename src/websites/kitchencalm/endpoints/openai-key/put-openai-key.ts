@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
-import { putOpenAIKeyForUser } from '@core/dynamodb/utilities.js';
+import { upsertChatApiKey } from '../../queries/chat-api-keys.js';
 
 export const PutOpenAIKeyRequestSchema = z.object({
   apiKey: z.string().min(1).describe('OpenAI API key to store'),
@@ -19,9 +19,9 @@ export async function putOpenAIKey(
   input: PutOpenAIKeyRequest
 ): Promise<PutOpenAIKeyResponse> {
   const userId = c.get('userId');
-  const dynamoClient = c.get('dynamoClient');
+  const { db } = c.get('databaseClient');
 
-  await putOpenAIKeyForUser(dynamoClient.client, userId, input.apiKey);
+  await upsertChatApiKey(db, userId, input.apiKey);
 
   return { success: true };
 }

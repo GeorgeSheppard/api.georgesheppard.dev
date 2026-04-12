@@ -8,6 +8,13 @@
       "when": 1767453044981,
       "tag": "0000_green_clea",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776001367669,
+      "tag": "0001_chat_api_keys",
+      "breakpoints": true
     }
   ]
 }

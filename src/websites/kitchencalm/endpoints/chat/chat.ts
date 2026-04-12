@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
-import { getOpenAIKeyForUser } from '@core/dynamodb/utilities.js';
+import { getChatApiKey } from '../../queries/chat-api-keys.js';
 import { callOpenAIChat } from '../../utils/openai-chat.js';
 
 export const ChatMessageSchema = z.object({
@@ -28,9 +28,9 @@ export type ChatResult =
 
 export async function chat(c: ContextWithUserId, input: ChatRequest): Promise<ChatResult> {
   const userId = c.get('userId');
-  const dynamoClient = c.get('dynamoClient');
+  const { db } = c.get('databaseClient');
 
-  const apiKey = await getOpenAIKeyForUser(dynamoClient.client, userId);
+  const apiKey = await getChatApiKey(db, userId);
   if (!apiKey) {
     return {
       status: 400,
@@ -38,7 +38,7 @@ export async function chat(c: ContextWithUserId, input: ChatRequest): Promise<Ch
     };
   }
 
-  const message = await callOpenAIChat(apiKey, input.messages);
+  const message = await callOpenAIChat(apiKey, input.messages, c);
 
   return { status: 200, body: { message } };
 }

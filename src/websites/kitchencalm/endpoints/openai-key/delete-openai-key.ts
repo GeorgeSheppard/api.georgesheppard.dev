@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
-import { deleteOpenAIKeyForUser } from '@core/dynamodb/utilities.js';
+import { deleteChatApiKey } from '../../queries/chat-api-keys.js';
 
 export const DeleteOpenAIKeyResponseSchema = z.object({
   success: z.boolean(),
@@ -10,9 +10,9 @@ export type DeleteOpenAIKeyResponse = z.infer<typeof DeleteOpenAIKeyResponseSche
 
 export async function deleteOpenAIKey(c: ContextWithUserId): Promise<DeleteOpenAIKeyResponse> {
   const userId = c.get('userId');
-  const dynamoClient = c.get('dynamoClient');
+  const { db } = c.get('databaseClient');
 
-  await deleteOpenAIKeyForUser(dynamoClient.client, userId);
+  await deleteChatApiKey(db, userId);
 
   return { success: true };
 }

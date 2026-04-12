@@ -1825,13 +1825,13 @@
         }
       }
     },
-    "/kitchencalm/openai-key": {
+    "/kitchencalm/is-chat-available": {
       "get": {
         "tags": [
           "kitchencalm",
           "chat"
         ],
-        "description": "Check whether the authenticated user has an OpenAI API key stored",
+        "description": "Check whether the chat feature is available for the authenticated user. Returns a reason when unavailable.",
         "security": [
           {
             "bearerAuth": []
@@ -1839,18 +1839,22 @@
         ],
         "responses": {
           "200": {
-            "description": "Key status returned",
+            "description": "Chat availability status",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "hasKey": {
+                    "available": {
                       "type": "boolean"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "Why chat is unavailable (only present when available is false)"
                     }
                   },
                   "required": [
-                    "hasKey"
+                    "available"
                   ]
                 }
               }
@@ -1875,7 +1879,9 @@
             }
           }
         }
-      },
+      }
+    },
+    "/kitchencalm/openai-key": {
       "put": {
         "tags": [
           "kitchencalm",

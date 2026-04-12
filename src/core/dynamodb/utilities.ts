@@ -6,7 +6,6 @@ import { IRecipe, RecipeUuid } from '@core/types/recipes.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
 import { config } from '@config/index.js';
 import { logger } from '@core/telemetry/logger.js';
-import { encryption } from '@core/utils/encryption.js';
 
 /**
  * Get all recipes for a user from DynamoDB
@@ -198,62 +197,6 @@ export async function putMealPlanForUser(
     });
   } catch (error) {
     logger.error('Failed to put meal plan in DynamoDB:', error);
-    throw error;
-  }
-}
-
-export async function getOpenAIKeyForUser(
-  client: DynamoDBDocument,
-  userId: string
-): Promise<string | null> {
-  try {
-    const result = await client.get({
-      TableName: config.DYNAMODB_TABLE_NAME,
-      Key: { UserId: userId, Item: 'OPENAI_KEY' },
-    });
-
-    if (!result.Item?.encryptedKey) {
-      return null;
-    }
-
-    return encryption.decrypt(result.Item.encryptedKey as string);
-  } catch (error) {
-    logger.error('Failed to get OpenAI key from DynamoDB:', error);
-    throw error;
-  }
-}
-
-export async function putOpenAIKeyForUser(
-  client: DynamoDBDocument,
-  userId: string,
-  apiKey: string
-): Promise<void> {
-  try {
-    await client.put({
-      TableName: config.DYNAMODB_TABLE_NAME,
-      Item: {
-        UserId: userId,
-        Item: 'OPENAI_KEY',
-        encryptedKey: encryption.encrypt(apiKey),
-      },
-    });
-  } catch (error) {
-    logger.error('Failed to put OpenAI key in DynamoDB:', error);
-    throw error;
-  }
-}
-
-export async function deleteOpenAIKeyForUser(
-  client: DynamoDBDocument,
-  userId: string
-): Promise<void> {
-  try {
-    await client.delete({
-      TableName: config.DYNAMODB_TABLE_NAME,
-      Key: { UserId: userId, Item: 'OPENAI_KEY' },
-    });
-  } catch (error) {
-    logger.error('Failed to delete OpenAI key from DynamoDB:', error);
     throw error;
   }
 }

@@ -47,8 +47,8 @@ import {
 } from './endpoints/search-recipes/search-recipes.js';
 import { parseRecipe } from './endpoints/parse-recipe/parse-recipe.js';
 import { parseRecipeRoute } from './endpoints/parse-recipe/parse-recipe-definition.js';
-import { getOpenAIKeyStatus } from './endpoints/openai-key/get-openai-key-status.js';
-import { getOpenAIKeyStatusRoute } from './endpoints/openai-key/get-openai-key-status-definition.js';
+import { isChatAvailable } from './endpoints/is-chat-available/is-chat-available.js';
+import { isChatAvailableRoute } from './endpoints/is-chat-available/is-chat-available-definition.js';
 import { putOpenAIKey } from './endpoints/openai-key/put-openai-key.js';
 import { putOpenAIKeyRoute } from './endpoints/openai-key/put-openai-key-definition.js';
 import { deleteOpenAIKey } from './endpoints/openai-key/delete-openai-key.js';
@@ -171,8 +171,8 @@ export function registerRoutes(app: OpenAPIHono) {
     return c.json(result, 200);
   });
 
-  app.openapi(getOpenAIKeyStatusRoute, async (c) => {
-    const result = await getOpenAIKeyStatus(c as ContextWithUserId);
+  app.openapi(isChatAvailableRoute, async (c) => {
+    const result = await isChatAvailable(c as ContextWithUserId);
     return c.json(result, 200);
   });
 

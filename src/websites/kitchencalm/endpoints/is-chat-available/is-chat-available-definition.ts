@@ -1,23 +1,24 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { jwtAuthMiddleware } from '@core/middleware/jwt-auth.js';
-import { GetOpenAIKeyStatusResponseSchema } from './get-openai-key-status.js';
+import { IsChatAvailableResponseSchema } from './is-chat-available.js';
 
-export const getOpenAIKeyStatusRoute = createRoute({
+export const isChatAvailableRoute = createRoute({
   method: 'get',
-  path: '/kitchencalm/openai-key',
+  path: '/kitchencalm/is-chat-available',
   tags: ['kitchencalm', 'chat'],
-  description: 'Check whether the authenticated user has an OpenAI API key stored',
+  description:
+    'Check whether the chat feature is available for the authenticated user. Returns a reason when unavailable.',
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   responses: {
     200: {
       content: {
         'application/json': {
-          schema: GetOpenAIKeyStatusResponseSchema,
+          schema: IsChatAvailableResponseSchema,
         },
       },
-      description: 'Key status returned',
+      description: 'Chat availability status',
     },
     401: {
       content: {
