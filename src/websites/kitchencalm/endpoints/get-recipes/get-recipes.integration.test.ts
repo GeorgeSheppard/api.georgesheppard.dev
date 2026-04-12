@@ -14,12 +14,8 @@ const anotherUserId = '550e8400-e29b-41d4-a716-446655440001';
 
 describe('GET /kitchencalm/recipes', () => {
   test('should return empty object when user has no recipes', async ({ dynamoClient }) => {
-    console.log('[get-recipes] Node version:', process.version);
-    console.log('[get-recipes] dynamoClient obtained, creating test app...');
     const app = await createTestApp({ dynamoClient });
-    console.log('[get-recipes] app created, signing JWT...');
     const token = await signJwt(validUserId);
-    console.log('[get-recipes] JWT signed, making request...');
 
     const response = await app.request(
       new Request('http://localhost/kitchencalm/recipes', {
@@ -30,10 +26,8 @@ describe('GET /kitchencalm/recipes', () => {
       })
     );
 
-    console.log('[get-recipes] response status:', response.status);
-    const body = await response.json();
-    console.log('[get-recipes] response body:', JSON.stringify(body));
     expect(response.status).toBe(200);
+    const body = await response.json();
     expect(body).toEqual({});
   });
 
