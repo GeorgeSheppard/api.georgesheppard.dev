@@ -27,6 +27,11 @@ export default defineConfig({
           setupFiles: ['./test/setup-mcp.ts'],
           testTimeout: 60000,
           hookTimeout: 120000,
+          poolOptions: {
+            threads: {
+              singleThread: true,
+            },
+          },
         },
       },
       {
@@ -36,6 +41,11 @@ export default defineConfig({
           include: ['src/**/*.integration.test.ts', '!src/websites/kitchencalm/**'],
           testTimeout: 60000,
           hookTimeout: 120000,
+          poolOptions: {
+            threads: {
+              singleThread: true,
+            },
+          },
         },
       },
     ],
