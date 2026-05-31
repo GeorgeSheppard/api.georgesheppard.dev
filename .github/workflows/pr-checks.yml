@@ -63,7 +63,7 @@ jobs:
       - name: Run Unit Tests
         run: pnpm test
 
-  integration:kitchencalm:
+  integration-kitchencalm:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -75,7 +75,7 @@ jobs:
       - name: Run KitchenCalm Integration Tests
         run: pnpm test:integration:kitchencalm
 
-  integration:shelfie:
+  integration-shelfie:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -87,7 +87,7 @@ jobs:
       - name: Run Shelfie Integration Tests
         run: pnpm test:integration:shelfie
 
-  integration:db:
+  integration-db:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
