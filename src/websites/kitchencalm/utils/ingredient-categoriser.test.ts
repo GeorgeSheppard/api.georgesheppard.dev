@@ -102,7 +102,7 @@ describe('categoriseIngredients', () => {
     await expect(categoriseIngredients(['Chicken'])).rejects.toThrow('No response from OpenAI');
   });
 
-  it('should use gpt-4o-mini model with temperature 0', async () => {
+  it('should use gpt-4.1-mini model with temperature 0', async () => {
     mockCreate.mockResolvedValue({
       choices: [
         {
@@ -117,7 +117,7 @@ describe('categoriseIngredients', () => {
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-mini',
         temperature: 0,
         response_format: { type: 'json_object' },
       })
