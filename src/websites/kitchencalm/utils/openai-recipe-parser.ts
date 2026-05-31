@@ -27,7 +27,7 @@ export async function parseRecipeWithOpenAI(
   recipeId?: string
 ): Promise<IRecipe> {
   const completion = await openaiClient.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-4.1',
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: recipeText },
