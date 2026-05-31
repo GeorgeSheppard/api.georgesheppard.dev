@@ -13,9 +13,9 @@
     "migrate:generate": "drizzle-kit generate",
     "generate:openapi": "tsx scripts/generate-openapi.ts",
     "test": "vitest --project unit",
-    "test:integration": "vitest --project integration:mcp --project integration:db",
-    "test:integration:mcp": "vitest --project integration:mcp",
-    "test:integration:db": "vitest --project integration:db",
+    "test:integration": "vitest --maxWorkers=1 --project integration:mcp --project integration:db",
+    "test:integration:mcp": "vitest --maxWorkers=1 --project integration:mcp",
+    "test:integration:db": "vitest --maxWorkers=1 --project integration:db",
     "lint": "tsc --noEmit && eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write ."
