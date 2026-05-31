@@ -63,7 +63,7 @@ jobs:
       - name: Run Unit Tests
         run: pnpm test
 
-  test:
+  integration-kitchencalm:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -72,5 +72,29 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup-env
 
-      - name: Run Integration Tests
-        run: pnpm test:integration
+      - name: Run KitchenCalm Integration Tests
+        run: pnpm test:integration:kitchencalm
+
+  integration-shelfie:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
+
+      - name: Run Shelfie Integration Tests
+        run: pnpm test:integration:shelfie
+
+  integration-db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
+
+      - name: Run Database Integration Tests
+        run: pnpm test:integration:db

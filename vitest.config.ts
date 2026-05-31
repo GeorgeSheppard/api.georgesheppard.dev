@@ -22,9 +22,19 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          name: 'integration:mcp',
+          name: 'integration:kitchencalm',
           include: ['src/websites/kitchencalm/**/*.integration.test.ts'],
-          setupFiles: ['./test/setup-mcp.ts'],
+          setupFiles: ['./test/setup-kitchencalm.ts'],
+          testTimeout: 60000,
+          hookTimeout: 120000,
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration:shelfie',
+          include: ['src/websites/shelfie/**/*.integration.test.ts'],
+          setupFiles: ['./test/setup-shelfie.ts'],
           testTimeout: 60000,
           hookTimeout: 120000,
         },
@@ -33,7 +43,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'integration:db',
-          include: ['src/**/*.integration.test.ts', '!src/websites/kitchencalm/**'],
+          include: ['src/core/**/*.integration.test.ts'],
           testTimeout: 60000,
           hookTimeout: 120000,
         },
