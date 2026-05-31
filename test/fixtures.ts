@@ -58,13 +58,14 @@ export const test = base.extend<{
   ],
 
   // Worker-scoped DynamoDB container (started once per worker)
+  // Pinned to 4.12.0: LocalStack 2026.03.0+ requires authentication tokens.
+  // 4.12.0 is the last community version without auth requirement.
   dynamodbContainer: [
     async ({}, use) => {
       console.log('🗄️ Starting DynamoDB container...');
-      const container = await new LocalstackContainer('localstack/localstack:latest')
+      const container = await new LocalstackContainer('localstack/localstack:4.12.0')
         .withEnvironment({
           SERVICES: 'dynamodb',
-          DEBUG: '1',
         })
         .start();
       console.log('✅ DynamoDB container started');
