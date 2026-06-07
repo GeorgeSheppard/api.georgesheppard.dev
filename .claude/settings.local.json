@@ -41,7 +41,8 @@
       "Bash(pnpm exec eslint:*)",
       "mcp__api-georgesheppard__get_recipes",
       "mcp__api-georgesheppard__update_recipe",
-      "mcp__github__search_pull_requests"
+      "mcp__github__search_pull_requests",
+      "mcp__Vercel__get_project"
     ]
   },
   "enableAllProjectMcpServers": true,
