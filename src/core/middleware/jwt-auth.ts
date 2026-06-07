@@ -5,6 +5,10 @@ import { ProtectedEnv } from '@core/types/context.js';
 import { logger } from '@core/telemetry/logger.js';
 
 export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) => {
+  if (c.req.method === 'OPTIONS') {
+    return next();
+  }
+
   const authHeader = c.req.header('Authorization');
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
