@@ -1,6 +1,5 @@
 import { createMiddleware } from 'hono/factory';
 import { verifyJwt } from '@core/utils/jwt.js';
-import { verifyCognitoJwt } from '@core/utils/cognito-jwt.js';
 import { ProtectedEnv } from '@core/types/context.js';
 import { logger } from '@core/telemetry/logger.js';
 import { getCookie } from 'hono/cookie';
