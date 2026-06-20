@@ -80,7 +80,7 @@ export async function callback(
     setCookie(c, 'session', session, {
       httpOnly: true,
       secure: config.NODE_ENV === 'production',
-      sameSite: 'Lax',
+      sameSite: config.NODE_ENV === 'production' ? 'None' : 'Lax',
       maxAge: SESSION_COOKIE_MAX_AGE,
       path: '/',
     });
