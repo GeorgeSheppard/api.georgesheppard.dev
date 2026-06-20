@@ -13,10 +13,11 @@
     "migrate:generate": "drizzle-kit generate",
     "generate:openapi": "tsx scripts/generate-openapi.ts",
     "test": "vitest --project unit",
-    "test:integration": "vitest --maxWorkers=1 --project integration:kitchencalm --project integration:shelfie --project integration:db",
+    "test:integration": "vitest --maxWorkers=1 --project integration:kitchencalm --project integration:shelfie --project integration:db --project integration:auth",
     "test:integration:kitchencalm": "vitest --maxWorkers=1 --project integration:kitchencalm",
     "test:integration:shelfie": "vitest --maxWorkers=1 --project integration:shelfie",
     "test:integration:db": "vitest --maxWorkers=1 --project integration:db",
+    "test:integration:auth": "vitest --maxWorkers=1 --project integration:auth",
     "lint": "tsc --noEmit && eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write ."

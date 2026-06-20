@@ -20,3 +20,17 @@ export async function verifyCognitoJwt(token: string): Promise<CognitoJwtPayload
   const payload = verified.payload as unknown as CognitoJwtPayload;
   return payload;
 }
+
+export interface CognitoIdTokenPayload extends CognitoJwtPayload {
+  email: string;
+  nonce?: string;
+}
+
+export async function verifyCognitoIdToken(token: string): Promise<CognitoIdTokenPayload> {
+  const verified = await jwtVerify(token, jwks, {
+    issuer: cognitoUrl,
+    audience: config.COGNITO_CLIENT_ID,
+  });
+
+  return verified.payload as unknown as CognitoIdTokenPayload;
+}

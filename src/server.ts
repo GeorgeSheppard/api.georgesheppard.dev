@@ -16,6 +16,7 @@ import {
   tools as kitchenCalmTools,
 } from '@websites/kitchencalm/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
+import { registerAuthRoutes } from '@core/auth/index.js';
 import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
@@ -69,6 +70,9 @@ export async function createApp(dependencies: AppDependencies) {
   app.get('/health', (c) => {
     return c.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
+
+  // Register auth routes
+  registerAuthRoutes(app);
 
   // Register website routes
   registerShelfieRoutes(app);

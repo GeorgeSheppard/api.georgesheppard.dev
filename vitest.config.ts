@@ -43,7 +43,16 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'integration:db',
-          include: ['src/core/**/*.integration.test.ts'],
+          include: ['src/core/**/*.integration.test.ts', '!src/core/auth/**/*.integration.test.ts'],
+          testTimeout: 60000,
+          hookTimeout: 120000,
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration:auth',
+          include: ['src/core/auth/**/*.integration.test.ts'],
           testTimeout: 60000,
           hookTimeout: 120000,
         },
