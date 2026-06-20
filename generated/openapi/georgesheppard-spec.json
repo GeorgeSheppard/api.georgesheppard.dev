@@ -333,6 +333,16 @@
         "tags": [
           "auth"
         ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "redirect_uri",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Logged out",

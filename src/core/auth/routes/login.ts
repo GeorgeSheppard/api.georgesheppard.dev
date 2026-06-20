@@ -3,13 +3,10 @@ import { Context } from 'hono';
 import { setCookie } from 'hono/cookie';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { buildAuthorizeUrl } from '@core/utils/cognito-oauth.js';
+import { resolveRedirectUri } from '../redirect.js';
 import { config } from '@config/index.js';
 
 const OAUTH_COOKIE_MAX_AGE = 600;
-
-function frontendUrl(): string {
-  return config.NODE_ENV === 'production' ? config.FRONTEND_URL_PROD : config.FRONTEND_URL_DEV;
-}
 
 function oauthCookieOptions() {
   return {
@@ -27,7 +24,7 @@ export function login(c: Context, redirectUri?: string): string {
 
   setCookie(c, 'oauth_state', state, oauthCookieOptions());
   setCookie(c, 'oauth_nonce', nonce, oauthCookieOptions());
-  setCookie(c, 'oauth_redirect', redirectUri ?? frontendUrl(), oauthCookieOptions());
+  setCookie(c, 'oauth_redirect', resolveRedirectUri(redirectUri), oauthCookieOptions());
 
   return buildAuthorizeUrl({
     state,

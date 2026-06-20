@@ -43,4 +43,34 @@ describe('login route', () => {
       })
     );
   });
+
+  it('stores the requested redirect_uri cookie when its origin is allowed', async () => {
+    vi.mocked(buildAuthorizeUrl).mockReturnValue('https://cognito.example.com/oauth2/authorize');
+
+    const app = new OpenAPIHono();
+    registerLoginRoute(app);
+
+    const res = await app.request('/auth/login?redirect_uri=https://test.vercel.app/dashboard');
+
+    expect(
+      res.headers
+        .getSetCookie()
+        .some((c) => c.startsWith('oauth_redirect=https%3A%2F%2Ftest.vercel.app%2Fdashboard'))
+    ).toBe(true);
+  });
+
+  it('falls back to the default frontend cookie when redirect_uri origin is not allowed', async () => {
+    vi.mocked(buildAuthorizeUrl).mockReturnValue('https://cognito.example.com/oauth2/authorize');
+
+    const app = new OpenAPIHono();
+    registerLoginRoute(app);
+
+    const res = await app.request('/auth/login?redirect_uri=https://evil.example.com');
+
+    expect(
+      res.headers
+        .getSetCookie()
+        .some((c) => c.startsWith('oauth_redirect=http%3A%2F%2Flocalhost%3A3000'))
+    ).toBe(true);
+  });
 });
