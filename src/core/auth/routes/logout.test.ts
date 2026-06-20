@@ -20,9 +20,9 @@ describe('logout handler', () => {
   it('uses the requested redirect_uri when its origin is allowed', () => {
     vi.mocked(buildLogoutUrl).mockReturnValue('https://cognito.example.com/logout');
 
-    logout('https://my-life-nu.vercel.app/signed-out');
+    logout('https://kitchencalm.georgesheppard.dev/signed-out');
 
-    expect(buildLogoutUrl).toHaveBeenCalledWith('https://my-life-nu.vercel.app/signed-out');
+    expect(buildLogoutUrl).toHaveBeenCalledWith('https://kitchencalm.georgesheppard.dev/signed-out');
   });
 
   it('falls back to the default frontend when redirect_uri origin is not allowed', () => {

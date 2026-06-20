@@ -38,7 +38,7 @@ describe('auth end-to-end flow', () => {
     const app = appWithAuth();
 
     const loginRes = await app.request(
-      '/auth/login?redirect_uri=https://my-life-nu.vercel.app/dashboard',
+      '/auth/login?redirect_uri=https://kitchencalm.georgesheppard.dev/dashboard',
       {
         redirect: 'manual',
       }
@@ -68,7 +68,7 @@ describe('auth end-to-end flow', () => {
       redirect: 'manual',
     });
     expect(callbackRes.status).toBe(302);
-    expect(callbackRes.headers.get('location')).toBe('https://my-life-nu.vercel.app/dashboard');
+    expect(callbackRes.headers.get('location')).toBe('https://kitchencalm.georgesheppard.dev/dashboard');
 
     const sessionCookies = cookiesFrom(callbackRes);
     expect(sessionCookies).toContain('session=');
@@ -84,7 +84,7 @@ describe('auth end-to-end flow', () => {
     vi.mocked(buildLogoutUrl).mockReturnValue('https://cognito.example.com/logout');
 
     const logoutRes = await app.request(
-      '/auth/logout?redirect_uri=https://my-life-nu.vercel.app/signed-out',
+      '/auth/logout?redirect_uri=https://kitchencalm.georgesheppard.dev/signed-out',
       { method: 'POST', headers: { cookie: sessionCookies } }
     );
     expect(logoutRes.status).toBe(200);
@@ -92,7 +92,7 @@ describe('auth end-to-end flow', () => {
       success: true,
       cognitoLogoutUrl: 'https://cognito.example.com/logout',
     });
-    expect(buildLogoutUrl).toHaveBeenCalledWith('https://my-life-nu.vercel.app/signed-out');
+    expect(buildLogoutUrl).toHaveBeenCalledWith('https://kitchencalm.georgesheppard.dev/signed-out');
     expect(logoutRes.headers.getSetCookie().some((c) => c.startsWith('session=;'))).toBe(true);
   });
 
@@ -193,10 +193,10 @@ describe('auth end-to-end flow', () => {
     const app = appWithAuth();
 
     const res = await app.request('/auth/session', {
-      headers: { origin: 'https://my-life-nu.vercel.app' },
+      headers: { origin: 'https://kitchencalm.georgesheppard.dev' },
     });
 
-    expect(res.headers.get('access-control-allow-origin')).toBe('https://my-life-nu.vercel.app');
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://kitchencalm.georgesheppard.dev');
     expect(res.headers.get('access-control-allow-credentials')).toBe('true');
   });
 
