@@ -1,4 +1,7 @@
-export const ALLOWED_FRONTEND_URLS = ['http://localhost:3000', 'https://my-life-nu.vercel.app'];
+export const ALLOWED_FRONTEND_URLS = [
+  'http://localhost:3000',
+  'https://kitchencalm.georgesheppard.dev',
+];
 
 const allowedOrigins = new Set(ALLOWED_FRONTEND_URLS.map((url) => new URL(url).origin));
 

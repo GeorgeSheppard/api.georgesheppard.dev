@@ -51,13 +51,15 @@ describe('login route', () => {
     registerLoginRoute(app);
 
     const res = await app.request(
-      '/auth/login?redirect_uri=https://my-life-nu.vercel.app/dashboard'
+      '/auth/login?redirect_uri=https://kitchencalm.georgesheppard.dev/dashboard'
     );
 
     expect(
       res.headers
         .getSetCookie()
-        .some((c) => c.startsWith('oauth_redirect=https%3A%2F%2Fmy-life-nu.vercel.app%2Fdashboard'))
+        .some((c) =>
+          c.startsWith('oauth_redirect=https%3A%2F%2Fkitchencalm.georgesheppard.dev%2Fdashboard')
+        )
     ).toBe(true);
   });
 
