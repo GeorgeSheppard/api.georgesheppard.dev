@@ -1,6 +1,5 @@
 export const ALLOWED_FRONTEND_URLS = [
   'http://localhost:3000',
-  'https://my-life-nu.vercel.app',
   'https://kitchencalm.georgesheppard.dev',
 ];
 
