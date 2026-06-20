@@ -57,7 +57,9 @@ describe('login route', () => {
     expect(
       res.headers
         .getSetCookie()
-        .some((c) => c.startsWith('oauth_redirect=https%3A%2F%2Fkitchencalm.georgesheppard.dev%2Fdashboard'))
+        .some((c) =>
+          c.startsWith('oauth_redirect=https%3A%2F%2Fkitchencalm.georgesheppard.dev%2Fdashboard')
+        )
     ).toBe(true);
   });
 

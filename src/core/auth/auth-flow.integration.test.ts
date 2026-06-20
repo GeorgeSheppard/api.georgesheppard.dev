@@ -68,7 +68,9 @@ describe('auth end-to-end flow', () => {
       redirect: 'manual',
     });
     expect(callbackRes.status).toBe(302);
-    expect(callbackRes.headers.get('location')).toBe('https://kitchencalm.georgesheppard.dev/dashboard');
+    expect(callbackRes.headers.get('location')).toBe(
+      'https://kitchencalm.georgesheppard.dev/dashboard'
+    );
 
     const sessionCookies = cookiesFrom(callbackRes);
     expect(sessionCookies).toContain('session=');
@@ -92,7 +94,9 @@ describe('auth end-to-end flow', () => {
       success: true,
       cognitoLogoutUrl: 'https://cognito.example.com/logout',
     });
-    expect(buildLogoutUrl).toHaveBeenCalledWith('https://kitchencalm.georgesheppard.dev/signed-out');
+    expect(buildLogoutUrl).toHaveBeenCalledWith(
+      'https://kitchencalm.georgesheppard.dev/signed-out'
+    );
     expect(logoutRes.headers.getSetCookie().some((c) => c.startsWith('session=;'))).toBe(true);
   });
 
@@ -196,7 +200,9 @@ describe('auth end-to-end flow', () => {
       headers: { origin: 'https://kitchencalm.georgesheppard.dev' },
     });
 
-    expect(res.headers.get('access-control-allow-origin')).toBe('https://kitchencalm.georgesheppard.dev');
+    expect(res.headers.get('access-control-allow-origin')).toBe(
+      'https://kitchencalm.georgesheppard.dev'
+    );
     expect(res.headers.get('access-control-allow-credentials')).toBe('true');
   });
 

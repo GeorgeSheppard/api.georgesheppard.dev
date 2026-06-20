@@ -22,7 +22,9 @@ describe('logout handler', () => {
 
     logout('https://kitchencalm.georgesheppard.dev/signed-out');
 
-    expect(buildLogoutUrl).toHaveBeenCalledWith('https://kitchencalm.georgesheppard.dev/signed-out');
+    expect(buildLogoutUrl).toHaveBeenCalledWith(
+      'https://kitchencalm.georgesheppard.dev/signed-out'
+    );
   });
 
   it('falls back to the default frontend when redirect_uri origin is not allowed', () => {
