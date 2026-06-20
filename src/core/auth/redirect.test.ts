@@ -7,8 +7,8 @@ describe('resolveRedirectUri', () => {
   });
 
   it('returns the requested uri when its origin is in the allowlist', () => {
-    expect(resolveRedirectUri('https://test.vercel.app/dashboard')).toBe(
-      'https://test.vercel.app/dashboard'
+    expect(resolveRedirectUri('https://my-life-nu.vercel.app/dashboard')).toBe(
+      'https://my-life-nu.vercel.app/dashboard'
     );
     expect(resolveRedirectUri('http://localhost:3000/some/path')).toBe(
       'http://localhost:3000/some/path'

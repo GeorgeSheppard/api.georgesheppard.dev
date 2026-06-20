@@ -62,13 +62,13 @@ describe('callback route', () => {
     const res = await app.request('/auth/callback?code=abc&state=expected-state', {
       headers: {
         cookie:
-          'oauth_state=expected-state; oauth_nonce=expected-nonce; oauth_redirect=https://test.vercel.app/dashboard',
+          'oauth_state=expected-state; oauth_nonce=expected-nonce; oauth_redirect=https://my-life-nu.vercel.app/dashboard',
       },
       redirect: 'manual',
     });
 
     expect(res.status).toBe(302);
-    expect(res.headers.get('location')).toBe('https://test.vercel.app/dashboard');
+    expect(res.headers.get('location')).toBe('https://my-life-nu.vercel.app/dashboard');
     expect(res.headers.getSetCookie().some((c) => c.startsWith('session='))).toBe(true);
   });
 

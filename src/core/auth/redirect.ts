@@ -1,10 +1,8 @@
-import { config } from '@config/index.js';
+export const ALLOWED_FRONTEND_URLS = ['http://localhost:3000', 'https://my-life-nu.vercel.app'];
 
-const allowedOrigins = new Set(
-  [config.FRONTEND_URL_DEV, config.FRONTEND_URL_PROD].map((url) => new URL(url).origin)
-);
+const allowedOrigins = new Set(ALLOWED_FRONTEND_URLS.map((url) => new URL(url).origin));
 
-const defaultRedirectUri = config.FRONTEND_URL_DEV;
+const defaultRedirectUri = ALLOWED_FRONTEND_URLS[0];
 
 /**
  * Returns `requested` if its origin is in the configured frontend allowlist,

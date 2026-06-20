@@ -50,12 +50,14 @@ describe('login route', () => {
     const app = new OpenAPIHono();
     registerLoginRoute(app);
 
-    const res = await app.request('/auth/login?redirect_uri=https://test.vercel.app/dashboard');
+    const res = await app.request(
+      '/auth/login?redirect_uri=https://my-life-nu.vercel.app/dashboard'
+    );
 
     expect(
       res.headers
         .getSetCookie()
-        .some((c) => c.startsWith('oauth_redirect=https%3A%2F%2Ftest.vercel.app%2Fdashboard'))
+        .some((c) => c.startsWith('oauth_redirect=https%3A%2F%2Fmy-life-nu.vercel.app%2Fdashboard'))
     ).toBe(true);
   });
 

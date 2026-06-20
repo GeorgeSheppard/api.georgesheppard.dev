@@ -1,6 +1,6 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
-import { config } from '@config/index.js';
+import { ALLOWED_FRONTEND_URLS } from './redirect.js';
 import { registerLoginRoute } from './routes/login.js';
 import { registerCallbackRoute } from './routes/callback.js';
 import { registerSessionRoute } from './routes/session.js';
@@ -10,7 +10,7 @@ export function registerAuthRoutes(app: OpenAPIHono) {
   app.use(
     '/auth/*',
     cors({
-      origin: [config.FRONTEND_URL_DEV, config.FRONTEND_URL_PROD],
+      origin: ALLOWED_FRONTEND_URLS,
       credentials: true,
       allowMethods: ['GET', 'POST'],
       allowHeaders: ['Content-Type'],

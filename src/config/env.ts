@@ -43,8 +43,6 @@ const envSchema = z.object({
     .string()
     .min(32)
     .describe('Secret for encrypting session cookies (min 32 chars)'),
-  FRONTEND_URL_DEV: z.string().url(),
-  FRONTEND_URL_PROD: z.string().url(),
   BACKEND_URL: z.string().url(),
 
   // Encryption (must be exact lengths)
