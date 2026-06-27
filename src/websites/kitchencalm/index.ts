@@ -6,6 +6,7 @@ import { authTokenRoute } from './endpoints/auth-token/auth-token-definition.js'
 import { getRecipes } from './endpoints/get-recipes/get-recipes.js';
 import { getRecipesRoute } from './endpoints/get-recipes/get-recipes-definition.js';
 import { updateRecipe } from './endpoints/update-recipe/update-recipe.js';
+import { updateRecipeRoute } from './endpoints/update-recipe/update-recipe-definition.js';
 import { deleteRecipe } from './endpoints/delete-recipe/delete-recipe.js';
 import { deleteRecipeRoute } from './endpoints/delete-recipe/delete-recipe-definition.js';
 import { getMealPlan } from './endpoints/get-meal-plan/get-meal-plan.js';
@@ -119,6 +120,12 @@ export function registerRoutes(app: OpenAPIHono) {
   app.openapi(deleteRecipeRoute, async (c) => {
     const { uuid } = c.req.valid('param');
     const result = await deleteRecipe(c as ContextWithUserId, uuid);
+    return c.json(result, 200);
+  });
+
+  app.openapi(updateRecipeRoute, async (c) => {
+    const recipeData = c.req.valid('json');
+    const result = await updateRecipe(c as ContextWithUserId, recipeData);
     return c.json(result, 200);
   });
 
