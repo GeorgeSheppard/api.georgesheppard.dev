@@ -29,7 +29,7 @@ export async function categoriseIngredients(ingredients: string[]): Promise<Cate
   const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1-mini',
     messages: [
       {
         role: 'system',
