@@ -271,6 +271,165 @@
     "parameters": {}
   },
   "paths": {
+    "/auth/login": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Frontend URL to return to after login; must be in the allowed origin list"
+            },
+            "required": false,
+            "description": "Frontend URL to return to after login; must be in the allowed origin list",
+            "name": "redirect_uri",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects the browser to the Cognito hosted UI authorize endpoint. Sets oauth_state, oauth_nonce and oauth_redirect cookies."
+          }
+        }
+      }
+    },
+    "/auth/callback": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Authorization code returned by Cognito"
+            },
+            "required": false,
+            "description": "Authorization code returned by Cognito",
+            "name": "code",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Must match the oauth_state cookie set during login"
+            },
+            "required": false,
+            "description": "Must match the oauth_state cookie set during login",
+            "name": "state",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects to the stored frontend URL on success (with a session cookie set), or to the same URL with ?error=auth_failed on failure."
+          }
+        }
+      }
+    },
+    "/auth/session": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "redirect_uri",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "cognitoLogoutUrl": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "cognitoLogoutUrl"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recommendations/{id}": {
       "get": {
         "tags": [

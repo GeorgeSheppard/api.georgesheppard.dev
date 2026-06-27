@@ -1,41 +1,64 @@
 import { createMiddleware } from 'hono/factory';
 import { verifyJwt } from '@core/utils/jwt.js';
-import { verifyCognitoJwt } from '@core/utils/cognito-jwt.js';
 import { ProtectedEnv } from '@core/types/context.js';
 import { logger } from '@core/telemetry/logger.js';
+import { getCookie } from 'hono/cookie';
+import { decryptSession } from '@core/utils/session-cookie';
 
 export const jwtAuthMiddleware = createMiddleware<ProtectedEnv>(async (c, next) => {
+  if (c.req.method === 'OPTIONS') {
+    return next();
+  }
+
+  const sessionCookie = getCookie(c, 'session');
   const authHeader = c.req.header('Authorization');
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!sessionCookie && !authHeader) {
     return c.json(
       {
-        error: 'Missing or invalid Authorization header',
+        error: 'Missing authentication method',
       },
       401
     );
   }
 
-  const token = authHeader.slice(7);
   let userId: string | null = null;
 
-  // Try Cognito JWT first
-  if (userId === null) {
-    try {
-      const payload = await verifyCognitoJwt(token);
-      userId = payload.sub;
-    } catch (error) {
-      logger.info('Cognito JWT verification failed:', error);
+  // Auth header authentication is only used for MCP
+  if (authHeader) {
+    if (!authHeader.startsWith('Bearer ')) {
+      return c.json(
+        {
+          error: 'Missing or invalid Bearer Authorization header',
+        },
+        401
+      );
     }
-  }
 
-  // Try own JWT if Cognito failed
-  if (userId === null) {
+    const token = authHeader.slice(7);
+
+    // This is MCP JWT verification, NOT cognito
     try {
       const payload = await verifyJwt(token);
       userId = payload.userId;
     } catch (error) {
       logger.info('Internal JWT verification failed:', error);
+      return c.json(
+        {
+          error: 'Failed to authenticate Bearer',
+        },
+        401
+      );
+    }
+  }
+
+  if (sessionCookie) {
+    try {
+      const session = await decryptSession(sessionCookie);
+      userId = session.userId;
+    } catch (error) {
+      logger.info('Failed to decrypt session cookie:', error);
+      return c.json({ error: 'Unauthorized' }, 401);
     }
   }
 

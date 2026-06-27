@@ -32,6 +32,18 @@ const envSchema = z.object({
   COGNITO_REGION: z.string().default('us-east-1'),
   COGNITO_USER_POOL_ID: z.string(),
   COGNITO_CLIENT_ID: z.string(),
+  COGNITO_CLIENT_SECRET: z.string(),
+  COGNITO_DOMAIN: z
+    .string()
+    .url()
+    .describe('Cognito hosted UI domain, e.g. https://my-pool.auth.us-east-1.amazoncognito.com'),
+
+  // Auth session / OAuth
+  SESSION_SECRET: z
+    .string()
+    .min(32)
+    .describe('Secret for encrypting session cookies (min 32 chars)'),
+  BACKEND_URL: z.string().url(),
 
   // Encryption (must be exact lengths)
   ENCRYPTION_KEY: z.string().length(32),

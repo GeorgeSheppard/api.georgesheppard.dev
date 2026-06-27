@@ -16,6 +16,8 @@ import {
   tools as kitchenCalmTools,
 } from '@websites/kitchencalm/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
+import { registerAuthRoutes } from '@core/auth/index.js';
+import { ALLOWED_FRONTEND_URLS } from '@core/auth/redirect.js';
 import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
@@ -61,7 +63,13 @@ export async function createApp(dependencies: AppDependencies) {
   app.use('*', httpInstrumentationMiddleware());
   app.use('*', httpLogger());
   app.use('*', securityHeaders());
-  app.use('*', cors({ origin: '*' }));
+  app.use(
+    '*',
+    cors({
+      origin: ALLOWED_FRONTEND_URLS,
+      credentials: true,
+    })
+  );
   // Error handler must be registered after middleware
   app.onError(errorHandler);
 
@@ -69,6 +77,9 @@ export async function createApp(dependencies: AppDependencies) {
   app.get('/health', (c) => {
     return c.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
+
+  // Register auth routes
+  registerAuthRoutes(app);
 
   // Register website routes
   registerShelfieRoutes(app);
