@@ -7,7 +7,6 @@ services:
       TUNNEL_TOKEN: '${CLOUDFLARE_TOKEN}'
     depends_on:
       - api
-      - shelfie
   api:
     image: georgeshep/bord:api.georgesheppard.dev
     platform: linux/amd64
@@ -27,10 +26,6 @@ services:
         condition: service_healthy
       queues:
         condition: service_healthy
-
-  shelfie:
-    image: jawil576/frontend:dev
-    platform: linux/amd64
 
   db:
     image: postgres:17
