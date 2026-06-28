@@ -10,14 +10,12 @@ import { logger } from '@core/telemetry/logger.js';
 
 const MAX_RETRIES = 2;
 
-function retryOrDrop(
+function requeueOrDrop(
   channel: amqp.Channel,
   queue: string,
   msg: amqp.ConsumeMessage,
   label: string
 ) {
-  channel.ack(msg);
-
   const retryCount = (msg.properties.headers?.['x-retry-count'] as number) ?? 0;
   if (retryCount < MAX_RETRIES) {
     channel.sendToQueue(queue, msg.content, {
@@ -44,16 +42,16 @@ async function main() {
   // Set up recommendation consumer
   await channel.consume(recommendationQueue, async (msg) => {
     if (!msg) return;
+    channel.ack(msg);
 
     try {
       const job = JSON.parse(msg.content.toString());
       logger.info(`Processing recommendation job:`, job);
       await processRecommendationJob(job, databaseClient, emailClient, recommender);
-      channel.ack(msg);
       logger.info(`Recommendation job completed`);
     } catch (err) {
       logger.error(`Recommendation job failed:`, err);
-      retryOrDrop(channel, recommendationQueue, msg, 'Recommendation job');
+      requeueOrDrop(channel, recommendationQueue, msg, 'Recommendation job');
     }
   });
 
