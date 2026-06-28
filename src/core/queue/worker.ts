@@ -1,11 +1,11 @@
 import '@core/telemetry/init.js';
 import { createQueueClient } from './client.js';
 import { createDatabaseClient } from '@core/database/client.js';
-import { processTextExtractionJob } from '@websites/shelfie/workers/text-extraction-worker.js';
 import { processRecommendationJob } from '@websites/shelfie/workers/recommendation-worker.js';
 import { config } from '@config/index.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { OpenAIRecommender } from '@core/utils/openai-recommender.js';
+import { OpenAIBookExtractor } from '@core/utils/openai-book-extractor.js';
 import { logger } from '@core/telemetry/logger.js';
 
 async function main() {
@@ -15,38 +15,11 @@ async function main() {
   const databaseClient = await createDatabaseClient(config.DATABASE_URL);
   const emailClient = new MailgunClient();
   const recommender = new OpenAIRecommender();
-  const { channel, textExtractionQueue, recommendationQueue } = queueClient;
+  const bookExtractor = new OpenAIBookExtractor();
+  const { channel, recommendationQueue } = queueClient;
 
   // Set prefetch to 1 to ensure fair distribution
   await channel.prefetch(1);
-
-  const MAX_RETRIES = 2;
-
-  // Set up text extraction consumer
-  await channel.consume(textExtractionQueue, async (msg) => {
-    if (!msg) return;
-
-    try {
-      const job = JSON.parse(msg.content.toString());
-      logger.info(`Processing text extraction job:`, job);
-      await processTextExtractionJob(job, databaseClient, queueClient);
-      channel.ack(msg);
-      logger.info(`Text extraction job completed`);
-    } catch (err) {
-      logger.error(`Text extraction job failed:`, err);
-      channel.ack(msg);
-
-      const retryCount = (msg.properties.headers?.['x-retry-count'] as number) ?? 0;
-      if (retryCount < MAX_RETRIES) {
-        channel.sendToQueue(textExtractionQueue, msg.content, {
-          persistent: true,
-          headers: { 'x-retry-count': retryCount + 1 },
-        });
-      } else {
-        logger.error(`Text extraction job exceeded max retries, dropping message`);
-      }
-    }
-  });
 
   // Set up recommendation consumer
   await channel.consume(recommendationQueue, async (msg) => {
@@ -55,7 +28,7 @@ async function main() {
     try {
       const job = JSON.parse(msg.content.toString());
       logger.info(`Processing recommendation job:`, job);
-      await processRecommendationJob(job, databaseClient, emailClient, recommender);
+      await processRecommendationJob(job, databaseClient, emailClient, recommender, bookExtractor);
       channel.ack(msg);
       logger.info(`Recommendation job completed`);
     } catch (err) {
@@ -64,7 +37,6 @@ async function main() {
     }
   });
 
-  logger.info('Text extraction worker started');
   logger.info('Recommendation worker started');
 
   // Graceful shutdown

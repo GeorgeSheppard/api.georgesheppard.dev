@@ -23,7 +23,6 @@ const envSchema = z.object({
   API_KEY: z.string(),
   MAILGUN_API_KEY: z.string(),
   OPENAI_API_KEY: z.string(),
-  TEXT_EXTRACTOR_URL: z.string().url(),
 
   // JWT
   JWT_SECRET: z.string().min(32).describe('Secret for signing JWTs (min 32 chars)'),

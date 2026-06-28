@@ -83,7 +83,7 @@ export async function fromBookcase(
   const queueClient = c.get('queueClient');
   try {
     queueClient.channel.sendToQueue(
-      queueClient.textExtractionQueue,
+      queueClient.recommendationQueue,
       Buffer.from(JSON.stringify({ userId: newRequest.id, recommendationId: recommendation.id })),
       { persistent: true }
     );

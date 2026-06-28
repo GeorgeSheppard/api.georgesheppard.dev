@@ -17,7 +17,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
   });
 
   test.afterEach(async ({ dbClient, queueClient }) => {
-    await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
+    await queueClient.channel.purgeQueue(queueClient.recommendationQueue);
     await dbClient.db.delete(requests);
   });
 
@@ -270,12 +270,12 @@ describe('POST /api/recommendations/from-bookcase', () => {
     expect(request).toHaveLength(1);
   });
 
-  test('should send message to text extraction queue with correct data', async ({
+  test('should send message to recommendation queue with correct data', async ({
     dbClient,
     queueClient,
   }) => {
     // First, consume any existing messages from the queue to clear it
-    await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
+    await queueClient.channel.purgeQueue(queueClient.recommendationQueue);
 
     const testImageData = Buffer.from('fake-image-data');
     const blob = new Blob([testImageData], { type: 'image/jpeg' });
@@ -303,7 +303,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
     const requestId = recommendation[0].requestId;
 
     // Consume message from queue and verify its contents
-    const message = await queueClient.channel.get(queueClient.textExtractionQueue);
+    const message = await queueClient.channel.get(queueClient.recommendationQueue);
 
     expect(message).not.toBe(false);
     if (message) {

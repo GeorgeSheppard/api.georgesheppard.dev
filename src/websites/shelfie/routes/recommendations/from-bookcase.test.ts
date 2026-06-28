@@ -16,7 +16,7 @@ function mockContext() {
     ipLocator: { getLocation: mockGetLocation },
     queueClient: {
       channel: { sendToQueue: mockSendToQueue },
-      textExtractionQueue: 'text-extraction',
+      recommendationQueue: 'recommendations',
     },
   });
 }
@@ -55,7 +55,7 @@ describe('fromBookcase handler', () => {
         body: { id: 'rec-1', success: true },
       });
       expect(createBookcaseRequest).toHaveBeenCalledWith({}, 'London, UK', testFiles);
-      expect(mockSendToQueue).toHaveBeenCalledWith('text-extraction', expect.any(Buffer), {
+      expect(mockSendToQueue).toHaveBeenCalledWith('recommendations', expect.any(Buffer), {
         persistent: true,
       });
     });
