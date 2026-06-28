@@ -909,6 +909,80 @@
         }
       }
     },
+    "/api/reextract-recurring-books": {
+      "get": {
+        "tags": [
+          "cron"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Books re-extracted for recurring users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalUsers": {
+                      "type": "number"
+                    },
+                    "processedUsers": {
+                      "type": "number"
+                    },
+                    "skippedUsers": {
+                      "type": "number"
+                    },
+                    "failures": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "totalUsers",
+                    "processedUsers",
+                    "skippedUsers",
+                    "failures"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mcp/auth/token": {
       "post": {
         "tags": [
