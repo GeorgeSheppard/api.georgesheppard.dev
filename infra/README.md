@@ -14,36 +14,46 @@ have volumes so best to keep those outside the repo).
 
 ### Deployment polling + secrets via Infisical
 
-There's no inbound deploy webhook and no self-hosted runner. Instead, a cron job on the mac mini polls every 2
-minutes: it fetches the latest `infra/compose.yaml` from `master`, pulls secrets from Infisical, pulls the latest
-api image, and only runs `docker compose up -d --remove-orphans` if the image, compose file, or secrets actually
-changed. It's silent (no log output) on a no-op poll. Secrets are no longer kept in a hand-edited `.env` on the
-box — updating a credential in Infisical takes effect on the next poll, no SSH session needed.
+There's no inbound deploy webhook and no self-hosted runner. A `launchd` job (`com.docker.compose.update`) on the
+mac mini runs every 5 minutes from the compose directory (e.g. `~/Documents/root`) and runs `deploy.sh`, which
+regenerates `.env` from Infisical and then does `docker compose pull && docker compose up -d --remove-orphans`.
+`docker compose up -d` only recreates containers whose image or config actually changed, so this is safe to run
+unconditionally every 5 minutes — no manual diffing needed. Secrets are no longer kept in a hand-edited `.env` on
+the box — updating a credential in Infisical takes effect on the next run, no SSH session needed.
 
 One-time setup on the mac mini:
 
 1. Create a Machine Identity in Infisical (Universal Auth) scoped to read access on the production environment.
-2. Set the following as persistent host environment variables (e.g. in `~/.zshrc` or a launchd plist), not in a
-   file in this repo:
-   - `INFISICAL_CLIENT_ID`
-   - `INFISICAL_CLIENT_SECRET`
-   - `INFISICAL_PROJECT_ID`
-3. Install the [Infisical CLI](https://infisical.com/docs/cli/overview) and Docker.
-4. Create the deploy directory and fetch the script:
+2. Install the [Infisical CLI](https://infisical.com/docs/cli/overview) and Docker.
+3. Copy `deploy.sh` into the compose directory (alongside `compose.yaml`) and make it executable:
    ```
-   mkdir -p ~/deploy
-   curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/deploy.sh \
-     -o ~/deploy/deploy.sh
-   chmod +x ~/deploy/deploy.sh
+   chmod +x ~/Documents/root/deploy.sh
    ```
-5. Add the cron job:
+4. Store the Machine Identity credentials somewhere only readable by you, e.g.
+   `~/.config/infisical/mac-mini.env` (`chmod 600`):
    ```
-   crontab -e
-   */2 * * * * ~/deploy/deploy.sh >> ~/deploy/deploy.log 2>&1
+   export INFISICAL_CLIENT_ID="..."
+   export INFISICAL_CLIENT_SECRET="..."
+   export INFISICAL_PROJECT_ID="..."
    ```
+5. Update `~/Library/LaunchAgents/com.docker.compose.update.plist` to source that file and call `deploy.sh`
+   instead of running `docker compose pull && up` directly:
+   ```xml
+   <key>ProgramArguments</key>
+   <array>
+       <string>/bin/bash</string>
+       <string>-c</string>
+       <string>
+           export PATH="/Applications/Docker.app/Contents/Resources/bin:/usr/local/bin:/usr/bin:/bin";
+           source ~/.config/infisical/mac-mini.env &&
+           ~/Documents/root/deploy.sh
+       </string>
+   </array>
+   ```
+6. Reload the job: `launchctl unload ~/Library/LaunchAgents/com.docker.compose.update.plist && launchctl load ~/Library/LaunchAgents/com.docker.compose.update.plist`
 
-The deploy flow becomes: push to `master` → GitHub Actions builds and pushes the image → within 2 minutes the mac
-mini picks up the new image (and any compose.yaml or secret changes) and restarts.
+The deploy flow becomes: push to `master` → GitHub Actions builds and pushes the image → within 5 minutes the mac
+mini pulls the new image, refreshes secrets from Infisical, and restarts anything that changed.
 
 You should now be good to test.
 
@@ -51,8 +61,8 @@ You should now be good to test.
 
 ### Update to latest images
 
-Run `~/deploy/deploy.sh` directly to force an immediate check rather than waiting for cron. Check `deployment.yml`
-in the main repo for how images get built and pushed.
+Run `~/Documents/root/deploy.sh` directly to force an immediate check rather than waiting for the launchd job.
+Check `deployment.yml` in the main repo for how images get built and pushed.
 
 ### Manually building
 
