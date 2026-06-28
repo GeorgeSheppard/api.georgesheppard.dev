@@ -5,8 +5,8 @@ import { S3PutSignedUrlRequestSchema, S3PutSignedUrlResponseSchema } from './s3-
 
 export const s3PutSignedUrlRoute = createRoute({
   method: 'post',
-  path: '/kitchencalm/s3/upload',
-  tags: ['kitchencalm', 's3'],
+  path: '/mise/s3/upload',
+  tags: ['mise', 's3'],
   description: 'Generate a signed PUT URL for uploading files to S3',
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],

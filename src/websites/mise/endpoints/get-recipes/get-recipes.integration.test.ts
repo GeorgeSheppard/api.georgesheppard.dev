@@ -1,5 +1,5 @@
 /**
- * Integration tests for GET /kitchencalm/recipes endpoint
+ * Integration tests for GET /mise/recipes endpoint
  */
 import { describe, expect, vi } from 'vitest';
 import { test } from '@test/fixtures.js';
@@ -12,13 +12,13 @@ import { PutCommand } from '@aws-sdk/lib-dynamodb';
 const validUserId = '550e8400-e29b-41d4-a716-446655440000';
 const anotherUserId = '550e8400-e29b-41d4-a716-446655440001';
 
-describe('GET /kitchencalm/recipes', () => {
+describe('GET /mise/recipes', () => {
   test('should return empty object when user has no recipes', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
     const token = await signJwt(validUserId);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes', {
+      new Request('http://localhost/mise/recipes', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -63,7 +63,7 @@ describe('GET /kitchencalm/recipes', () => {
     );
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes', {
+      new Request('http://localhost/mise/recipes', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ describe('GET /kitchencalm/recipes', () => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes', {
+      new Request('http://localhost/mise/recipes', {
         method: 'GET',
       })
     );
@@ -95,7 +95,7 @@ describe('GET /kitchencalm/recipes', () => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes', {
+      new Request('http://localhost/mise/recipes', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer invalid-token',
@@ -144,7 +144,7 @@ describe('GET /kitchencalm/recipes', () => {
     );
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes', {
+      new Request('http://localhost/mise/recipes', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${user1Token}`,
@@ -162,7 +162,7 @@ describe('GET /kitchencalm/recipes', () => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes', {
+      new Request('http://localhost/mise/recipes', {
         method: 'GET',
         headers: {
           Authorization: 'NotBearer token',
@@ -210,7 +210,7 @@ describe('GET /kitchencalm/recipes', () => {
     ]);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes', {
+      new Request('http://localhost/mise/recipes', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -255,7 +255,7 @@ describe('GET /kitchencalm/recipes', () => {
     );
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes', {
+      new Request('http://localhost/mise/recipes', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,

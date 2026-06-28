@@ -63,7 +63,7 @@ jobs:
       - name: Run Unit Tests
         run: pnpm test
 
-  integration-kitchencalm:
+  integration-mise:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -72,8 +72,8 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup-env
 
-      - name: Run KitchenCalm Integration Tests
-        run: pnpm test:integration:kitchencalm
+      - name: Run Mise Integration Tests
+        run: pnpm test:integration:mise
 
   integration-shelfie:
     runs-on: ubuntu-latest

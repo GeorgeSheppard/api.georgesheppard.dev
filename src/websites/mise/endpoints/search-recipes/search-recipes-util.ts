@@ -57,7 +57,7 @@ export function searchRecipes(recipes: IRecipe[], query: string, fields?: string
       ) as (keyof SearchableRecipe)[])
     : ['name', 'description', 'ingredients', 'instructions'];
 
-  // Configure Fuse.js with options from MyLife implementation
+  // Configure Fuse.js with options from the legacy recipe search implementation
   const fuseOptions: IFuseOptions<SearchableRecipe> = {
     threshold: 0.2,
     includeScore: true,

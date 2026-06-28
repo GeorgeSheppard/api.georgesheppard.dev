@@ -5,8 +5,8 @@ import { ShoppingListResponseSchema } from './get-shopping-list.js';
 
 export const getShoppingListRoute = createRoute({
   method: 'get',
-  path: '/kitchencalm/shopping-list',
-  tags: ['kitchencalm', 'shopping-list'],
+  path: '/mise/shopping-list',
+  tags: ['mise', 'shopping-list'],
   description:
     'Get aggregated shopping list from recipes in the meal plan, optionally filtered by date range',
   security: [{ bearerAuth: [] }],

@@ -55,7 +55,7 @@ describe('Update Meal Plan Endpoint', () => {
     ];
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/meal-plan', {
+      new Request('http://localhost/mise/meal-plan', {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -102,7 +102,7 @@ describe('Update Meal Plan Endpoint', () => {
 
     // Create initial meal plan
     await app.request(
-      new Request('http://localhost/kitchencalm/meal-plan', {
+      new Request('http://localhost/mise/meal-plan', {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -131,7 +131,7 @@ describe('Update Meal Plan Endpoint', () => {
     ];
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/meal-plan', {
+      new Request('http://localhost/mise/meal-plan', {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -152,7 +152,7 @@ describe('Update Meal Plan Endpoint', () => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/meal-plan', {
+      new Request('http://localhost/mise/meal-plan', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +177,7 @@ describe('Update Meal Plan Endpoint', () => {
     ];
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/meal-plan', {
+      new Request('http://localhost/mise/meal-plan', {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,

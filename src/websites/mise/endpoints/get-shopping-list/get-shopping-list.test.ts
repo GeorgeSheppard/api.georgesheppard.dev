@@ -7,10 +7,10 @@ import { Unit } from '@core/types/recipes.js';
 import type { IMealPlan } from '@core/types/meal-plan.js';
 
 vi.mock('@core/dynamodb/utilities.js');
-vi.mock('@websites/kitchencalm/utils/ingredient-categoriser.js');
+vi.mock('@websites/mise/utils/ingredient-categoriser.js');
 
 import { getAllRecipesForUser, getMealPlanForUser } from '@core/dynamodb/utilities.js';
-import { categoriseIngredients } from '@websites/kitchencalm/utils/ingredient-categoriser.js';
+import { categoriseIngredients } from '@websites/mise/utils/ingredient-categoriser.js';
 
 const validUserId = '550e8400-e29b-41d4-a716-446655440000';
 

@@ -22,9 +22,9 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          name: 'integration:kitchencalm',
-          include: ['src/websites/kitchencalm/**/*.integration.test.ts'],
-          setupFiles: ['./test/setup-kitchencalm.ts'],
+          name: 'integration:mise',
+          include: ['src/websites/mise/**/*.integration.test.ts'],
+          setupFiles: ['./test/setup-mise.ts'],
           testTimeout: 60000,
           hookTimeout: 120000,
         },

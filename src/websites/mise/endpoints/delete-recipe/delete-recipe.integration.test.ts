@@ -35,7 +35,7 @@ describe('Delete Recipe Endpoint', () => {
 
     // Delete the recipe
     const deleteResponse = await app.request(
-      new Request(`http://localhost/kitchencalm/recipes/${recipeId}`, {
+      new Request(`http://localhost/mise/recipes/${recipeId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -54,7 +54,7 @@ describe('Delete Recipe Endpoint', () => {
     const recipeId = uuidv4();
 
     const response = await app.request(
-      new Request(`http://localhost/kitchencalm/recipes/${recipeId}`, {
+      new Request(`http://localhost/mise/recipes/${recipeId}`, {
         method: 'DELETE',
       })
     );

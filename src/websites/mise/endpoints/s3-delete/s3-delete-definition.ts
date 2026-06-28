@@ -1,17 +1,17 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
-import { S3GetSignedUrlRequestSchema, S3GetSignedUrlResponseSchema } from './s3-get-signed-url.js';
+import { S3DeleteRequestSchema, S3DeleteResponseSchema } from './s3-delete.js';
 
-export const s3GetSignedUrlRoute = createRoute({
+export const s3DeleteRoute = createRoute({
   method: 'post',
-  path: '/kitchencalm/s3/signed-url',
-  tags: ['kitchencalm', 's3'],
-  description: 'Generate a signed GET URL for downloading files from S3',
+  path: '/mise/s3/delete',
+  tags: ['mise', 's3'],
+  description: 'Delete a file from S3',
   request: {
     body: {
       content: {
         'application/json': {
-          schema: S3GetSignedUrlRequestSchema,
+          schema: S3DeleteRequestSchema,
         },
       },
       required: true,
@@ -21,10 +21,10 @@ export const s3GetSignedUrlRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: S3GetSignedUrlResponseSchema,
+          schema: S3DeleteResponseSchema,
         },
       },
-      description: 'Signed GET URL generated successfully',
+      description: 'File deleted successfully',
     },
     400: {
       content: {
