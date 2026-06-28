@@ -20,6 +20,11 @@ async function main() {
   // Set prefetch to 1 to ensure fair distribution
   await channel.prefetch(1);
 
+  const MAX_RETRIES = 2;
+  const RETRY_BASE_DELAY_MS = 5000;
+
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
   // Set up text extraction consumer
   await channel.consume(textExtractionQueue, async (msg) => {
     if (!msg) return;
@@ -32,7 +37,19 @@ async function main() {
       logger.info(`Text extraction job completed`);
     } catch (err) {
       logger.error(`Text extraction job failed:`, err);
-      channel.nack(msg, false, true); // Requeue on error
+
+      const retryCount = (msg.properties.headers?.['x-retry-count'] as number) ?? 0;
+      if (retryCount < MAX_RETRIES) {
+        channel.ack(msg);
+        await sleep(RETRY_BASE_DELAY_MS * 2 ** retryCount);
+        channel.sendToQueue(textExtractionQueue, msg.content, {
+          persistent: true,
+          headers: { 'x-retry-count': retryCount + 1 },
+        });
+      } else {
+        logger.error(`Text extraction job exceeded max retries, dropping message`);
+        channel.ack(msg);
+      }
     }
   });
 
