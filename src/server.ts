@@ -16,6 +16,7 @@ import {
   tools as kitchenCalmTools,
 } from '@websites/kitchencalm/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
+import { registerMcpOauthRoutes } from '@core/mcp/oauth/index.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
 import { ALLOWED_FRONTEND_URLS } from '@core/auth/redirect.js';
 import { config } from './config';
@@ -88,6 +89,7 @@ export async function createApp(dependencies: AppDependencies) {
   // Register MCP with all tools from all websites
   const allMcpTools = [...kitchenCalmTools];
   registerMcpSseRoute(app, allMcpTools);
+  registerMcpOauthRoutes(app);
 
   // Register Swagger UI and OpenAPI spec
   if (config.NODE_ENV === 'development') {
