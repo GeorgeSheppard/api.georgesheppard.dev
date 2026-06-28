@@ -17,7 +17,7 @@ cd "$(dirname "$0")"
 : "${INFISICAL_PROJECT_ID:?INFISICAL_PROJECT_ID is not set}"
 INFISICAL_ENV="${INFISICAL_ENV:-prod}"
 
-curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o compose.yaml
+curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o ~/Documents/root/compose.yaml
 
 INFISICAL_TOKEN="$(infisical login --method=universal-auth \
   --client-id="$INFISICAL_CLIENT_ID" \
