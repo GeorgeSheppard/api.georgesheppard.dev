@@ -12,10 +12,28 @@ Start the text extraction service from the `ml` root with:
 Copy the `Infra` folder and make a folder outside of the Shelfie repository (once the docker images start we will
 have volumes so best to keep those outside the repo).
 
-Create a `.env` using the `.env.example` in the `Infra` folder.
+### Secrets via Infisical
 
-Start the remaining services from the `Infra` folder using:
-`docker compose up -d --remove-orphans`
+Secrets are no longer kept in a hand-edited `.env` on the box. Instead `deploy.sh` pulls them from Infisical at
+deploy time using a Machine Identity (Universal Auth), so credential changes only require updating Infisical and
+re-running the deploy — no SSH session needed to edit files.
+
+One-time setup on the mac mini:
+
+1. Create a Machine Identity in Infisical (Universal Auth) scoped to read access on the production environment.
+2. Set the following as persistent host environment variables (e.g. in `~/.zshrc` or a launchd plist), not in a file
+   in this repo:
+   - `INFISICAL_CLIENT_ID`
+   - `INFISICAL_CLIENT_SECRET`
+   - `INFISICAL_PROJECT_ID`
+3. Install the [Infisical CLI](https://infisical.com/docs/cli/overview).
+
+Then deploy/update with:
+`./deploy.sh`
+
+This regenerates `.env` from Infisical, pulls the latest images, and restarts the stack with
+`docker compose up -d --remove-orphans`. Hook this script into whatever already triggers image pulls on the mac
+mini, in place of a bare `docker compose pull && docker compose up -d`.
 
 You should now be good to test.
 
@@ -23,7 +41,8 @@ You should now be good to test.
 
 ### Update to latest images
 
-Check the `deployment.yml` for the latest method for updating to the latest images.
+Run `./deploy.sh` from the `Infra` folder. Check `deployment.yml` in the main repo for how images get built and
+pushed.
 
 ### Manually building
 
