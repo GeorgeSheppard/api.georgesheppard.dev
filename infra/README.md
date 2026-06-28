@@ -16,10 +16,12 @@ have volumes so best to keep those outside the repo).
 
 There's no inbound deploy webhook and no self-hosted runner. A `launchd` job (`com.docker.compose.update`) on the
 mac mini runs every 5 minutes from the compose directory (e.g. `~/Documents/root`) and runs `deploy.sh`, which
-regenerates `.env` from Infisical and then does `docker compose pull && docker compose up -d --remove-orphans`.
-`docker compose up -d` only recreates containers whose image or config actually changed, so this is safe to run
-unconditionally every 5 minutes — no manual diffing needed. Secrets are no longer kept in a hand-edited `.env` on
-the box — updating a credential in Infisical takes effect on the next run, no SSH session needed.
+overwrites the local `compose.yaml` with the latest `infra/compose.yaml` from `master`, regenerates `.env` from
+Infisical, and then does `docker compose pull && docker compose up -d --remove-orphans`. `docker compose up -d`
+only recreates containers whose image or config actually changed, so this is safe to run unconditionally every
+5 minutes — no manual diffing needed. Secrets are no longer kept in a hand-edited `.env` on the box — updating a
+credential in Infisical takes effect on the next run, no SSH session needed. If the repo is private, set
+`GITHUB_TOKEN` (a PAT with read access) alongside the Infisical credentials so `deploy.sh` can fetch the file.
 
 One-time setup on the mac mini:
 
