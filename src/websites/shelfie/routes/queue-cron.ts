@@ -5,6 +5,7 @@ import { findDueUsers, createRecurringRecommendation } from '../queries/recommen
 import { authMiddleware } from '@core/middleware/auth.js';
 import { ROUTES } from './paths.js';
 import { logger } from '@core/telemetry/logger.js';
+import { config } from '@config/index.js';
 
 const route = createRoute({
   method: 'get',
@@ -67,7 +68,21 @@ export async function queueDueRecommendations(c: Context): Promise<QueueCronResu
     `Queued recommendations for ${successCount}/${dueUsers.length} users (${queueFailures} queue failures)`
   );
 
+  await pingHealthcheck();
+
   return { successCount, totalUsers: dueUsers.length, queueFailures };
+}
+
+async function pingHealthcheck(): Promise<void> {
+  if (!config.RECOMMENDATIONS_CRON_HEALTHCHECK_URL) {
+    return;
+  }
+
+  try {
+    await fetch(config.RECOMMENDATIONS_CRON_HEALTHCHECK_URL);
+  } catch (error) {
+    logger.error('Failed to ping recommendations cron healthcheck:', error);
+  }
 }
 
 export function registerQueueCronRoute(app: OpenAPIHono) {

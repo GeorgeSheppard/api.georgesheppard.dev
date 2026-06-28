@@ -63,6 +63,9 @@ const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string(),
   S3_ENDPOINT: z.string().url().optional(),
 
+  // Cron monitoring (optional — ping disabled when unset)
+  RECOMMENDATIONS_CRON_HEALTHCHECK_URL: z.string().url().optional(),
+
   // OpenTelemetry (optional — telemetry is disabled when endpoint is unset)
   // These are read directly from process.env by the OTel SDK, not from config.
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
