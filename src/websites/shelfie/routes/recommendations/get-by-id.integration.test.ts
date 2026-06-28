@@ -12,7 +12,7 @@ describe('GET /api/recommendations/{id}', () => {
   });
 
   test.afterEach(async ({ dbClient, queueClient }) => {
-    await queueClient.channel.purgeQueue(queueClient.textExtractionQueue);
+    await queueClient.channel.purgeQueue(queueClient.recommendationQueue);
     await dbClient.db.delete(requests);
   });
 

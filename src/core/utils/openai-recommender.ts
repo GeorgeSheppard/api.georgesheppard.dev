@@ -1,12 +1,12 @@
 import OpenAI from 'openai';
 import { config } from '@config/index.js';
 import { Location, toAffiliateTag, toAmazonDomain } from '@core/types/location.js';
-import { Recommendation } from '@core/types/recommendation.js';
+import { BookEntry, Recommendation } from '@core/types/recommendation.js';
 import { logger } from '@core/telemetry/logger.js';
 
 export abstract class Recommender {
   abstract getRecommendations(
-    books: string[],
+    books: BookEntry[],
     location: Location,
     previousRecommendations?: Recommendation[]
   ): Promise<Recommendation[]>;
@@ -22,7 +22,7 @@ export class OpenAIRecommender implements Recommender {
   }
 
   async getRecommendations(
-    books: string[],
+    books: BookEntry[],
     location: Location,
     previousRecommendations: Recommendation[] = []
   ): Promise<Recommendation[]> {
@@ -69,8 +69,11 @@ export class OpenAIRecommender implements Recommender {
     }
   }
 
-  private buildPrompt(books: string[], previousRecommendations: string[]): string {
-    let prompt = `Based on these books the user has read:\n${books.join('\n')}\n\n`;
+  private buildPrompt(books: BookEntry[], previousRecommendations: string[]): string {
+    const bookList = books
+      .map((book) => (book.author ? `${book.title} by ${book.author}` : book.title))
+      .join('\n');
+    let prompt = `Based on these books the user has read:\n${bookList}\n\n`;
     prompt += 'Generate 5 book recommendations.\n\n';
 
     if (previousRecommendations.length > 0) {

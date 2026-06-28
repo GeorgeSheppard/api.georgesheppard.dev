@@ -4,8 +4,10 @@ import { createMockContext } from '@test/utils/mock-context.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 
 vi.mock('../../queries/recommendations.js');
+vi.mock('@core/utils/openai-book-extractor.js');
 
-import { createBookcaseRequest } from '../../queries/recommendations.js';
+import { createBookcaseRequest, updateBooksProcessed } from '../../queries/recommendations.js';
+import { extractBooksFromImages } from '@core/utils/openai-book-extractor.js';
 
 const mockSendToQueue = vi.fn();
 const mockGetLocation = vi.fn();
@@ -14,9 +16,10 @@ function mockContext() {
   return createMockContext({
     databaseClient: { db: {} },
     ipLocator: { getLocation: mockGetLocation },
+    openaiClient: { getClient: () => ({}) },
     queueClient: {
       channel: { sendToQueue: mockSendToQueue },
-      textExtractionQueue: 'text-extraction',
+      recommendationQueue: 'recommendations',
     },
   });
 }
@@ -33,6 +36,10 @@ describe('fromBookcase handler', () => {
       newRequest: { id: 'req-1' },
       recommendation: { id: 'rec-1' },
     });
+    vi.mocked(extractBooksFromImages).mockResolvedValue([
+      { title: 'Dune', author: 'Frank Herbert' },
+    ]);
+    vi.mocked(updateBooksProcessed).mockResolvedValue(undefined);
   });
 
   describe('bad request (400)', () => {
@@ -55,7 +62,14 @@ describe('fromBookcase handler', () => {
         body: { id: 'rec-1', success: true },
       });
       expect(createBookcaseRequest).toHaveBeenCalledWith({}, 'London, UK', testFiles);
-      expect(mockSendToQueue).toHaveBeenCalledWith('text-extraction', expect.any(Buffer), {
+      expect(extractBooksFromImages).toHaveBeenCalledWith(
+        [{ buffer: testFiles[0].data, contentType: testFiles[0].mimetype }],
+        {}
+      );
+      expect(updateBooksProcessed).toHaveBeenCalledWith({}, 'req-1', [
+        { title: 'Dune', author: 'Frank Herbert' },
+      ]);
+      expect(mockSendToQueue).toHaveBeenCalledWith('recommendations', expect.any(Buffer), {
         persistent: true,
       });
     });
