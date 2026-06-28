@@ -12,28 +12,38 @@ Start the text extraction service from the `ml` root with:
 Copy the `Infra` folder and make a folder outside of the Shelfie repository (once the docker images start we will
 have volumes so best to keep those outside the repo).
 
-### Secrets via Infisical
+### Deployment polling + secrets via Infisical
 
-Secrets are no longer kept in a hand-edited `.env` on the box. Instead `deploy.sh` pulls them from Infisical at
-deploy time using a Machine Identity (Universal Auth), so credential changes only require updating Infisical and
-re-running the deploy — no SSH session needed to edit files.
+There's no inbound deploy webhook and no self-hosted runner. Instead, a cron job on the mac mini polls every 2
+minutes: it fetches the latest `infra/compose.yaml` from `master`, pulls secrets from Infisical, pulls the latest
+api image, and only runs `docker compose up -d --remove-orphans` if the image, compose file, or secrets actually
+changed. It's silent (no log output) on a no-op poll. Secrets are no longer kept in a hand-edited `.env` on the
+box — updating a credential in Infisical takes effect on the next poll, no SSH session needed.
 
 One-time setup on the mac mini:
 
 1. Create a Machine Identity in Infisical (Universal Auth) scoped to read access on the production environment.
-2. Set the following as persistent host environment variables (e.g. in `~/.zshrc` or a launchd plist), not in a file
-   in this repo:
+2. Set the following as persistent host environment variables (e.g. in `~/.zshrc` or a launchd plist), not in a
+   file in this repo:
    - `INFISICAL_CLIENT_ID`
    - `INFISICAL_CLIENT_SECRET`
    - `INFISICAL_PROJECT_ID`
-3. Install the [Infisical CLI](https://infisical.com/docs/cli/overview).
+3. Install the [Infisical CLI](https://infisical.com/docs/cli/overview) and Docker.
+4. Create the deploy directory and fetch the script:
+   ```
+   mkdir -p ~/deploy
+   curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/deploy.sh \
+     -o ~/deploy/deploy.sh
+   chmod +x ~/deploy/deploy.sh
+   ```
+5. Add the cron job:
+   ```
+   crontab -e
+   */2 * * * * ~/deploy/deploy.sh >> ~/deploy/deploy.log 2>&1
+   ```
 
-Then deploy/update with:
-`./deploy.sh`
-
-This regenerates `.env` from Infisical, pulls the latest images, and restarts the stack with
-`docker compose up -d --remove-orphans`. Hook this script into whatever already triggers image pulls on the mac
-mini, in place of a bare `docker compose pull && docker compose up -d`.
+The deploy flow becomes: push to `master` → GitHub Actions builds and pushes the image → within 2 minutes the mac
+mini picks up the new image (and any compose.yaml or secret changes) and restarts.
 
 You should now be good to test.
 
@@ -41,8 +51,8 @@ You should now be good to test.
 
 ### Update to latest images
 
-Run `./deploy.sh` from the `Infra` folder. Check `deployment.yml` in the main repo for how images get built and
-pushed.
+Run `~/deploy/deploy.sh` directly to force an immediate check rather than waiting for cron. Check `deployment.yml`
+in the main repo for how images get built and pushed.
 
 ### Manually building
 
