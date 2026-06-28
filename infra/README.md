@@ -36,19 +36,11 @@ One-time setup on the mac mini:
    export INFISICAL_CLIENT_SECRET="..."
    export INFISICAL_PROJECT_ID="..."
    ```
-5. Update `~/Library/LaunchAgents/com.docker.compose.update.plist` to source that file and call `deploy.sh`
-   instead of running `docker compose pull && up` directly:
-   ```xml
-   <key>ProgramArguments</key>
-   <array>
-       <string>/bin/bash</string>
-       <string>-c</string>
-       <string>
-           export PATH="/Applications/Docker.app/Contents/Resources/bin:/usr/local/bin:/usr/bin:/bin";
-           source ~/.config/infisical/mac-mini.env &&
-           ~/Documents/root/deploy.sh
-       </string>
-   </array>
+5. Replace `~/Library/LaunchAgents/com.docker.compose.update.plist` with the copy checked in here at
+   `com.docker.compose.update.plist`, which sources that file and calls `deploy.sh` instead of running
+   `docker compose pull && up` directly:
+   ```
+   cp infra/com.docker.compose.update.plist ~/Library/LaunchAgents/com.docker.compose.update.plist
    ```
 6. Reload the job: `launchctl unload ~/Library/LaunchAgents/com.docker.compose.update.plist && launchctl load ~/Library/LaunchAgents/com.docker.compose.update.plist`
 
