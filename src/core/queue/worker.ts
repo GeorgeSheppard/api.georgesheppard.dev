@@ -1,4 +1,5 @@
 import '@core/telemetry/init.js';
+import amqp from 'amqplib';
 import { createQueueClient } from './client.js';
 import { createDatabaseClient } from '@core/database/client.js';
 import { processTextExtractionJob } from '@websites/shelfie/workers/text-extraction-worker.js';
@@ -7,6 +8,27 @@ import { config } from '@config/index.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { OpenAIRecommender } from '@core/utils/openai-recommender.js';
 import { logger } from '@core/telemetry/logger.js';
+
+const MAX_RETRIES = 2;
+
+function retryOrDrop(
+  channel: amqp.Channel,
+  queue: string,
+  msg: amqp.ConsumeMessage,
+  label: string
+) {
+  channel.ack(msg);
+
+  const retryCount = (msg.properties.headers?.['x-retry-count'] as number) ?? 0;
+  if (retryCount < MAX_RETRIES) {
+    channel.sendToQueue(queue, msg.content, {
+      persistent: true,
+      headers: { 'x-retry-count': retryCount + 1 },
+    });
+  } else {
+    logger.error(`${label} exceeded max retries, dropping message`);
+  }
+}
 
 async function main() {
   logger.info('Starting RabbitMQ workers...');
@@ -20,8 +42,6 @@ async function main() {
   // Set prefetch to 1 to ensure fair distribution
   await channel.prefetch(1);
 
-  const MAX_RETRIES = 2;
-
   // Set up text extraction consumer
   await channel.consume(textExtractionQueue, async (msg) => {
     if (!msg) return;
@@ -34,17 +54,7 @@ async function main() {
       logger.info(`Text extraction job completed`);
     } catch (err) {
       logger.error(`Text extraction job failed:`, err);
-      channel.ack(msg);
-
-      const retryCount = (msg.properties.headers?.['x-retry-count'] as number) ?? 0;
-      if (retryCount < MAX_RETRIES) {
-        channel.sendToQueue(textExtractionQueue, msg.content, {
-          persistent: true,
-          headers: { 'x-retry-count': retryCount + 1 },
-        });
-      } else {
-        logger.error(`Text extraction job exceeded max retries, dropping message`);
-      }
+      retryOrDrop(channel, textExtractionQueue, msg, 'Text extraction job');
     }
   });
 
@@ -60,7 +70,7 @@ async function main() {
       logger.info(`Recommendation job completed`);
     } catch (err) {
       logger.error(`Recommendation job failed:`, err);
-      channel.nack(msg, false, true); // Requeue on error
+      retryOrDrop(channel, recommendationQueue, msg, 'Recommendation job');
     }
   });
 
