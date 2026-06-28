@@ -4,6 +4,7 @@ import { registerAddEmailRoute } from './routes/recommendations/add-email.js';
 import { registerDeleteEmailRoute } from './routes/recommendations/delete-email.js';
 import { registerFromBookcaseRoute } from './routes/recommendations/from-bookcase.js';
 import { registerQueueCronRoute } from './routes/queue-cron.js';
+import { registerReextractRecurringBooksRoute } from './routes/reextract-recurring-books.js';
 
 export function registerShelfieRoutes(app: OpenAPIHono) {
   registerGetByIdRoute(app);
@@ -11,4 +12,5 @@ export function registerShelfieRoutes(app: OpenAPIHono) {
   registerDeleteEmailRoute(app);
   registerFromBookcaseRoute(app);
   registerQueueCronRoute(app);
+  registerReextractRecurringBooksRoute(app);
 }
