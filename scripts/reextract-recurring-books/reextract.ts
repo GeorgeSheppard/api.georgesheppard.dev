@@ -15,14 +15,6 @@ import { requests, images } from '@core/database/schema/index.js';
 import { extractBooksFromImages } from '@core/utils/openai-book-extractor.js';
 import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import { updateBooksProcessed } from '@websites/shelfie/queries/recommendations.js';
-import type { BookEntry } from '@core/types/recommendation.js';
-
-function formatBooks(books: BookEntry[] | undefined): string {
-  if (!books || books.length === 0) return '(none)';
-  return books
-    .map((book) => (book.author ? `${book.title} - ${book.author}` : book.title))
-    .join(', ');
-}
 
 async function reextractBooksForRecurringUsers(): Promise<void> {
   const { db, close } = await createDatabaseClient(config.DATABASE_URL);
@@ -53,8 +45,8 @@ async function reextractBooksForRecurringUsers(): Promise<void> {
         await updateBooksProcessed(db, user.id, extractedBooks);
         console.log(
           `Re-extracted books for ${user.id}\n` +
-            `  Before: ${formatBooks(user.booksProcessed?.books)}\n` +
-            `  After:  ${formatBooks(extractedBooks)}`
+            `  Before: ${JSON.stringify(user.booksProcessed)}\n` +
+            `  After:  ${JSON.stringify(extractedBooks)}`
         );
       } catch (error) {
         console.error(`Failed to re-extract books for ${user.id}:`, error);
