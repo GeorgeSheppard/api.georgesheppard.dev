@@ -7,9 +7,9 @@ import { updateRecipe, putMealPlanForUser } from '@core/dynamodb/utilities.js';
 import { IRecipe } from '@core/types/recipes.js';
 import { Unit } from '@core/types/recipes.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
-import type { ShoppingListItem } from '@websites/kitchencalm/endpoints/get-shopping-list/get-shopping-list.js';
+import type { ShoppingListItem } from '@websites/mise/endpoints/get-shopping-list/get-shopping-list.js';
 
-vi.mock('@websites/kitchencalm/utils/ingredient-categoriser.js', () => ({
+vi.mock('@websites/mise/utils/ingredient-categoriser.js', () => ({
   categoriseIngredients: vi.fn(async (ingredients: string[]) => {
     const map: Record<string, string> = {};
     for (const ingredient of ingredients) {
@@ -26,7 +26,7 @@ describe('Get Shopping List Endpoint', () => {
     const token = await signJwt(userId);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list', {
+      new Request('http://localhost/mise/shopping-list', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -96,7 +96,7 @@ describe('Get Shopping List Endpoint', () => {
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list', {
+      new Request('http://localhost/mise/shopping-list', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -173,7 +173,7 @@ describe('Get Shopping List Endpoint', () => {
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list', {
+      new Request('http://localhost/mise/shopping-list', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -282,7 +282,7 @@ describe('Get Shopping List Endpoint', () => {
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list', {
+      new Request('http://localhost/mise/shopping-list', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -392,7 +392,7 @@ describe('Get Shopping List Endpoint', () => {
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
     const responseAll = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list', {
+      new Request('http://localhost/mise/shopping-list', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -406,7 +406,7 @@ describe('Get Shopping List Endpoint', () => {
 
     // Filter to today only by passing single date timestamp
     const responseToday = await app.request(
-      new Request(`http://localhost/kitchencalm/shopping-list?dates=${todayTimestamp}`, {
+      new Request(`http://localhost/mise/shopping-list?dates=${todayTimestamp}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -551,7 +551,7 @@ describe('Get Shopping List Endpoint', () => {
     const tomorrowTimestamp = todayTimestamp + 24 * 60 * 60 * 1000;
     const responseRange = await app.request(
       new Request(
-        `http://localhost/kitchencalm/shopping-list?dates=${todayTimestamp}&dates=${tomorrowTimestamp}`,
+        `http://localhost/mise/shopping-list?dates=${todayTimestamp}&dates=${tomorrowTimestamp}`,
         {
           method: 'GET',
           headers: {
@@ -623,7 +623,7 @@ describe('Get Shopping List Endpoint', () => {
 
     // Empty dates array should return all dates
     const responseEmpty = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list', {
+      new Request('http://localhost/mise/shopping-list', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -693,15 +693,12 @@ describe('Get Shopping List Endpoint', () => {
 
     // Filter with dates that do not match any meal plan dates
     const responseNoMatch = await app.request(
-      new Request(
-        'http://localhost/kitchencalm/shopping-list?dates=15%2F08%2F2024&dates=20%2F08%2F2024',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+      new Request('http://localhost/mise/shopping-list?dates=15%2F08%2F2024&dates=20%2F08%2F2024', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
     );
 
     expect(responseNoMatch.status).toBe(200);
@@ -801,7 +798,7 @@ describe('Get Shopping List Endpoint', () => {
 
     // Filter using bracket notation: dates[]=timestamp
     const responseToday = await app.request(
-      new Request(`http://localhost/kitchencalm/shopping-list?dates=${todayTimestamp}`, {
+      new Request(`http://localhost/mise/shopping-list?dates=${todayTimestamp}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -820,7 +817,7 @@ describe('Get Shopping List Endpoint', () => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/shopping-list', {
+      new Request('http://localhost/mise/shopping-list', {
         method: 'GET',
       })
     );

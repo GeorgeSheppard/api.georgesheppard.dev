@@ -62,13 +62,13 @@ describe('callback route', () => {
     const res = await app.request('/auth/callback?code=abc&state=expected-state', {
       headers: {
         cookie:
-          'oauth_state=expected-state; oauth_nonce=expected-nonce; oauth_redirect=https://kitchencalm.georgesheppard.dev/dashboard',
+          'oauth_state=expected-state; oauth_nonce=expected-nonce; oauth_redirect=https://mise.georgesheppard.dev/dashboard',
       },
       redirect: 'manual',
     });
 
     expect(res.status).toBe(302);
-    expect(res.headers.get('location')).toBe('https://kitchencalm.georgesheppard.dev/dashboard');
+    expect(res.headers.get('location')).toBe('https://mise.georgesheppard.dev/dashboard');
     expect(res.headers.getSetCookie().some((c) => c.startsWith('session='))).toBe(true);
   });
 

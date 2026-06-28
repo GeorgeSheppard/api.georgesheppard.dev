@@ -1,5 +1,5 @@
 /**
- * Meal plan type definitions for KitchenCalm/MyLife backend
+ * Meal plan type definitions for Mise/MyLife backend
  */
 
 import { RecipeUuid } from './recipes.js';

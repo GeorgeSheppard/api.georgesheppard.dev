@@ -1,4 +1,4 @@
-# MyLife/KitchenCalm Backend Documentation
+# MyLife/Mise Backend Documentation
 
 **Project:** MyLife - Recipe Management & Meal Planning Application
 **Framework:** Next.js 12 + tRPC (TypeScript RPC)
@@ -155,9 +155,9 @@ MyLife/
 
 #### **Optional**
 
-| Variable       | Type   | Description                         | Example                                                     |
-| -------------- | ------ | ----------------------------------- | ----------------------------------------------------------- |
-| `DATABASE_URL` | string | PostgreSQL URL (noted but not used) | `postgresql://postgres:password@localhost:5432/kitchencalm` |
+| Variable       | Type   | Description                         | Example                                              |
+| -------------- | ------ | ----------------------------------- | ---------------------------------------------------- |
+| `DATABASE_URL` | string | PostgreSQL URL (noted but not used) | `postgresql://postgres:password@localhost:5432/mise` |
 
 ---
 
@@ -1186,7 +1186,7 @@ The shopping list can be generated for:
 If you want to implement a dedicated shopping list endpoint in the Hono backend:
 
 ```typescript
-// GET /kitchencalm/shopping-list?startDate=2024-01-08&endDate=2024-01-15
+// GET /mise/shopping-list?startDate=2024-01-08&endDate=2024-01-15
 interface ShoppingListRequest {
   startDate?: string; // Optional: defaults to today
   endDate?: string; // Optional: defaults to today + 7 days

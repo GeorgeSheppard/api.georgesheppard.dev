@@ -1,5 +1,5 @@
 /**
- * DynamoDB client factory for KitchenCalm/MyLife backend
+ * DynamoDB client factory for Mise/MyLife backend
  */
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';

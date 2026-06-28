@@ -1,5 +1,5 @@
 /**
- * Recipe type definitions for KitchenCalm/MyLife backend
+ * Recipe type definitions for Mise/MyLife backend
  */
 
 /**

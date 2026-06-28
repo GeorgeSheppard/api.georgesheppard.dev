@@ -966,10 +966,10 @@
         }
       }
     },
-    "/kitchencalm/recipes": {
+    "/mise/recipes": {
       "get": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "recipes"
         ],
         "description": "Get all recipes for the authenticated user",
@@ -1033,10 +1033,10 @@
         }
       }
     },
-    "/kitchencalm/recipes/search": {
+    "/mise/recipes/search": {
       "get": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "recipes"
         ],
         "description": "Search recipes by name, description, ingredients, or instructions",
@@ -1186,10 +1186,10 @@
         }
       }
     },
-    "/kitchencalm/recipes/{uuid}": {
+    "/mise/recipes/{uuid}": {
       "delete": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "recipes"
         ],
         "description": "Delete a recipe for the authenticated user",
@@ -1278,10 +1278,10 @@
         }
       }
     },
-    "/kitchencalm/meal-plan": {
+    "/mise/meal-plan": {
       "get": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "meal-plan"
         ],
         "description": "Get the meal plan for the authenticated user",
@@ -1343,7 +1343,7 @@
       },
       "put": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "meal-plan"
         ],
         "description": "Update the meal plan for the authenticated user",
@@ -1442,10 +1442,10 @@
         }
       }
     },
-    "/kitchencalm/shopping-list": {
+    "/mise/shopping-list": {
       "get": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "shopping-list"
         ],
         "description": "Get aggregated shopping list from recipes in the meal plan, optionally filtered by date range",
@@ -1575,10 +1575,10 @@
         }
       }
     },
-    "/kitchencalm/s3/signed-url": {
+    "/mise/s3/signed-url": {
       "post": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "s3"
         ],
         "description": "Generate a signed GET URL for downloading files from S3",
@@ -1663,10 +1663,10 @@
         }
       }
     },
-    "/kitchencalm/s3/upload": {
+    "/mise/s3/upload": {
       "post": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "s3"
         ],
         "description": "Generate a signed PUT URL for uploading files to S3",
@@ -1785,10 +1785,10 @@
         }
       }
     },
-    "/kitchencalm/s3/delete": {
+    "/mise/s3/delete": {
       "post": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "s3"
         ],
         "description": "Delete a file from S3",
@@ -1872,10 +1872,10 @@
         }
       }
     },
-    "/kitchencalm/parse-recipe": {
+    "/mise/parse-recipe": {
       "post": {
         "tags": [
-          "kitchencalm",
+          "mise",
           "recipes"
         ],
         "description": "Parse natural language recipe text and save to the user account",

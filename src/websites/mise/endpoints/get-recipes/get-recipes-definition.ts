@@ -1,28 +1,23 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { jwtAuthMiddleware } from '@core/middleware/jwt-auth.js';
-import { DeleteRecipeResponseSchema } from './delete-recipe.js';
+import { GetRecipesResponseSchema } from './get-recipes.js';
 
-export const deleteRecipeRoute = createRoute({
-  method: 'delete',
-  path: '/kitchencalm/recipes/{uuid}',
-  tags: ['kitchencalm', 'recipes'],
-  description: 'Delete a recipe for the authenticated user',
-  security: [{ bearerAuth: [] }],
+export const getRecipesRoute = createRoute({
+  method: 'get',
+  path: '/mise/recipes',
+  tags: ['mise', 'recipes'],
+  description: 'Get all recipes for the authenticated user',
+  security: [{ Bearer: [] }],
   middleware: [jwtAuthMiddleware],
-  request: {
-    params: z.object({
-      uuid: z.string().uuid().describe('Recipe UUID to delete'),
-    }),
-  },
   responses: {
     200: {
       content: {
         'application/json': {
-          schema: DeleteRecipeResponseSchema,
+          schema: GetRecipesResponseSchema,
         },
       },
-      description: 'Recipe deleted successfully',
+      description: 'Recipes retrieved successfully',
     },
     401: {
       content: {

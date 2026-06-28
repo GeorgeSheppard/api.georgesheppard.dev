@@ -1,20 +1,20 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { jwtAuthMiddleware } from '@core/middleware/jwt-auth.js';
-import { ParseRecipeRequestSchema, ParseRecipeResponseSchema } from './parse-recipe.js';
+import { UpdateMealPlanRequestSchema, UpdateMealPlanResponseSchema } from './update-meal-plan.js';
 
-export const parseRecipeRoute = createRoute({
-  method: 'post',
-  path: '/kitchencalm/parse-recipe',
-  tags: ['kitchencalm', 'recipes'],
-  description: 'Parse natural language recipe text and save to the user account',
+export const updateMealPlanRoute = createRoute({
+  method: 'put',
+  path: '/mise/meal-plan',
+  tags: ['mise', 'meal-plan'],
+  description: 'Update the meal plan for the authenticated user',
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
     body: {
       content: {
         'application/json': {
-          schema: ParseRecipeRequestSchema,
+          schema: UpdateMealPlanRequestSchema,
         },
       },
       required: true,
@@ -24,10 +24,10 @@ export const parseRecipeRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: ParseRecipeResponseSchema,
+          schema: UpdateMealPlanResponseSchema,
         },
       },
-      description: 'Recipe parsed and saved successfully',
+      description: 'Meal plan updated successfully',
     },
     400: {
       content: {

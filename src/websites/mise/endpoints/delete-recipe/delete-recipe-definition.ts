@@ -1,43 +1,28 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { jwtAuthMiddleware } from '@core/middleware/jwt-auth.js';
-import { UpdateMealPlanRequestSchema, UpdateMealPlanResponseSchema } from './update-meal-plan.js';
+import { DeleteRecipeResponseSchema } from './delete-recipe.js';
 
-export const updateMealPlanRoute = createRoute({
-  method: 'put',
-  path: '/kitchencalm/meal-plan',
-  tags: ['kitchencalm', 'meal-plan'],
-  description: 'Update the meal plan for the authenticated user',
+export const deleteRecipeRoute = createRoute({
+  method: 'delete',
+  path: '/mise/recipes/{uuid}',
+  tags: ['mise', 'recipes'],
+  description: 'Delete a recipe for the authenticated user',
   security: [{ bearerAuth: [] }],
   middleware: [jwtAuthMiddleware],
   request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: UpdateMealPlanRequestSchema,
-        },
-      },
-      required: true,
-    },
+    params: z.object({
+      uuid: z.string().uuid().describe('Recipe UUID to delete'),
+    }),
   },
   responses: {
     200: {
       content: {
         'application/json': {
-          schema: UpdateMealPlanResponseSchema,
+          schema: DeleteRecipeResponseSchema,
         },
       },
-      description: 'Meal plan updated successfully',
-    },
-    400: {
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string().describe('Error message'),
-          }),
-        },
-      },
-      description: 'Invalid request body',
+      description: 'Recipe deleted successfully',
     },
     401: {
       content: {

@@ -51,14 +51,14 @@ describe('login route', () => {
     registerLoginRoute(app);
 
     const res = await app.request(
-      '/auth/login?redirect_uri=https://kitchencalm.georgesheppard.dev/dashboard'
+      '/auth/login?redirect_uri=https://mise.georgesheppard.dev/dashboard'
     );
 
     expect(
       res.headers
         .getSetCookie()
         .some((c) =>
-          c.startsWith('oauth_redirect=https%3A%2F%2Fkitchencalm.georgesheppard.dev%2Fdashboard')
+          c.startsWith('oauth_redirect=https%3A%2F%2Fmise.georgesheppard.dev%2Fdashboard')
         )
     ).toBe(true);
   });

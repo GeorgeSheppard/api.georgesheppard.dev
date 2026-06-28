@@ -32,7 +32,7 @@ Handlers must be **exported functions** that:
 3. Call **utility functions** for external operations (DB, S3, DynamoDB, etc.)
 4. Return a typed result (not a Hono `Response`)
 
-### KitchenCalm Pattern (Existing)
+### Mise Pattern (Existing)
 
 Handlers return data directly. The route registration always returns 200.
 
@@ -238,10 +238,10 @@ it('should return 404 when not found', async () => {
 
 See these files for the canonical patterns:
 
-**KitchenCalm (utility function mocking):**
+**Mise (utility function mocking):**
 
-- Handler: `src/websites/kitchencalm/endpoints/get-recipes/get-recipes.ts`
-- Test: `src/websites/kitchencalm/endpoints/get-recipes/get-recipes.test.ts`
+- Handler: `src/websites/mise/endpoints/get-recipes/get-recipes.ts`
+- Test: `src/websites/mise/endpoints/get-recipes/get-recipes.test.ts`
 
 **Shelfie (refactored with query extraction):**
 

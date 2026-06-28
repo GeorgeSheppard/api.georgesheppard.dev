@@ -192,7 +192,7 @@ import {
   AuthTokenRequestSchema,
   AuthTokenResponseSchema,
   authTokenHandler,
-} from '@websites/kitchencalm/endpoints/auth-token/auth-token.js';
+} from '@websites/mise/endpoints/auth-token/auth-token.js';
 
 // Register handler in MCP server (example)
 mcpServer.setRequestHandler(AuthTokenRequest, async (request) => {

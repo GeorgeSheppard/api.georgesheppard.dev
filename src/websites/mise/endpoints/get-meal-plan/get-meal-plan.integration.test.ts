@@ -19,7 +19,7 @@ describe('Get Meal Plan Endpoint', () => {
     const token = await signJwt(userId);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/meal-plan', {
+      new Request('http://localhost/mise/meal-plan', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -110,7 +110,7 @@ describe('Get Meal Plan Endpoint', () => {
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/meal-plan', {
+      new Request('http://localhost/mise/meal-plan', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -186,7 +186,7 @@ describe('Get Meal Plan Endpoint', () => {
     await putMealPlanForUser(dynamoClient.client, userId, mealPlan);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/meal-plan', {
+      new Request('http://localhost/mise/meal-plan', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -211,7 +211,7 @@ describe('Get Meal Plan Endpoint', () => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/meal-plan', {
+      new Request('http://localhost/mise/meal-plan', {
         method: 'GET',
       })
     );

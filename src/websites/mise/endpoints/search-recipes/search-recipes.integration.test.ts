@@ -1,5 +1,5 @@
 /**
- * Integration tests for GET /kitchencalm/recipes/search endpoint
+ * Integration tests for GET /mise/recipes/search endpoint
  */
 import { describe, expect } from 'vitest';
 import { test } from '@test/fixtures.js';
@@ -17,13 +17,13 @@ function generateUUID(index: number): string {
   return `550e8400-e29b-41d4-a716-${String(446655440000 + index).padStart(12, '0')}`;
 }
 
-describe('GET /kitchencalm/recipes/search', () => {
+describe('GET /mise/recipes/search', () => {
   test('should return empty results when user has no recipes', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
     const token = await signJwt(validUserId);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=pasta', {
+      new Request('http://localhost/mise/recipes/search?q=pasta', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -67,7 +67,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     );
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=nonexistent', {
+      new Request('http://localhost/mise/recipes/search?q=nonexistent', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -111,7 +111,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     );
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=Pasta', {
+      new Request('http://localhost/mise/recipes/search?q=Pasta', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -160,7 +160,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     );
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=Bacon', {
+      new Request('http://localhost/mise/recipes/search?q=Bacon', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -198,7 +198,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     );
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=vegetarian', {
+      new Request('http://localhost/mise/recipes/search?q=vegetarian', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -243,7 +243,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     );
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=Preheat', {
+      new Request('http://localhost/mise/recipes/search?q=Preheat', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -289,7 +289,7 @@ describe('GET /kitchencalm/recipes/search', () => {
 
     // Search for "Pasta" in name field only - should find it
     const responseNameOnly = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=Pasta&fields=name', {
+      new Request('http://localhost/mise/recipes/search?q=Pasta&fields=name', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -307,7 +307,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=pasta', {
+      new Request('http://localhost/mise/recipes/search?q=pasta', {
         method: 'GET',
       })
     );
@@ -321,7 +321,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=pasta', {
+      new Request('http://localhost/mise/recipes/search?q=pasta', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer invalid-token',
@@ -370,7 +370,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     ]);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=Pasta', {
+      new Request('http://localhost/mise/recipes/search?q=Pasta', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${user1Token}`,
@@ -422,7 +422,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     ]);
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=Pasta', {
+      new Request('http://localhost/mise/recipes/search?q=Pasta', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -469,7 +469,7 @@ describe('GET /kitchencalm/recipes/search', () => {
     );
 
     const response = await app.request(
-      new Request('http://localhost/kitchencalm/recipes/search?q=Test', {
+      new Request('http://localhost/mise/recipes/search?q=Test', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,

@@ -11,10 +11,7 @@ import { DynamoDBClientWrapper } from '@core/dynamodb/client.js';
 import { S3ClientWrapper } from '@core/s3/client.js';
 import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import { registerShelfieRoutes } from '@websites/shelfie/index.js';
-import {
-  registerRoutes as registerKitchenCalmRoutes,
-  tools as kitchenCalmTools,
-} from '@websites/kitchencalm/index.js';
+import { registerRoutes as registerMiseRoutes, tools as miseTools } from '@websites/mise/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
 import { ALLOWED_FRONTEND_URLS } from '@core/auth/redirect.js';
@@ -83,10 +80,10 @@ export async function createApp(dependencies: AppDependencies) {
 
   // Register website routes
   registerShelfieRoutes(app);
-  registerKitchenCalmRoutes(app);
+  registerMiseRoutes(app);
 
   // Register MCP with all tools from all websites
-  const allMcpTools = [...kitchenCalmTools];
+  const allMcpTools = [...miseTools];
   registerMcpSseRoute(app, allMcpTools);
 
   // Register Swagger UI and OpenAPI spec

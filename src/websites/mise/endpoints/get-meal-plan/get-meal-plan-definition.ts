@@ -1,32 +1,25 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
-import { S3DeleteRequestSchema, S3DeleteResponseSchema } from './s3-delete.js';
+import { jwtAuthMiddleware } from '@core/middleware/jwt-auth.js';
+import { GetMealPlanResponseSchema } from './get-meal-plan.js';
 
-export const s3DeleteRoute = createRoute({
-  method: 'post',
-  path: '/kitchencalm/s3/delete',
-  tags: ['kitchencalm', 's3'],
-  description: 'Delete a file from S3',
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: S3DeleteRequestSchema,
-        },
-      },
-      required: true,
-    },
-  },
+export const getMealPlanRoute = createRoute({
+  method: 'get',
+  path: '/mise/meal-plan',
+  tags: ['mise', 'meal-plan'],
+  description: 'Get the meal plan for the authenticated user',
+  security: [{ bearerAuth: [] }],
+  middleware: [jwtAuthMiddleware],
   responses: {
     200: {
       content: {
         'application/json': {
-          schema: S3DeleteResponseSchema,
+          schema: GetMealPlanResponseSchema,
         },
       },
-      description: 'File deleted successfully',
+      description: 'Meal plan retrieved successfully',
     },
-    400: {
+    401: {
       content: {
         'application/json': {
           schema: z.object({
@@ -34,7 +27,7 @@ export const s3DeleteRoute = createRoute({
           }),
         },
       },
-      description: 'Invalid request body',
+      description: 'Unauthorized - invalid or missing JWT token',
     },
     500: {
       content: {
