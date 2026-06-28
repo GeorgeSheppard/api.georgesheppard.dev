@@ -4,6 +4,31 @@ import { eq } from 'drizzle-orm';
 import { App } from '../../../../server.js';
 import { createMockIpLocator } from '@test/mocks/ip-locator.js';
 import { createTestApp } from '@test/utils/app.js';
+import type { OpenAIClientWrapper } from '@core/utils/openai-client.js';
+import type OpenAI from 'openai';
+
+function createMockOpenAIClient(): OpenAIClientWrapper {
+  return {
+    getClient: () =>
+      ({
+        chat: {
+          completions: {
+            create: async () => ({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify({
+                      books: [{ title: 'Dune', author: 'Frank Herbert' }],
+                    }),
+                  },
+                },
+              ],
+            }),
+          },
+        },
+      }) as unknown as OpenAI,
+  } as OpenAIClientWrapper;
+}
 
 describe('POST /api/recommendations/from-bookcase', () => {
   let app: App;
@@ -13,6 +38,7 @@ describe('POST /api/recommendations/from-bookcase', () => {
       databaseClient: dbClient,
       queueClient: queueClient,
       ipLocator: createMockIpLocator(),
+      openaiClient: createMockOpenAIClient(),
     });
   });
 

@@ -163,6 +163,23 @@ export async function createBookcaseRequest(
   });
 }
 
+/**
+ * Save extracted books against a request.
+ */
+export async function updateBooksProcessed(
+  db: DatabaseClient['db'],
+  requestId: string,
+  books: BooksProcessed['books']
+): Promise<void> {
+  await db
+    .update(requests)
+    .set({
+      booksProcessed: { books },
+      booksProcessedUtc: new Date(),
+    })
+    .where(eq(requests.id, requestId));
+}
+
 export interface DueUser {
   id: string;
   location: string | null;

@@ -1,7 +1,6 @@
-import { requests, recommendations, images } from '@core/database/schema/index.js';
+import { requests, recommendations } from '@core/database/schema/index.js';
 import { eq, desc, isNotNull, and } from 'drizzle-orm';
 import { Recommender } from '@core/utils/openai-recommender.js';
-import { BookExtractor } from '@core/utils/openai-book-extractor.js';
 import { EmailClient } from '@core/utils/mailgun.js';
 import { encryption } from '@core/utils/encryption.js';
 import { RecommendationJob } from '@core/queue/client.js';
@@ -13,42 +12,20 @@ export async function processRecommendationJob(
   job: RecommendationJob,
   databaseClient: DatabaseClient,
   emailClient: EmailClient,
-  recommender: Recommender,
-  bookExtractor: BookExtractor
+  recommender: Recommender
 ) {
   const { userId, recommendationId } = job;
 
-  logger.info(`Extracting books for user ${userId}`);
+  logger.info(`Generating recommendations for user ${userId}`);
 
   const { db } = databaseClient;
 
-  // Fetch user
+  // Fetch user with books processed
   const [user] = await db.select().from(requests).where(eq(requests.id, userId));
 
-  if (!user) {
-    throw new Error(`User not found: ${userId}`);
+  if (!user || !user.booksProcessed) {
+    throw new Error(`User or books not found: ${userId}`);
   }
-
-  // Fetch all images for this user
-  const userImages = await db.select().from(images).where(eq(images.requestId, userId));
-
-  if (userImages.length === 0) {
-    throw new Error(`No images found for user: ${userId}`);
-  }
-
-  const books = await bookExtractor.extractBooks(
-    userImages.map((image) => ({ buffer: image.image, contentType: image.contentType }))
-  );
-
-  await db
-    .update(requests)
-    .set({
-      booksProcessed: { books },
-      booksProcessedUtc: new Date(),
-    })
-    .where(eq(requests.id, userId));
-
-  logger.info(`Extracted ${books.length} unique books, generating recommendations`);
 
   // Fetch previous recommendations (last 6)
   const previousRecs = await db
@@ -64,7 +41,11 @@ export async function processRecommendationJob(
 
   // Generate new recommendations
   const location = (user.location as Location) || Location.Us;
-  const newRecommendations = await recommender.getRecommendations(books, location, previousBooks);
+  const newRecommendations = await recommender.getRecommendations(
+    user.booksProcessed.books,
+    location,
+    previousBooks
+  );
 
   // Update recommendation record
   await db

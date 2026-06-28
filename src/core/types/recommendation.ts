@@ -6,6 +6,11 @@ export interface Recommendation {
   amazonLink: string;
 }
 
+export interface BookEntry {
+  title: string;
+  author: string | null;
+}
+
 export interface BooksProcessed {
-  books: string[];
+  books: BookEntry[];
 }

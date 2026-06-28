@@ -5,7 +5,6 @@ import { processRecommendationJob } from '@websites/shelfie/workers/recommendati
 import { config } from '@config/index.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { OpenAIRecommender } from '@core/utils/openai-recommender.js';
-import { OpenAIBookExtractor } from '@core/utils/openai-book-extractor.js';
 import { logger } from '@core/telemetry/logger.js';
 
 async function main() {
@@ -15,7 +14,6 @@ async function main() {
   const databaseClient = await createDatabaseClient(config.DATABASE_URL);
   const emailClient = new MailgunClient();
   const recommender = new OpenAIRecommender();
-  const bookExtractor = new OpenAIBookExtractor();
   const { channel, recommendationQueue } = queueClient;
 
   // Set prefetch to 1 to ensure fair distribution
@@ -28,7 +26,7 @@ async function main() {
     try {
       const job = JSON.parse(msg.content.toString());
       logger.info(`Processing recommendation job:`, job);
-      await processRecommendationJob(job, databaseClient, emailClient, recommender, bookExtractor);
+      await processRecommendationJob(job, databaseClient, emailClient, recommender);
       channel.ack(msg);
       logger.info(`Recommendation job completed`);
     } catch (err) {
