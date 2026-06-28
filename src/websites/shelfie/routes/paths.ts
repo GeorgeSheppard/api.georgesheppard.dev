@@ -13,4 +13,5 @@ export const ROUTES = {
 
   // Cron (Protected)
   QUEUE_DUE_RECOMMENDATIONS: '/api/queue-due-recommendations',
+  REEXTRACT_RECURRING_BOOKS: '/api/reextract-recurring-books',
 } as const;
