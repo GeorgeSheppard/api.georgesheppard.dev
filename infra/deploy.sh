@@ -8,8 +8,7 @@ set -euo pipefail
 # changed, so this is safe to run unconditionally.
 #
 # Required host env vars: INFISICAL_CLIENT_ID, INFISICAL_CLIENT_SECRET, INFISICAL_PROJECT_ID
-# Optional: INFISICAL_ENV (defaults to "prod"), GITHUB_TOKEN (only needed if the repo is private),
-#           COMPOSE_SOURCE_URL (defaults to the raw infra/compose.yaml on master)
+# Optional: INFISICAL_ENV (defaults to "prod")
 
 cd "$(dirname "$0")"
 
@@ -17,13 +16,8 @@ cd "$(dirname "$0")"
 : "${INFISICAL_CLIENT_SECRET:?INFISICAL_CLIENT_SECRET is not set}"
 : "${INFISICAL_PROJECT_ID:?INFISICAL_PROJECT_ID is not set}"
 INFISICAL_ENV="${INFISICAL_ENV:-prod}"
-COMPOSE_SOURCE_URL="${COMPOSE_SOURCE_URL:-https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml}"
 
-if [ -n "${GITHUB_TOKEN:-}" ]; then
-  curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" "$COMPOSE_SOURCE_URL" -o compose.yaml
-else
-  curl -fsSL "$COMPOSE_SOURCE_URL" -o compose.yaml
-fi
+curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o compose.yaml
 
 INFISICAL_TOKEN="$(infisical login --method=universal-auth \
   --client-id="$INFISICAL_CLIENT_ID" \
