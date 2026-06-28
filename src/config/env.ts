@@ -49,7 +49,7 @@ const envSchema = z.object({
   ENCRYPTION_KEY: z.string().length(32),
   ENCRYPTION_IV: z.string().length(16),
 
-  // DynamoDB (Mise/MyLife)
+  // DynamoDB (Mise)
   DYNAMODB_REGION: z.string().default('eu-west-2'),
   DYNAMODB_TABLE_NAME: z.string(),
   DYNAMODB_ACCESS_KEY_ID: z.string(),

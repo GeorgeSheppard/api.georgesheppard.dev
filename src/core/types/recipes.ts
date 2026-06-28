@@ -1,5 +1,5 @@
 /**
- * Recipe type definitions for Mise/MyLife backend
+ * Recipe type definitions for Mise backend
  */
 
 /**
