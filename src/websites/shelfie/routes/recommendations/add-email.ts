@@ -112,10 +112,10 @@ export async function addEmail(c: Context, input: AddEmailInput): Promise<AddEma
   if (recommendationsAlreadyDone) {
     try {
       await emailClient.sendRecommendationsEmail({
-        from: 'Shelfie <postmaster@mailgun.shelfie.georgesheppard.dev>',
+        from: 'Shelfie <postmaster@mail.georgesheppard.dev>',
         to: [finalEmail],
         subject: 'Your Shelfie recommendations are here!',
-        template: 'recommendations',
+        template: 'shelfie recommendations',
         variables: {
           recommendationsurl: `https://shelfie.georgesheppard.dev/recommendations/${input.id}`,
           unsubscribeUrl: `https://shelfie.georgesheppard.dev/unsubscribe/${requestId}`,

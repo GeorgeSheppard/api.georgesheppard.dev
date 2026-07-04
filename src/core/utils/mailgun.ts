@@ -21,7 +21,7 @@ export abstract class EmailClient {
 
 export class MailgunClient implements EmailClient {
   private apiKey: string;
-  private domain = 'mailgun.shelfie.georgesheppard.dev';
+  private domain = 'mail.georgesheppard.dev';
   private baseUrl = 'https://api.eu.mailgun.net/v3';
 
   constructor() {
