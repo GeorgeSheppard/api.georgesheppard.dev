@@ -2057,6 +2057,274 @@
           }
         }
       }
+    },
+    "/mise/shopping-list/generate": {
+      "post": {
+        "tags": [
+          "mise",
+          "shopping-list"
+        ],
+        "description": "Generate a shopping list from the meal plan (optionally filtered by dates) and store it as the active shopping list for mobile use",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dates": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "description": "Array of Unix timestamps (milliseconds)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Shopping list generated and saved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "ingredient": {
+                            "type": "string",
+                            "description": "Name of the ingredient"
+                          },
+                          "quantities": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "value": {
+                                  "type": "number",
+                                  "description": "Quantity value"
+                                },
+                                "unit": {
+                                  "type": "string",
+                                  "description": "Unit of measurement"
+                                }
+                              },
+                              "required": [
+                                "unit"
+                              ]
+                            },
+                            "description": "Array of quantities with units"
+                          },
+                          "category": {
+                            "type": "string",
+                            "description": "Shopping category for the ingredient"
+                          },
+                          "meals": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "List of meals this ingredient belongs to"
+                          }
+                        },
+                        "required": [
+                          "ingredient",
+                          "quantities",
+                          "category",
+                          "meals"
+                        ]
+                      },
+                      "description": "Array of shopping list items with ingredient, quantity, and category"
+                    },
+                    "generatedAt": {
+                      "type": "number",
+                      "description": "Unix timestamp (milliseconds) the list was generated at"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "generatedAt"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mise/shopping-list/active": {
+      "get": {
+        "tags": [
+          "mise",
+          "shopping-list"
+        ],
+        "description": "Get the active (previously generated) shopping list for the authenticated user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active shopping list retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "ingredient": {
+                            "type": "string",
+                            "description": "Name of the ingredient"
+                          },
+                          "quantities": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "value": {
+                                  "type": "number",
+                                  "description": "Quantity value"
+                                },
+                                "unit": {
+                                  "type": "string",
+                                  "description": "Unit of measurement"
+                                }
+                              },
+                              "required": [
+                                "unit"
+                              ]
+                            },
+                            "description": "Array of quantities with units"
+                          },
+                          "category": {
+                            "type": "string",
+                            "description": "Shopping category for the ingredient"
+                          },
+                          "meals": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "List of meals this ingredient belongs to"
+                          }
+                        },
+                        "required": [
+                          "ingredient",
+                          "quantities",
+                          "category",
+                          "meals"
+                        ]
+                      },
+                      "description": "Array of shopping list items with ingredient, quantity, and category"
+                    },
+                    "generatedAt": {
+                      "type": "number",
+                      "nullable": true,
+                      "description": "Unix timestamp (milliseconds) the list was generated at, null if none exists yet"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "generatedAt"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

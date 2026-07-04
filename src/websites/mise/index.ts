@@ -47,6 +47,17 @@ import {
 } from './endpoints/search-recipes/search-recipes.js';
 import { parseRecipe } from './endpoints/parse-recipe/parse-recipe.js';
 import { parseRecipeRoute } from './endpoints/parse-recipe/parse-recipe-definition.js';
+import {
+  generateShoppingList,
+  GenerateShoppingListRequestSchema,
+  GenerateShoppingListResponseSchema,
+} from './endpoints/generate-shopping-list/generate-shopping-list.js';
+import { generateShoppingListRoute } from './endpoints/generate-shopping-list/generate-shopping-list-definition.js';
+import {
+  getActiveShoppingList,
+  GetActiveShoppingListResponseSchema,
+} from './endpoints/get-active-shopping-list/get-active-shopping-list.js';
+import { getActiveShoppingListRoute } from './endpoints/get-active-shopping-list/get-active-shopping-list-definition.js';
 
 export const tools: McpTool<any, any>[] = [
   {
@@ -95,6 +106,20 @@ export const tools: McpTool<any, any>[] = [
     SearchRecipesRequestSchema,
     searchRecipesHandler,
     SearchRecipesResponseSchema
+  ),
+  createMcpTool(
+    'generate_shopping_list',
+    'Generate a shopping list from the meal plan and store it as the active shopping list for mobile use',
+    GenerateShoppingListRequestSchema,
+    generateShoppingList,
+    GenerateShoppingListResponseSchema
+  ),
+  createMcpTool(
+    'get_active_shopping_list',
+    'Get the active (previously generated) shopping list for the authenticated user',
+    z.object({}),
+    getActiveShoppingList,
+    GetActiveShoppingListResponseSchema
   ),
 ];
 
@@ -160,6 +185,17 @@ export function registerRoutes(app: OpenAPIHono) {
   app.openapi(parseRecipeRoute, async (c) => {
     const input = c.req.valid('json');
     const result = await parseRecipe(c as ContextWithUserId, input);
+    return c.json(result, 200);
+  });
+
+  app.openapi(generateShoppingListRoute, async (c) => {
+    const input = c.req.valid('json');
+    const result = await generateShoppingList(c as ContextWithUserId, input);
+    return c.json(result, 200);
+  });
+
+  app.openapi(getActiveShoppingListRoute, async (c) => {
+    const result = await getActiveShoppingList(c as ContextWithUserId);
     return c.json(result, 200);
   });
 }

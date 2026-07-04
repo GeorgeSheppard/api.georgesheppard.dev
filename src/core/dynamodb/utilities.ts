@@ -4,6 +4,7 @@
 import { DynamoDBDocument, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { IRecipe, RecipeUuid } from '@core/types/recipes.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
+import { IStoredShoppingList } from '@core/types/shopping-list.js';
 import { config } from '@config/index.js';
 import { logger } from '@core/telemetry/logger.js';
 
@@ -197,6 +198,71 @@ export async function putMealPlanForUser(
     });
   } catch (error) {
     logger.error('Failed to put meal plan in DynamoDB:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get the active shopping list for a user
+ *
+ * Returns the shopping list item with sort key 'SL' for the user.
+ * Returns null if no shopping list has been generated yet.
+ *
+ * @param client - DynamoDB document client
+ * @param userId - User ID (Cognito sub)
+ * @returns Stored shopping list, or null if none exists
+ */
+export async function getShoppingListForUser(
+  client: DynamoDBDocument,
+  userId: string
+): Promise<IStoredShoppingList | null> {
+  try {
+    const result = await client.get({
+      TableName: config.DYNAMODB_TABLE_NAME,
+      Key: {
+        UserId: userId,
+        Item: 'SL',
+      },
+    });
+
+    if (!result.Item || !result.Item.data) {
+      return null;
+    }
+
+    return result.Item.data as IStoredShoppingList;
+  } catch (error) {
+    logger.error('Failed to get shopping list from DynamoDB:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update (put) the active shopping list for a user
+ *
+ * Replaces the entire shopping list with the provided data.
+ * Creates new item if doesn't exist, or updates existing one.
+ *
+ * @param client - DynamoDB document client
+ * @param userId - User ID (Cognito sub)
+ * @param shoppingList - Shopping list to save
+ * @returns Promise<void>
+ */
+export async function putShoppingListForUser(
+  client: DynamoDBDocument,
+  userId: string,
+  shoppingList: IStoredShoppingList
+): Promise<void> {
+  try {
+    await client.put({
+      TableName: config.DYNAMODB_TABLE_NAME,
+      Item: {
+        UserId: userId,
+        Item: 'SL',
+        data: shoppingList,
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to put shopping list in DynamoDB:', error);
     throw error;
   }
 }
