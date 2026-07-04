@@ -53,7 +53,7 @@ describe('parseMultipartFiles', () => {
     ]);
   });
 
-  it('defaults the max size to 50MB', () => {
-    expect(MAX_UPLOAD_SIZE_BYTES).toBe(50 * 1024 * 1024);
+  it('defaults the max size to 20MB', () => {
+    expect(MAX_UPLOAD_SIZE_BYTES).toBe(20 * 1024 * 1024);
   });
 });

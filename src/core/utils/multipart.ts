@@ -8,7 +8,7 @@ export interface UploadedFile {
   data: Buffer;
 }
 
-export const MAX_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024;
+export const MAX_UPLOAD_SIZE_BYTES = 20 * 1024 * 1024;
 
 export async function parseMultipartFiles(
   c: Context,
