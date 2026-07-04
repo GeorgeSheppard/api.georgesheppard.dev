@@ -22,4 +22,16 @@ describe('resolveRedirectUri', () => {
   it('falls back to the default when the uri is not a valid url', () => {
     expect(resolveRedirectUri('not-a-url')).toBe('http://localhost:3000');
   });
+
+  it('allows Cloudflare preview deployment origins', () => {
+    const previewUrl =
+      'https://claude-recipe-servings-display-sk5qai-mise.georgesheppard98.workers.dev/food';
+    expect(resolveRedirectUri(previewUrl)).toBe(previewUrl);
+  });
+
+  it('rejects workers.dev origins outside the account subdomain', () => {
+    expect(resolveRedirectUri('https://some-worker.evil-account.workers.dev')).toBe(
+      'http://localhost:3000'
+    );
+  });
 });

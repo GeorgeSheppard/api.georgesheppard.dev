@@ -14,7 +14,7 @@ import { registerShelfieRoutes } from '@websites/shelfie/index.js';
 import { registerRoutes as registerMiseRoutes, tools as miseTools } from '@websites/mise/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
-import { ALLOWED_FRONTEND_URLS } from '@core/auth/redirect.js';
+import { isAllowedOrigin } from '@core/auth/redirect.js';
 import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
@@ -63,7 +63,7 @@ export async function createApp(dependencies: AppDependencies) {
   app.use(
     '*',
     cors({
-      origin: ALLOWED_FRONTEND_URLS,
+      origin: (origin) => (origin && isAllowedOrigin(origin) ? origin : undefined),
       credentials: true,
     })
   );
