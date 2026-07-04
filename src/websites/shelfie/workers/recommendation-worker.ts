@@ -64,10 +64,10 @@ export async function processRecommendationJob(
       const plaintextEmail = encryption.decrypt(user.email);
 
       await emailClient.sendRecommendationsEmail({
-        from: 'Shelfie <postmaster@mailgun.shelfie.georgesheppard.dev>',
+        from: 'Shelfie <postmaster@mail.georgesheppard.dev>',
         to: [plaintextEmail],
         subject: 'Your Shelfie recommendations are here!',
-        template: 'recommendations',
+        template: 'shelfie recommendations',
         variables: {
           recommendationsurl: `https://shelfie.georgesheppard.dev/recommendations/${recommendationId}`,
           unsubscribeUrl: `https://shelfie.georgesheppard.dev/unsubscribe/${userId}`,
