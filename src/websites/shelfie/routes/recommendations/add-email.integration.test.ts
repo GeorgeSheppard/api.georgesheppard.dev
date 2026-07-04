@@ -288,10 +288,10 @@ describe('POST /api/recommendations/add-email', () => {
 
     // Verify email was sent immediately
     expect(emailClient.sendRecommendationsEmail).toHaveBeenCalledWith({
-      from: 'Shelfie <postmaster@mailgun.shelfie.georgesheppard.dev>',
+      from: 'Shelfie <postmaster@mail.georgesheppard.dev>',
       to: [testEmail],
       subject: 'Your Shelfie recommendations are here!',
-      template: 'recommendations',
+      template: 'shelfie recommendations',
       variables: {
         recommendationsurl: `https://shelfie.georgesheppard.dev/recommendations/${recommendation.id}`,
         unsubscribeUrl: `https://shelfie.georgesheppard.dev/unsubscribe/${request.id}`,
@@ -427,10 +427,10 @@ describe('POST /api/recommendations/add-email', () => {
 
     // Verify email was sent immediately with unsubscribe text
     expect(emailClient.sendRecommendationsEmail).toHaveBeenCalledWith({
-      from: 'Shelfie <postmaster@mailgun.shelfie.georgesheppard.dev>',
+      from: 'Shelfie <postmaster@mail.georgesheppard.dev>',
       to: [testEmail],
       subject: 'Your Shelfie recommendations are here!',
-      template: 'recommendations',
+      template: 'shelfie recommendations',
       variables: {
         recommendationsurl: `https://shelfie.georgesheppard.dev/recommendations/${recommendation.id}`,
         unsubscribeUrl: `https://shelfie.georgesheppard.dev/unsubscribe/${request.id}`,

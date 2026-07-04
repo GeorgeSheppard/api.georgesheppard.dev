@@ -1,5 +1,5 @@
 <!--
-  Mailgun template: "recommendations"
+  Mailgun template: "shelfie recommendations"
   Engine: Handlebars v3
 
   Variables sent by src/core/utils/mailgun.ts (MailgunClient.sendRecommendationsEmail):
@@ -17,13 +17,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Your Shelfie recommendations</title>
     <!--[if mso]>
-    <noscript>
-      <xml>
-        <o:OfficeDocumentSettings>
-          <o:PixelsPerInch>96</o:PixelsPerInch>
-        </o:OfficeDocumentSettings>
-      </xml>
-    </noscript>
+      <noscript>
+        <xml>
+          <o:OfficeDocumentSettings>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+          </o:OfficeDocumentSettings>
+        </xml>
+      </noscript>
     <![endif]-->
   </head>
   <body
@@ -32,7 +32,14 @@
       padding: 0;
       width: 100%;
       background-color: #f5f0f0;
-      font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+      font-family:
+        'Geist',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
         sans-serif;
     "
   >
@@ -119,8 +126,7 @@
                           opacity: 0.8;
                         "
                       >
-                        We've picked out some new books we think you'll love, based on your
-                        shelf.
+                        We've picked out some new books we think you'll love, based on your shelf.
                       </p>
                     </td>
                   </tr>
@@ -128,10 +134,7 @@
                     <td align="center" style="padding-bottom: 8px">
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                         <tr>
-                          <td
-                            align="center"
-                            style="background-color: #e08585; border-radius: 6px"
-                          >
+                          <td align="center" style="background-color: #e08585; border-radius: 6px">
                             <a
                               href="{{recommendationsurl}}"
                               target="_blank"
@@ -168,8 +171,7 @@
                     opacity: 0.6;
                   "
                 >
-                  You're receiving this email because you asked Shelfie for book
-                  recommendations.
+                  You're receiving this email because you asked Shelfie for book recommendations.
                   {{#if unsubscribeText}}
                   <br />
                   <a

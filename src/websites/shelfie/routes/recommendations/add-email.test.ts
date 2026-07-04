@@ -172,7 +172,7 @@ describe('addEmail handler', () => {
       expect(mockSendRecommendationsEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: ['test@example.com'],
-          template: 'recommendations',
+          template: 'shelfie recommendations',
         })
       );
     });
