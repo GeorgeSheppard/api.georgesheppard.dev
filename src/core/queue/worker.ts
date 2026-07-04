@@ -1,4 +1,5 @@
 import '@core/telemetry/init.js';
+import amqp from 'amqplib';
 import { createQueueClient } from './client.js';
 import { createDatabaseClient } from '@core/database/client.js';
 import { processRecommendationJob } from '@websites/shelfie/workers/recommendation-worker.js';
@@ -6,6 +7,25 @@ import { config } from '@config/index.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { OpenAIRecommender } from '@core/utils/openai-recommender.js';
 import { logger } from '@core/telemetry/logger.js';
+
+const MAX_RETRIES = 2;
+
+function requeueOrDrop(
+  channel: amqp.Channel,
+  queue: string,
+  msg: amqp.ConsumeMessage,
+  label: string
+) {
+  const retryCount = (msg.properties.headers?.['x-retry-count'] as number) ?? 0;
+  if (retryCount < MAX_RETRIES) {
+    channel.sendToQueue(queue, msg.content, {
+      persistent: true,
+      headers: { 'x-retry-count': retryCount + 1 },
+    });
+  } else {
+    logger.error(`${label} exceeded max retries, dropping message`);
+  }
+}
 
 async function main() {
   logger.info('Starting RabbitMQ workers...');
@@ -22,16 +42,16 @@ async function main() {
   // Set up recommendation consumer
   await channel.consume(recommendationQueue, async (msg) => {
     if (!msg) return;
+    channel.ack(msg);
 
     try {
       const job = JSON.parse(msg.content.toString());
       logger.info(`Processing recommendation job:`, job);
       await processRecommendationJob(job, databaseClient, emailClient, recommender);
-      channel.ack(msg);
       logger.info(`Recommendation job completed`);
     } catch (err) {
       logger.error(`Recommendation job failed:`, err);
-      channel.nack(msg, false, true); // Requeue on error
+      requeueOrDrop(channel, recommendationQueue, msg, 'Recommendation job');
     }
   });
 
