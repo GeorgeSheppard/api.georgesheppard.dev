@@ -96,3 +96,41 @@ export const MealPlanDaySchema = z.record(
   z.string().uuid().describe('Recipe UUID'),
   z.array(MealPlanComponentSchema).describe('Array of component servings for this recipe')
 );
+
+// Chat ("Chef") schemas
+
+export const ChatRecipeSchema = OpenAIRecipeSchema.extend({
+  sourceUrl: z
+    .string()
+    .url()
+    .optional()
+    .describe('URL the recipe was found at, if imported from the web'),
+}).openapi('ChatRecipe');
+
+const ChatTextBlockSchema = z
+  .object({
+    type: z.literal('text'),
+    text: z.string().describe('Plain text chat content'),
+  })
+  .openapi('ChatTextBlock');
+
+const ChatRecipeBlockSchema = z
+  .object({
+    type: z.literal('recipe'),
+    recipe: ChatRecipeSchema,
+  })
+  .openapi('ChatRecipeBlock');
+
+export const ChatContentBlockSchema = z
+  .discriminatedUnion('type', [ChatTextBlockSchema, ChatRecipeBlockSchema])
+  .openapi('ChatContentBlock');
+
+export const ChatMessageSchema = z
+  .object({
+    role: z.enum(['user', 'assistant']).describe('Who sent this message'),
+    content: z.array(ChatContentBlockSchema).min(1).describe('Ordered content blocks'),
+  })
+  .openapi('ChatMessage');
+
+export type ChatContentBlock = z.infer<typeof ChatContentBlockSchema>;
+export type ChatMessage = z.infer<typeof ChatMessageSchema>;

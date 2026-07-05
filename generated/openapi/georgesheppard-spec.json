@@ -266,6 +266,161 @@
           "componentId",
           "servings"
         ]
+      },
+      "ChatMessage": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "description": "Who sent this message"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatContentBlock"
+            },
+            "minItems": 1,
+            "description": "Ordered content blocks"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "description": "The assistant reply to append to the conversation"
+      },
+      "ChatContentBlock": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ChatTextBlock"
+          },
+          {
+            "$ref": "#/components/schemas/ChatRecipeBlock"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "text": "#/components/schemas/ChatTextBlock",
+            "recipe": "#/components/schemas/ChatRecipeBlock"
+          }
+        }
+      },
+      "ChatTextBlock": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "text"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "description": "Plain text chat content"
+          }
+        },
+        "required": [
+          "type",
+          "text"
+        ]
+      },
+      "ChatRecipeBlock": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "recipe"
+            ]
+          },
+          "recipe": {
+            "$ref": "#/components/schemas/ChatRecipe"
+          }
+        },
+        "required": [
+          "type",
+          "recipe"
+        ]
+      },
+      "ChatRecipe": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OpenAIRecipe"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "sourceUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL the recipe was found at, if imported from the web"
+              }
+            }
+          }
+        ]
+      },
+      "OpenAIRecipe": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Recipe name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Recipe description"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Component name"
+                },
+                "ingredients": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Ingredient"
+                  },
+                  "description": "List of ingredients"
+                },
+                "instructions": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instruction"
+                  },
+                  "description": "List of instructions"
+                },
+                "storeable": {
+                  "type": "boolean",
+                  "description": "Whether component can be made ahead"
+                },
+                "servings": {
+                  "type": "number",
+                  "description": "Number of servings"
+                }
+              },
+              "required": [
+                "name",
+                "ingredients",
+                "instructions"
+              ]
+            },
+            "description": "Recipe components"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "components"
+        ]
       }
     },
     "parameters": {}
@@ -1062,6 +1217,126 @@
                   "additionalProperties": {
                     "$ref": "#/components/schemas/Recipe"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "mise",
+          "recipes"
+        ],
+        "description": "Create or update a recipe for the authenticated user",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Recipe UUID (omit to generate new)"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Recipe name"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Recipe description"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "S3 keys of the recipe images"
+                  },
+                  "components": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Component"
+                    },
+                    "description": "Recipe components"
+                  }
+                },
+                "required": [
+                  "name",
+                  "description",
+                  "components"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recipe created or updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Recipe UUID (new or provided)"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether update was successful"
+                    }
+                  },
+                  "required": [
+                    "uuid",
+                    "success"
+                  ]
                 }
               }
             }
@@ -2012,6 +2287,100 @@
                   },
                   "required": [
                     "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mise/chat": {
+      "post": {
+        "tags": [
+          "mise",
+          "chat"
+        ],
+        "description": "Send a message to Chef, the Mise cooking assistant",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "messages": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ChatMessage"
+                    },
+                    "minItems": 1,
+                    "description": "Full conversation history so far, including the latest user message"
+                  }
+                },
+                "required": [
+                  "messages"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assistant reply",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "$ref": "#/components/schemas/ChatMessage"
+                    }
+                  },
+                  "required": [
+                    "message"
                   ]
                 }
               }

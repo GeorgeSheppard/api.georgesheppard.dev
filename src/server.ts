@@ -10,6 +10,7 @@ import { DatabaseClient } from '@core/database/client.js';
 import { DynamoDBClientWrapper } from '@core/dynamodb/client.js';
 import { S3ClientWrapper } from '@core/s3/client.js';
 import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
+import { AnthropicClientWrapper } from '@core/utils/anthropic-client.js';
 import { registerShelfieRoutes } from '@websites/shelfie/index.js';
 import { registerRoutes as registerMiseRoutes, tools as miseTools } from '@websites/mise/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
@@ -30,6 +31,7 @@ export interface AppDependencies {
   dynamoClient: DynamoDBClientWrapper;
   s3Client: S3ClientWrapper;
   openaiClient: OpenAIClientWrapper;
+  anthropicClient: AnthropicClientWrapper;
 }
 
 export async function createApp(dependencies: AppDependencies) {
@@ -41,6 +43,7 @@ export async function createApp(dependencies: AppDependencies) {
     dynamoClient,
     s3Client,
     openaiClient,
+    anthropicClient,
   } = dependencies;
   const app = new OpenAPIHono();
 
@@ -53,6 +56,7 @@ export async function createApp(dependencies: AppDependencies) {
     c.set('dynamoClient', dynamoClient);
     c.set('s3Client', s3Client);
     c.set('openaiClient', openaiClient);
+    c.set('anthropicClient', anthropicClient);
     await next();
   });
 
@@ -121,5 +125,6 @@ declare module 'hono' {
     dynamoClient: DynamoDBClientWrapper;
     s3Client: S3ClientWrapper;
     openaiClient: OpenAIClientWrapper;
+    anthropicClient: AnthropicClientWrapper;
   }
 }

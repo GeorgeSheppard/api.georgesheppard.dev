@@ -6,6 +6,9 @@ import { authTokenRoute } from './endpoints/auth-token/auth-token-definition.js'
 import { getRecipes } from './endpoints/get-recipes/get-recipes.js';
 import { getRecipesRoute } from './endpoints/get-recipes/get-recipes-definition.js';
 import { updateRecipe } from './endpoints/update-recipe/update-recipe.js';
+import { updateRecipeRoute } from './endpoints/update-recipe/update-recipe-definition.js';
+import { chat } from './endpoints/chat/chat.js';
+import { chatRoute } from './endpoints/chat/chat-definition.js';
 import { deleteRecipe } from './endpoints/delete-recipe/delete-recipe.js';
 import { deleteRecipeRoute } from './endpoints/delete-recipe/delete-recipe-definition.js';
 import { getMealPlan } from './endpoints/get-meal-plan/get-meal-plan.js';
@@ -160,6 +163,18 @@ export function registerRoutes(app: OpenAPIHono) {
   app.openapi(parseRecipeRoute, async (c) => {
     const input = c.req.valid('json');
     const result = await parseRecipe(c as ContextWithUserId, input);
+    return c.json(result, 200);
+  });
+
+  app.openapi(updateRecipeRoute, async (c) => {
+    const input = c.req.valid('json');
+    const result = await updateRecipe(c as ContextWithUserId, input);
+    return c.json(result, 200);
+  });
+
+  app.openapi(chatRoute, async (c) => {
+    const input = c.req.valid('json');
+    const result = await chat(c as ContextWithUserId, input);
     return c.json(result, 200);
   });
 }
