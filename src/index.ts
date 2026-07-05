@@ -10,6 +10,7 @@ import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { CountryIsIpLocator } from '@core/utils/ip-locator.js';
 import { logger } from '@core/telemetry/logger.js';
+import { getVersion } from '@core/utils/get-version.js';
 
 async function main() {
   const databaseClient = await createDatabaseClient(config.DATABASE_URL);
@@ -47,7 +48,8 @@ async function main() {
     hostname: '0.0.0.0',
   });
 
-  logger.info(`Server is running on http://localhost:${config.PORT}`);
+  const version = getVersion();
+  logger.info(`Server v${version} is running on http://localhost:${config.PORT}`);
   logger.info(`Swagger UI available at http://localhost:${config.PORT}/swagger`);
 
   const shutdown = async (signal: string) => {
