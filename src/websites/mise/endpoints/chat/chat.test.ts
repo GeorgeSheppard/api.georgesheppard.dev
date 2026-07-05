@@ -10,11 +10,11 @@ import { runChatAgent } from '../../utils/chat-agent.js';
 const validUserId = '550e8400-e29b-41d4-a716-446655440000';
 
 function mockContext() {
-  const anthropicClient = { getClient: vi.fn(() => 'anthropic-client-stub') };
+  const openaiClient = { getClient: vi.fn(() => 'openai-client-stub') };
   return createMockContext<ContextWithUserId>({
     userId: validUserId,
     dynamoClient: { client: {} },
-    anthropicClient,
+    openaiClient,
   });
 }
 
@@ -39,7 +39,7 @@ describe('chat handler', () => {
     expect(result).toEqual({ message: assistantMessage });
   });
 
-  it('passes the conversation history and anthropic client through to the agent', async () => {
+  it('passes the conversation history and openai client through to the agent', async () => {
     vi.mocked(runChatAgent).mockResolvedValue({
       role: 'assistant',
       content: [{ type: 'text', text: 'ok' }],
@@ -51,16 +51,16 @@ describe('chat handler', () => {
 
     await chat(c, request);
 
-    expect(runChatAgent).toHaveBeenCalledWith(c, 'anthropic-client-stub', request.messages);
+    expect(runChatAgent).toHaveBeenCalledWith(c, 'openai-client-stub', request.messages);
   });
 
   it('propagates errors from the chat agent', async () => {
-    vi.mocked(runChatAgent).mockRejectedValue(new Error('Anthropic API error'));
+    vi.mocked(runChatAgent).mockRejectedValue(new Error('OpenAI API error'));
 
     const request: ChatRequest = {
       messages: [{ role: 'user', content: [{ type: 'text', text: 'hi' }] }],
     };
 
-    await expect(chat(mockContext(), request)).rejects.toThrow('Anthropic API error');
+    await expect(chat(mockContext(), request)).rejects.toThrow('OpenAI API error');
   });
 });

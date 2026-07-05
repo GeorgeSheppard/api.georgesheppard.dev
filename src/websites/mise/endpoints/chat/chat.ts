@@ -19,7 +19,7 @@ export const ChatResponseSchema = z.object({
 export type ChatResponse = z.infer<typeof ChatResponseSchema>;
 
 export async function chat(c: ContextWithUserId, input: ChatRequest): Promise<ChatResponse> {
-  const anthropicClient = c.get('anthropicClient');
-  const message = await runChatAgent(c, anthropicClient.getClient(), input.messages);
+  const openaiClient = c.get('openaiClient');
+  const message = await runChatAgent(c, openaiClient.getClient(), input.messages);
   return { message };
 }

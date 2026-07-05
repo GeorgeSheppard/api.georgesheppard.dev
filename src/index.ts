@@ -7,7 +7,6 @@ import { createDatabaseClient } from '@core/database/client.js';
 import { createDynamoDBClient } from '@core/dynamodb/client.js';
 import { createS3ClientWrapper } from '@core/s3/client.js';
 import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
-import { AnthropicClientWrapper } from '@core/utils/anthropic-client.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { CountryIsIpLocator } from '@core/utils/ip-locator.js';
 import { logger } from '@core/telemetry/logger.js';
@@ -32,7 +31,6 @@ async function main() {
   const emailClient = new MailgunClient();
   const ipLocator = new CountryIsIpLocator();
   const openaiClient = new OpenAIClientWrapper();
-  const anthropicClient = new AnthropicClientWrapper();
   const app = await createApp({
     databaseClient,
     queueClient,
@@ -41,7 +39,6 @@ async function main() {
     emailClient,
     ipLocator,
     openaiClient,
-    anthropicClient,
   });
 
   const server = serve({

@@ -43,8 +43,6 @@ export async function createTestApp(dependencies: Partial<AppDependencies>): Pro
     dynamoClient: dependencies.dynamoClient ?? createMissingDependencyProxy('dynamoClient'),
     s3Client: dependencies.s3Client ?? createMissingDependencyProxy('s3Client'),
     openaiClient: dependencies.openaiClient ?? createMissingDependencyProxy('openaiClient'),
-    anthropicClient:
-      dependencies.anthropicClient ?? createMissingDependencyProxy('anthropicClient'),
   };
 
   return createApp(fullDependencies);

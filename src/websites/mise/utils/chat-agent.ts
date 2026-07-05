@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 import { ContextWithUserId } from '@core/types/context.js';
@@ -17,13 +17,14 @@ import {
   parseMealPlanDate,
 } from './meal-plan-utils.js';
 
-const MODEL = 'claude-sonnet-5';
+const MODEL = 'gpt-4.1';
 const MAX_TOOL_ITERATIONS = 8;
+const MAX_FETCHED_PAGE_CHARS = 12000;
 
 const SYSTEM_PROMPT = `You are Chef, the cooking assistant built into Mise, a recipe and meal-planning app.
 
 You can:
-- Search the web and fetch recipe pages to find recipes for the user.
+- Search the web to find recipes, and fetch a specific page's content with fetch_url (e.g. a recipe page turned up by search).
 - Search the user's own saved recipes.
 - Save a recipe to the user's collection.
 - Add or remove a recipe from the user's meal plan for a given date.
@@ -33,6 +34,10 @@ Whenever you want to show the user a specific recipe (one you found online, or o
 To add or remove a recipe from the meal plan it must already be saved (it needs a UUID) — save it first if it came from the web or wasn't already one of the user's recipes.
 
 Keep your text replies short and conversational. Dates for the meal plan must be in YYYY-MM-DD format.`;
+
+const FetchUrlInputSchema = z.object({
+  url: z.string().url().describe('URL of the page to fetch, e.g. a recipe page found via search'),
+});
 
 const SearchMyRecipesInputSchema = z.object({
   query: z
@@ -64,17 +69,27 @@ const RemoveFromMealPlanInputSchema = z.object({
   date: z.string().describe('Date in YYYY-MM-DD format'),
 });
 
-function tool(name: string, description: string, schema: z.ZodTypeAny): Anthropic.Tool {
+function tool(
+  name: string,
+  description: string,
+  schema: z.ZodTypeAny
+): OpenAI.Responses.FunctionTool {
   return {
+    type: 'function',
     name,
     description,
-    input_schema: z.toJSONSchema(schema) as unknown as Anthropic.Tool.InputSchema,
+    parameters: z.toJSONSchema(schema) as Record<string, unknown>,
+    strict: false,
   };
 }
 
-const TOOLS: Anthropic.ToolUnion[] = [
-  { type: 'web_search_20260209', name: 'web_search', max_uses: 4 },
-  { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 4, max_content_tokens: 8000 },
+const TOOLS: OpenAI.Responses.Tool[] = [
+  { type: 'web_search_preview' },
+  tool(
+    'fetch_url',
+    "Fetch a web page's text content, e.g. to read a specific recipe page found via web search",
+    FetchUrlInputSchema
+  ),
   tool(
     'search_my_recipes',
     "Search the user's own saved recipes by name, description or ingredients",
@@ -98,32 +113,49 @@ const TOOLS: Anthropic.ToolUnion[] = [
   ),
 ];
 
-function toAnthropicMessages(messages: ChatMessage[]): Anthropic.MessageParam[] {
+function toResponseInput(messages: ChatMessage[]): OpenAI.Responses.EasyInputMessage[] {
   return messages.map((message) => ({
     role: message.role,
-    content: message.content.map((block): Anthropic.TextBlockParam => {
-      if (block.type === 'text') {
-        return { type: 'text', text: block.text };
-      }
-      // Recipes shown in earlier turns are re-described as text so Claude keeps
-      // context without needing to re-emit a show_recipe call for them.
-      return {
-        type: 'text',
-        text: `[Previously shown recipe: ${block.recipe.name} — ${block.recipe.description}]`,
-      };
-    }),
+    content: message.content
+      .map((block) =>
+        block.type === 'text'
+          ? block.text
+          : // Recipes shown in earlier turns are re-described as text so the model keeps
+            // context without needing to re-emit a show_recipe call for them.
+            `[Previously shown recipe: ${block.recipe.name} — ${block.recipe.description}]`
+      )
+      .join('\n\n'),
   }));
+}
+
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 async function executeTool(
   c: ContextWithUserId,
   name: string,
-  rawInput: unknown
+  rawArguments: string
 ): Promise<{ output: string; recipeShown?: ChatContentBlock }> {
   const userId = c.get('userId');
   const dynamoClient = c.get('dynamoClient');
+  const rawInput: unknown = JSON.parse(rawArguments);
 
   switch (name) {
+    case 'fetch_url': {
+      const input = FetchUrlInputSchema.parse(rawInput);
+      const response = await fetch(input.url);
+      if (!response.ok) {
+        return { output: `Failed to fetch ${input.url}: HTTP ${response.status}` };
+      }
+      const html = await response.text();
+      return { output: htmlToPlainText(html).slice(0, MAX_FETCHED_PAGE_CHARS) };
+    }
     case 'search_my_recipes': {
       const input = SearchMyRecipesInputSchema.parse(rawInput);
       const result = await searchRecipesHandler(c, {
@@ -183,44 +215,33 @@ async function executeTool(
   }
 }
 
-function isTextBlock(block: Anthropic.ContentBlock): block is Anthropic.TextBlock {
-  return block.type === 'text';
-}
-
-function isToolUseBlock(block: Anthropic.ContentBlock): block is Anthropic.ToolUseBlock {
-  return block.type === 'tool_use';
+function isFunctionCall(
+  item: OpenAI.Responses.ResponseOutputItem
+): item is OpenAI.Responses.ResponseFunctionToolCall {
+  return item.type === 'function_call';
 }
 
 export async function runChatAgent(
   c: ContextWithUserId,
-  client: Anthropic,
+  client: OpenAI,
   history: ChatMessage[]
 ): Promise<ChatMessage> {
-  const messages = toAnthropicMessages(history);
+  const input: OpenAI.Responses.ResponseInputItem[] = toResponseInput(history);
   const shownRecipes: ChatContentBlock[] = [];
 
   for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
-    const response = await client.messages.create({
+    const response = await client.responses.create({
       model: MODEL,
-      max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      thinking: { type: 'adaptive' },
+      instructions: SYSTEM_PROMPT,
       tools: TOOLS,
-      messages,
+      input,
     });
 
-    messages.push({ role: 'assistant', content: response.content });
+    const functionCalls = response.output.filter(isFunctionCall);
 
-    const toolUseBlocks = response.content.filter(isToolUseBlock);
-
-    if (response.stop_reason !== 'tool_use' && response.stop_reason !== 'pause_turn') {
-      const text = response.content
-        .filter(isTextBlock)
-        .map((block) => block.text)
-        .join('\n\n');
-
+    if (functionCalls.length === 0) {
       const content: ChatContentBlock[] = [];
-      if (text) content.push({ type: 'text', text });
+      if (response.output_text) content.push({ type: 'text', text: response.output_text });
       content.push(...shownRecipes);
       if (content.length === 0) {
         content.push({
@@ -231,29 +252,22 @@ export async function runChatAgent(
       return { role: 'assistant', content };
     }
 
-    if (toolUseBlocks.length === 0) {
-      // pause_turn with no client-side tool calls (a server tool hit its round limit) —
-      // resend as-is so the API resumes where it left off.
-      continue;
-    }
+    input.push(...response.output);
 
-    const toolResults: Anthropic.ToolResultBlockParam[] = [];
-    for (const block of toolUseBlocks) {
+    for (const call of functionCalls) {
       try {
-        const { output, recipeShown } = await executeTool(c, block.name, block.input);
+        const { output, recipeShown } = await executeTool(c, call.name, call.arguments);
         if (recipeShown) shownRecipes.push(recipeShown);
-        toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: output });
+        input.push({ type: 'function_call_output', call_id: call.call_id, output });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        toolResults.push({
-          type: 'tool_result',
-          tool_use_id: block.id,
-          content: message,
-          is_error: true,
+        input.push({
+          type: 'function_call_output',
+          call_id: call.call_id,
+          output: JSON.stringify({ error: message }),
         });
       }
     }
-    messages.push({ role: 'user', content: toolResults });
   }
 
   return {
