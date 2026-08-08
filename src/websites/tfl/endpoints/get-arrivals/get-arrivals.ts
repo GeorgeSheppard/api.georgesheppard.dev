@@ -3,7 +3,9 @@ import { Context } from 'hono';
 import { getStopPointArrivals } from '../../utils/tfl-api.js';
 
 const DEFAULT_LIMIT = 3;
-const MAX_LIMIT = 20;
+// The frontend also uses an unfiltered, high-limit request to discover every line/direction
+// combo currently running at a station, so this needs to comfortably cover a busy interchange.
+const MAX_LIMIT = 50;
 
 export const GetArrivalsQuerySchema = z.object({
   stopPointId: z.string().min(1).describe('TfL StopPoint ID'),
