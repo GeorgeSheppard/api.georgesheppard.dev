@@ -12,13 +12,12 @@ export const GetArrivalsQuerySchema = z.object({
   lineId: z.string().optional().describe('Filter to a specific line, e.g. "victoria"'),
   direction: z.enum(['inbound', 'outbound']).optional().describe('Filter to a specific direction'),
   // Hono collapses a single query value to a plain string and only produces an array when the
-  // same key is repeated, so this accepts either shape and normalizes to string[] | undefined.
+  // same key is repeated, so this accepts either shape — normalized to an array in the handler,
+  // below, rather than via .transform() here, which would make the field's TS type technically
+  // required-but-possibly-undefined instead of optional and break every caller that omits it.
   destinationName: z
     .union([z.string(), z.array(z.string())])
     .optional()
-    .transform((value) =>
-      value === undefined ? undefined : Array.isArray(value) ? value : [value]
-    )
     .describe(
       'Filter to one or more destinations, e.g. "Wimbledon" — pass multiple to accept every ' +
         'station on a branch (including short-turning trains), useful for branched lines like ' +
@@ -61,12 +60,12 @@ export async function getArrivals(
   const tflClient = c.get('tflClient');
   const arrivals = await getStopPointArrivals(tflClient.getClient(), input.stopPointId);
 
+  const destinationNames = input.destinationName ? [input.destinationName].flat() : undefined;
+
   const filtered = arrivals
     .filter((arrival) => !input.lineId || arrival.lineId === input.lineId)
     .filter((arrival) => !input.direction || arrival.direction === input.direction)
-    .filter(
-      (arrival) => !input.destinationName || input.destinationName.includes(arrival.destinationName)
-    )
+    .filter((arrival) => !destinationNames || destinationNames.includes(arrival.destinationName))
     .sort((a, b) => a.timeToStation - b.timeToStation)
     .slice(0, input.limit)
     .map((arrival) => ({

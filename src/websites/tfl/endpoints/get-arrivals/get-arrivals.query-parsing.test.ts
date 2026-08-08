@@ -13,6 +13,10 @@ import { getStopPointArrivals } from '../../utils/tfl-api.js';
 
 const mockTflClient = { getClient: () => ({}) } as unknown as TflClientWrapper;
 
+interface ArrivalsResponseBody {
+  arrivals: { destinationName: string }[];
+}
+
 describe('GET /tfl/arrivals query parsing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -58,10 +62,8 @@ describe('GET /tfl/arrivals query parsing', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.arrivals.map((a: { destinationName: string }) => a.destinationName)).toEqual([
-      'Wimbledon',
-    ]);
+    const body = (await response.json()) as ArrivalsResponseBody;
+    expect(body.arrivals.map((a) => a.destinationName)).toEqual(['Wimbledon']);
   });
 
   it('accepts multiple repeated destinationName values', async () => {
@@ -72,10 +74,8 @@ describe('GET /tfl/arrivals query parsing', () => {
     );
 
     expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.arrivals.map((a: { destinationName: string }) => a.destinationName).sort()).toEqual(
-      ['Richmond', 'Wimbledon']
-    );
+    const body = (await response.json()) as ArrivalsResponseBody;
+    expect(body.arrivals.map((a) => a.destinationName).sort()).toEqual(['Richmond', 'Wimbledon']);
   });
 
   it('returns everything when destinationName is omitted', async () => {
@@ -84,7 +84,7 @@ describe('GET /tfl/arrivals query parsing', () => {
     const response = await app.request('/tfl/arrivals?stopPointId=940GZZLUECT');
 
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as ArrivalsResponseBody;
     expect(body.arrivals).toHaveLength(3);
   });
 });
