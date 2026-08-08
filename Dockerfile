@@ -3,8 +3,10 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# Enable corepack so it installs the exact pnpm version pinned in package.json's
+# "packageManager" field, instead of npm's floating "latest" (which can drift out of
+# sync with the committed lockfile and break --frozen-lockfile installs)
+RUN corepack enable
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
@@ -24,8 +26,10 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# Enable corepack so it installs the exact pnpm version pinned in package.json's
+# "packageManager" field, instead of npm's floating "latest" (which can drift out of
+# sync with the committed lockfile and break --frozen-lockfile installs)
+RUN corepack enable
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
