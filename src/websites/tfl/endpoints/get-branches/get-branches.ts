@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Context } from 'hono';
-import { getRouteSequence } from '../../utils/tfl-api.js';
+import { getCachedRouteSequence } from '../../utils/route-sequence-cache.js';
 import { deriveBranches } from '../../utils/branches.js';
 
 export const GetBranchesQuerySchema = z.object({
@@ -20,6 +20,13 @@ export const BranchSchema = z.object({
         "value a live arrival's destinationName could legitimately take for a train still on " +
         'this branch, including ones that short-turn before reaching the terminus'
     ),
+  label: z
+    .string()
+    .describe(
+      'Display label — usually just the terminus, but disambiguated with TfL\'s own "via X" ' +
+        'naming when another branch from this stop shares the same terminus (e.g. the Northern ' +
+        'line\'s "Morden via Bank" vs "Morden via Charing Cross")'
+    ),
 });
 
 export const GetBranchesResponseSchema = z.object({
@@ -33,7 +40,7 @@ export async function getBranches(
   input: GetBranchesQuery
 ): Promise<GetBranchesResponse> {
   const tflClient = c.get('tflClient');
-  const routeSequence = await getRouteSequence(
+  const routeSequence = await getCachedRouteSequence(
     tflClient.getClient(),
     input.lineId,
     input.direction

@@ -3,6 +3,7 @@ import { getBranches } from './get-branches.js';
 import { createMockContext } from '@test/utils/mock-context.js';
 import type { Context } from 'hono';
 import type { TflRouteSequence } from '../../utils/tfl-api.js';
+import { clearRouteSequenceCache } from '../../utils/route-sequence-cache.js';
 
 vi.mock('../../utils/tfl-api.js');
 
@@ -36,6 +37,7 @@ const routeSequence: TflRouteSequence = {
 describe('getBranches handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearRouteSequenceCache();
   });
 
   it('derives branches downstream of the given stop', async () => {
@@ -52,6 +54,7 @@ describe('getBranches handler', () => {
         {
           terminus: 'Wimbledon',
           destinations: ['West Brompton', 'Parsons Green', 'Wimbledon'],
+          label: 'Wimbledon',
         },
       ],
     });

@@ -2361,11 +2361,16 @@
                               "type": "string"
                             },
                             "description": "Every station downstream of stopPointId on this branch, in travel order — i.e. every value a live arrival's destinationName could legitimately take for a train still on this branch, including ones that short-turn before reaching the terminus"
+                          },
+                          "label": {
+                            "type": "string",
+                            "description": "Display label — usually just the terminus, but disambiguated with TfL's own \"via X\" naming when another branch from this stop shares the same terminus (e.g. the Northern line's \"Morden via Bank\" vs \"Morden via Charing Cross\")"
                           }
                         },
                         "required": [
                           "terminus",
-                          "destinations"
+                          "destinations",
+                          "label"
                         ]
                       }
                     }

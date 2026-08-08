@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { deriveBranches } from './branches.js';
 import type { TflRouteSequence } from './tfl-api.js';
 import districtRouteSequence from './__fixtures__/district-route-sequence.json' with { type: 'json' };
+import northernRouteSequence from './__fixtures__/northern-route-sequence.json' with { type: 'json' };
 
 // Real TfL District line topology (captured from Line/district/Route/Sequence/inbound, the
 // direction where Earl's Court sits ahead of Wimbledon in travel order), trimmed to the
@@ -12,6 +13,15 @@ const districtInbound = districtRouteSequence as TflRouteSequence;
 const EARLS_COURT = '940GZZLUECT';
 const UPMINSTER = '940GZZLUUPM';
 const WIMBLEDON = '940GZZLUWIM';
+
+// Real TfL Northern line topology (captured from Line/northern/Route/Sequence/inbound), trimmed
+// to the Edgware/High Barnet/Mill Hill East branches meeting at Camden Town, which then splits
+// again into "via Bank" and "via Charing Cross" routings to Morden, plus the Battersea Power
+// Station extension — a genuine double-branch-point case where two branches can end at the same
+// terminus (Morden) via physically different routes.
+const northernInbound = northernRouteSequence as TflRouteSequence;
+
+const CAMDEN_TOWN = '940GZZLUCTN';
 
 describe('deriveBranches', () => {
   it("derives the Wimbledon branch from Earl's Court, including short-turn stations", () => {
@@ -29,6 +39,8 @@ describe('deriveBranches', () => {
       'Wimbledon Park Underground Station',
       'Wimbledon Underground Station',
     ]);
+    // No other branch from Earl's Court also ends at Wimbledon, so no "via X" disambiguation.
+    expect(wimbledonBranch!.label).toBe('Wimbledon Underground Station');
   });
 
   it('does not mix the Richmond/Ealing Broadway branches into the Wimbledon branch', () => {
@@ -76,5 +88,32 @@ describe('deriveBranches', () => {
   it('returns no branches for an unknown stop point', () => {
     const branches = deriveBranches(districtInbound, 'not-a-real-stop-id');
     expect(branches).toEqual([]);
+  });
+});
+
+describe('deriveBranches label disambiguation (Northern line)', () => {
+  it('disambiguates two branches that share a terminus with TfL\'s own "via X" naming', () => {
+    // From Camden Town, both the Bank and Charing Cross routings end at Morden, but take
+    // physically different paths through central London — a bare "Morden" label on both would
+    // be genuinely ambiguous, unlike District's branches, which all have distinct termini.
+    const branches = deriveBranches(northernInbound, CAMDEN_TOWN);
+    const mordenBranches = branches.filter((b) => b.terminus === 'Morden Underground Station');
+
+    expect(mordenBranches).toHaveLength(2);
+    const labels = mordenBranches.map((b) => b.label).sort();
+    expect(labels).toEqual([
+      'Morden Underground Station via Bank',
+      'Morden Underground Station via Charing Cross',
+    ]);
+  });
+
+  it('does not disambiguate a branch whose terminus is unique at this stop', () => {
+    const branches = deriveBranches(northernInbound, CAMDEN_TOWN);
+    const batterseaBranch = branches.find(
+      (b) => b.terminus === 'Battersea Power Station Underground Station'
+    );
+
+    expect(batterseaBranch).toBeDefined();
+    expect(batterseaBranch!.label).toBe('Battersea Power Station Underground Station');
   });
 });
