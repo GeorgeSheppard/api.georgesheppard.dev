@@ -9,6 +9,7 @@ import { createS3ClientWrapper } from '@core/s3/client.js';
 import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { CountryIsIpLocator } from '@core/utils/ip-locator.js';
+import { TflClientWrapper } from '@core/utils/tfl-client.js';
 import { logger } from '@core/telemetry/logger.js';
 
 async function main() {
@@ -31,6 +32,7 @@ async function main() {
   const emailClient = new MailgunClient();
   const ipLocator = new CountryIsIpLocator();
   const openaiClient = new OpenAIClientWrapper();
+  const tflClient = new TflClientWrapper();
   const app = await createApp({
     databaseClient,
     queueClient,
@@ -39,6 +41,7 @@ async function main() {
     emailClient,
     ipLocator,
     openaiClient,
+    tflClient,
   });
 
   const server = serve({

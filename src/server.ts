@@ -12,6 +12,7 @@ import { S3ClientWrapper } from '@core/s3/client.js';
 import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import { registerShelfieRoutes } from '@websites/shelfie/index.js';
 import { registerRoutes as registerMiseRoutes, tools as miseTools } from '@websites/mise/index.js';
+import { registerRoutes as registerTflRoutes } from '@websites/tfl/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
 import { isAllowedOrigin } from '@core/auth/redirect.js';
@@ -19,6 +20,7 @@ import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
 import { IpLocator } from '@core/utils/ip-locator';
+import { TflClientWrapper } from '@core/utils/tfl-client.js';
 
 export type App = OpenAPIHono<Env, {}, '/'>;
 
@@ -30,6 +32,7 @@ export interface AppDependencies {
   dynamoClient: DynamoDBClientWrapper;
   s3Client: S3ClientWrapper;
   openaiClient: OpenAIClientWrapper;
+  tflClient: TflClientWrapper;
 }
 
 export async function createApp(dependencies: AppDependencies) {
@@ -41,6 +44,7 @@ export async function createApp(dependencies: AppDependencies) {
     dynamoClient,
     s3Client,
     openaiClient,
+    tflClient,
   } = dependencies;
   const app = new OpenAPIHono();
 
@@ -53,6 +57,7 @@ export async function createApp(dependencies: AppDependencies) {
     c.set('dynamoClient', dynamoClient);
     c.set('s3Client', s3Client);
     c.set('openaiClient', openaiClient);
+    c.set('tflClient', tflClient);
     await next();
   });
 
@@ -81,6 +86,7 @@ export async function createApp(dependencies: AppDependencies) {
   // Register website routes
   registerShelfieRoutes(app);
   registerMiseRoutes(app);
+  registerTflRoutes(app);
 
   // Register MCP with all tools from all websites
   const allMcpTools = [...miseTools];
@@ -121,5 +127,6 @@ declare module 'hono' {
     dynamoClient: DynamoDBClientWrapper;
     s3Client: S3ClientWrapper;
     openaiClient: OpenAIClientWrapper;
+    tflClient: TflClientWrapper;
   }
 }
