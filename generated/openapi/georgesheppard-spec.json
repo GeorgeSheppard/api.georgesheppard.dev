@@ -2179,11 +2179,21 @@
           },
           {
             "schema": {
-              "type": "string",
-              "description": "Filter to a specific destination, e.g. \"Wimbledon\" — useful for branched lines like the District line"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "Filter to one or more destinations, e.g. \"Wimbledon\" — pass multiple to accept every station on a branch (including short-turning trains), useful for branched lines like the District line. Repeat the param for multiple values."
             },
             "required": false,
-            "description": "Filter to a specific destination, e.g. \"Wimbledon\" — useful for branched lines like the District line",
+            "description": "Filter to one or more destinations, e.g. \"Wimbledon\" — pass multiple to accept every station on a branch (including short-turning trains), useful for branched lines like the District line. Repeat the param for multiple values.",
             "name": "destinationName",
             "in": "query"
           },
@@ -2257,6 +2267,111 @@
                   },
                   "required": [
                     "arrivals"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tfl/branches": {
+      "get": {
+        "tags": [
+          "tfl"
+        ],
+        "description": "Get the physical branches available from a station in a given direction, derived from TfL's line topology — lets a favourite be scoped to a whole branch (e.g. every station on the Wimbledon branch) rather than one specific train destination",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "TfL StopPoint ID to board at"
+            },
+            "required": true,
+            "description": "TfL StopPoint ID to board at",
+            "name": "stopPointId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "e.g. \"district\""
+            },
+            "required": true,
+            "description": "e.g. \"district\"",
+            "name": "lineId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "inbound",
+                "outbound"
+              ],
+              "description": "Direction of travel from stopPointId"
+            },
+            "required": true,
+            "description": "Direction of travel from stopPointId",
+            "name": "direction",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branches available from the station in that direction",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "branches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "terminus": {
+                            "type": "string",
+                            "description": "The branch's actual far terminus, e.g. \"Wimbledon\""
+                          },
+                          "destinations": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Every station downstream of stopPointId on this branch, in travel order — i.e. every value a live arrival's destinationName could legitimately take for a train still on this branch, including ones that short-turn before reaching the terminus"
+                          }
+                        },
+                        "required": [
+                          "terminus",
+                          "destinations"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "branches"
                   ]
                 }
               }

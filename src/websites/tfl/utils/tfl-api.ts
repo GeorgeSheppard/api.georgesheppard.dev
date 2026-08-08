@@ -41,3 +41,34 @@ export async function getStopPointArrivals(
   );
   return data ?? [];
 }
+
+interface TflRouteSequenceStopPoint {
+  id: string;
+  name: string;
+}
+
+interface TflStopPointSequence {
+  stopPoint: TflRouteSequenceStopPoint[];
+}
+
+interface TflOrderedLineRoute {
+  name: string;
+  naptanIds: string[];
+}
+
+export interface TflRouteSequence {
+  stopPointSequences: TflStopPointSequence[];
+  orderedLineRoutes: TflOrderedLineRoute[];
+}
+
+export async function getRouteSequence(
+  client: AxiosInstance,
+  lineId: string,
+  direction: 'inbound' | 'outbound'
+): Promise<TflRouteSequence> {
+  const { data } = await client.get<TflRouteSequence>(
+    `/Line/${encodeURIComponent(lineId)}/Route/Sequence/${direction}`,
+    { params: { excludeCrowding: true } }
+  );
+  return data;
+}

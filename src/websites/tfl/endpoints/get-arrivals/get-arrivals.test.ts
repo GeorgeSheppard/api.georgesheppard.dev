@@ -128,14 +128,14 @@ describe('getArrivals handler', () => {
     ]);
   });
 
-  it('should filter by destination, e.g. to isolate a branch on the same line and direction', async () => {
+  it('should filter by a single destination, e.g. to isolate a branch on the same line and direction', async () => {
     vi.mocked(getStopPointArrivals).mockResolvedValue(arrivals);
 
     const result = await getArrivals(mockContext(), {
       stopPointId: '940GZZLUERC',
       lineId: 'district',
       direction: 'outbound',
-      destinationName: 'Wimbledon',
+      destinationName: ['Wimbledon'],
       limit: 3,
     });
 
@@ -151,6 +151,20 @@ describe('getArrivals handler', () => {
         currentLocation: 'At Gloucester Road',
       },
     ]);
+  });
+
+  it('should filter by multiple destinations, e.g. every station on a branch', async () => {
+    vi.mocked(getStopPointArrivals).mockResolvedValue(arrivals);
+
+    const result = await getArrivals(mockContext(), {
+      stopPointId: '940GZZLUERC',
+      lineId: 'district',
+      direction: 'outbound',
+      destinationName: ['Wimbledon', 'Richmond'],
+      limit: 3,
+    });
+
+    expect(result.arrivals.map((a) => a.destinationName).sort()).toEqual(['Richmond', 'Wimbledon']);
   });
 
   it('should return an empty list when there are no arrivals', async () => {

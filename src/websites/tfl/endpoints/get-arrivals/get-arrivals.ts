@@ -11,11 +11,18 @@ export const GetArrivalsQuerySchema = z.object({
   stopPointId: z.string().min(1).describe('TfL StopPoint ID'),
   lineId: z.string().optional().describe('Filter to a specific line, e.g. "victoria"'),
   direction: z.enum(['inbound', 'outbound']).optional().describe('Filter to a specific direction'),
+  // Hono collapses a single query value to a plain string and only produces an array when the
+  // same key is repeated, so this accepts either shape and normalizes to string[] | undefined.
   destinationName: z
-    .string()
+    .union([z.string(), z.array(z.string())])
     .optional()
+    .transform((value) =>
+      value === undefined ? undefined : Array.isArray(value) ? value : [value]
+    )
     .describe(
-      'Filter to a specific destination, e.g. "Wimbledon" — useful for branched lines like the District line'
+      'Filter to one or more destinations, e.g. "Wimbledon" — pass multiple to accept every ' +
+        'station on a branch (including short-turning trains), useful for branched lines like ' +
+        'the District line. Repeat the param for multiple values.'
     ),
   limit: z.coerce
     .number()
@@ -58,7 +65,7 @@ export async function getArrivals(
     .filter((arrival) => !input.lineId || arrival.lineId === input.lineId)
     .filter((arrival) => !input.direction || arrival.direction === input.direction)
     .filter(
-      (arrival) => !input.destinationName || arrival.destinationName === input.destinationName
+      (arrival) => !input.destinationName || input.destinationName.includes(arrival.destinationName)
     )
     .sort((a, b) => a.timeToStation - b.timeToStation)
     .slice(0, input.limit)
