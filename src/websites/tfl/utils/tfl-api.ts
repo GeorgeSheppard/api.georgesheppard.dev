@@ -46,34 +46,3 @@ export async function getStopPointArrivals(
   // through into /tfl/branches and fail its direction validation.
   return (data ?? []).filter((arrival) => arrival.modeName === 'tube');
 }
-
-interface TflRouteSequenceStopPoint {
-  id: string;
-  name: string;
-}
-
-interface TflStopPointSequence {
-  stopPoint: TflRouteSequenceStopPoint[];
-}
-
-interface TflOrderedLineRoute {
-  name: string;
-  naptanIds: string[];
-}
-
-export interface TflRouteSequence {
-  stopPointSequences: TflStopPointSequence[];
-  orderedLineRoutes: TflOrderedLineRoute[];
-}
-
-export async function getRouteSequence(
-  client: AxiosInstance,
-  lineId: string,
-  direction: 'inbound' | 'outbound'
-): Promise<TflRouteSequence> {
-  const { data } = await client.get<TflRouteSequence>(
-    `/Line/${encodeURIComponent(lineId)}/Route/Sequence/${direction}`,
-    { params: { excludeCrowding: true } }
-  );
-  return data;
-}
