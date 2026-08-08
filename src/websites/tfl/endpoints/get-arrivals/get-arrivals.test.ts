@@ -55,6 +55,26 @@ const arrivals: TflArrival[] = [
     expectedArrival: '2026-08-08T09:00:30Z',
     currentLocation: 'At Platform',
   },
+  {
+    lineId: 'district',
+    lineName: 'District',
+    platformName: 'Westbound - Platform 1',
+    direction: 'outbound',
+    destinationName: 'Wimbledon',
+    timeToStation: 200,
+    expectedArrival: '2026-08-08T09:03:20Z',
+    currentLocation: 'At Gloucester Road',
+  },
+  {
+    lineId: 'district',
+    lineName: 'District',
+    platformName: 'Westbound - Platform 1',
+    direction: 'outbound',
+    destinationName: 'Richmond',
+    timeToStation: 90,
+    expectedArrival: '2026-08-08T09:01:30Z',
+    currentLocation: 'At Kensington (Olympia)',
+  },
 ];
 
 describe('getArrivals handler', () => {
@@ -71,7 +91,7 @@ describe('getArrivals handler', () => {
     });
 
     expect(result.arrivals).toHaveLength(3);
-    expect(result.arrivals.map((a) => a.timeToStationSeconds)).toEqual([30, 60, 120]);
+    expect(result.arrivals.map((a) => a.timeToStationSeconds)).toEqual([30, 60, 90]);
   });
 
   it('should filter by line and direction', async () => {
@@ -104,6 +124,31 @@ describe('getArrivals handler', () => {
         timeToStationSeconds: 300,
         expectedArrival: '2026-08-08T09:05:00Z',
         currentLocation: 'At Kings Cross St Pancras',
+      },
+    ]);
+  });
+
+  it('should filter by destination, e.g. to isolate a branch on the same line and direction', async () => {
+    vi.mocked(getStopPointArrivals).mockResolvedValue(arrivals);
+
+    const result = await getArrivals(mockContext(), {
+      stopPointId: '940GZZLUERC',
+      lineId: 'district',
+      direction: 'outbound',
+      destinationName: 'Wimbledon',
+      limit: 3,
+    });
+
+    expect(result.arrivals).toEqual([
+      {
+        lineId: 'district',
+        lineName: 'District',
+        platformName: 'Westbound - Platform 1',
+        direction: 'outbound',
+        destinationName: 'Wimbledon',
+        timeToStationSeconds: 200,
+        expectedArrival: '2026-08-08T09:03:20Z',
+        currentLocation: 'At Gloucester Road',
       },
     ]);
   });

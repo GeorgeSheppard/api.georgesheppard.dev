@@ -11,6 +11,12 @@ export const GetArrivalsQuerySchema = z.object({
   stopPointId: z.string().min(1).describe('TfL StopPoint ID'),
   lineId: z.string().optional().describe('Filter to a specific line, e.g. "victoria"'),
   direction: z.enum(['inbound', 'outbound']).optional().describe('Filter to a specific direction'),
+  destinationName: z
+    .string()
+    .optional()
+    .describe(
+      'Filter to a specific destination, e.g. "Wimbledon" — useful for branched lines like the District line'
+    ),
   limit: z.coerce
     .number()
     .int()
@@ -51,6 +57,9 @@ export async function getArrivals(
   const filtered = arrivals
     .filter((arrival) => !input.lineId || arrival.lineId === input.lineId)
     .filter((arrival) => !input.direction || arrival.direction === input.direction)
+    .filter(
+      (arrival) => !input.destinationName || arrival.destinationName === input.destinationName
+    )
     .sort((a, b) => a.timeToStation - b.timeToStation)
     .slice(0, input.limit)
     .map((arrival) => ({
