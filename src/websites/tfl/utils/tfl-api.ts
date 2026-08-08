@@ -19,6 +19,7 @@ export interface TflArrival {
   timeToStation: number;
   expectedArrival: string;
   currentLocation: string;
+  modeName: string;
 }
 
 export async function searchStopPoints(
@@ -39,7 +40,11 @@ export async function getStopPointArrivals(
   const { data } = await client.get<TflArrival[]>(
     `/StopPoint/${encodeURIComponent(stopPointId)}/Arrivals`
   );
-  return data ?? [];
+  // Station search is filtered to tube stops, but a searched id can still be a multi-modal "HUB"
+  // StopPoint (e.g. major interchanges) whose Arrivals include other modes too — those have their
+  // own direction conventions (not TfL's tube inbound/outbound), which would otherwise flow
+  // through into /tfl/branches and fail its direction validation.
+  return (data ?? []).filter((arrival) => arrival.modeName === 'tube');
 }
 
 interface TflRouteSequenceStopPoint {
