@@ -2057,6 +2057,222 @@
           }
         }
       }
+    },
+    "/tfl/stations": {
+      "get": {
+        "tags": [
+          "tfl"
+        ],
+        "description": "Search for tube stations by name",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Station name to search for"
+            },
+            "required": true,
+            "description": "Station name to search for",
+            "name": "query",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching stations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "TfL StopPoint ID"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Station name"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "stations"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tfl/arrivals": {
+      "get": {
+        "tags": [
+          "tfl"
+        ],
+        "description": "Get the next arrivals for a station, optionally filtered by line and direction",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "TfL StopPoint ID"
+            },
+            "required": true,
+            "description": "TfL StopPoint ID",
+            "name": "stopPointId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter to a specific line, e.g. \"victoria\""
+            },
+            "required": false,
+            "description": "Filter to a specific line, e.g. \"victoria\"",
+            "name": "lineId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "inbound",
+                "outbound"
+              ],
+              "description": "Filter to a specific direction"
+            },
+            "required": false,
+            "description": "Filter to a specific direction",
+            "name": "direction",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 3,
+              "description": "Maximum number of arrivals to return"
+            },
+            "required": false,
+            "description": "Maximum number of arrivals to return",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Next arrivals for the station",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "arrivals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "lineId": {
+                            "type": "string"
+                          },
+                          "lineName": {
+                            "type": "string"
+                          },
+                          "platformName": {
+                            "type": "string"
+                          },
+                          "direction": {
+                            "type": "string"
+                          },
+                          "destinationName": {
+                            "type": "string"
+                          },
+                          "timeToStationSeconds": {
+                            "type": "number",
+                            "description": "Seconds until arrival"
+                          },
+                          "expectedArrival": {
+                            "type": "string",
+                            "description": "ISO timestamp of expected arrival"
+                          },
+                          "currentLocation": {
+                            "type": "string",
+                            "description": "Human-readable current position of the train, e.g. \"At Green Park\""
+                          }
+                        },
+                        "required": [
+                          "lineId",
+                          "lineName",
+                          "platformName",
+                          "direction",
+                          "destinationName",
+                          "timeToStationSeconds",
+                          "expectedArrival",
+                          "currentLocation"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "arrivals"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

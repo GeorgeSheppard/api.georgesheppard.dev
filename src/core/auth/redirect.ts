@@ -1,7 +1,9 @@
 export const ALLOWED_FRONTEND_URLS = [
   'http://localhost:3000',
+  'http://localhost:5173',
   'https://mise.georgesheppard.dev',
   'https://shelfie.georgesheppard.dev',
+  'https://tfl.georgesheppard.dev',
 ];
 
 const allowedOrigins = new Set(ALLOWED_FRONTEND_URLS.map((url) => new URL(url).origin));
