@@ -2181,7 +2181,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 20,
+              "maximum": 50,
               "default": 3,
               "description": "Maximum number of arrivals to return"
             },
