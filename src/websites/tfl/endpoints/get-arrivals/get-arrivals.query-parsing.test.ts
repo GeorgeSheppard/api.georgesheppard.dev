@@ -30,6 +30,7 @@ describe('GET /tfl/arrivals query parsing', () => {
         timeToStation: 60,
         expectedArrival: '2026-08-08T09:01:00Z',
         currentLocation: 'Approaching',
+        modeName: 'tube',
       },
       {
         lineId: 'district',
@@ -40,6 +41,7 @@ describe('GET /tfl/arrivals query parsing', () => {
         timeToStation: 90,
         expectedArrival: '2026-08-08T09:01:30Z',
         currentLocation: 'At Gloucester Road',
+        modeName: 'tube',
       },
       {
         lineId: 'district',
@@ -50,6 +52,7 @@ describe('GET /tfl/arrivals query parsing', () => {
         timeToStation: 120,
         expectedArrival: '2026-08-08T09:02:00Z',
         currentLocation: 'At South Kensington',
+        modeName: 'tube',
       },
     ]);
   });

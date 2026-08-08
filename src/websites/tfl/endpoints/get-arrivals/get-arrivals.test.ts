@@ -24,6 +24,7 @@ const arrivals: TflArrival[] = [
     timeToStation: 300,
     expectedArrival: '2026-08-08T09:05:00Z',
     currentLocation: 'At Kings Cross St Pancras',
+    modeName: 'tube',
   },
   {
     lineId: 'victoria',
@@ -34,6 +35,7 @@ const arrivals: TflArrival[] = [
     timeToStation: 60,
     expectedArrival: '2026-08-08T09:01:00Z',
     currentLocation: 'Approaching',
+    modeName: 'tube',
   },
   {
     lineId: 'victoria',
@@ -44,6 +46,7 @@ const arrivals: TflArrival[] = [
     timeToStation: 120,
     expectedArrival: '2026-08-08T09:02:00Z',
     currentLocation: 'At Green Park',
+    modeName: 'tube',
   },
   {
     lineId: 'jubilee',
@@ -54,6 +57,7 @@ const arrivals: TflArrival[] = [
     timeToStation: 30,
     expectedArrival: '2026-08-08T09:00:30Z',
     currentLocation: 'At Platform',
+    modeName: 'tube',
   },
   {
     lineId: 'district',
@@ -64,6 +68,7 @@ const arrivals: TflArrival[] = [
     timeToStation: 200,
     expectedArrival: '2026-08-08T09:03:20Z',
     currentLocation: 'At Gloucester Road',
+    modeName: 'tube',
   },
   {
     lineId: 'district',
@@ -74,6 +79,7 @@ const arrivals: TflArrival[] = [
     timeToStation: 90,
     expectedArrival: '2026-08-08T09:01:30Z',
     currentLocation: 'At Kensington (Olympia)',
+    modeName: 'tube',
   },
 ];
 
