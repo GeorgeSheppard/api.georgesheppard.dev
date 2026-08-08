@@ -18,6 +18,7 @@ export interface TflArrival {
   destinationName: string;
   timeToStation: number;
   expectedArrival: string;
+  currentLocation: string;
 }
 
 export async function searchStopPoints(

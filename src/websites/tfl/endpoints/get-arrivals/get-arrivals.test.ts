@@ -23,6 +23,7 @@ const arrivals: TflArrival[] = [
     destinationName: 'Brixton',
     timeToStation: 300,
     expectedArrival: '2026-08-08T09:05:00Z',
+    currentLocation: 'At Kings Cross St Pancras',
   },
   {
     lineId: 'victoria',
@@ -32,6 +33,7 @@ const arrivals: TflArrival[] = [
     destinationName: 'Brixton',
     timeToStation: 60,
     expectedArrival: '2026-08-08T09:01:00Z',
+    currentLocation: 'Approaching',
   },
   {
     lineId: 'victoria',
@@ -41,6 +43,7 @@ const arrivals: TflArrival[] = [
     destinationName: 'Walthamstow Central',
     timeToStation: 120,
     expectedArrival: '2026-08-08T09:02:00Z',
+    currentLocation: 'At Green Park',
   },
   {
     lineId: 'jubilee',
@@ -50,6 +53,7 @@ const arrivals: TflArrival[] = [
     destinationName: 'Stanmore',
     timeToStation: 30,
     expectedArrival: '2026-08-08T09:00:30Z',
+    currentLocation: 'At Platform',
   },
 ];
 
@@ -89,6 +93,7 @@ describe('getArrivals handler', () => {
         destinationName: 'Brixton',
         timeToStationSeconds: 60,
         expectedArrival: '2026-08-08T09:01:00Z',
+        currentLocation: 'Approaching',
       },
       {
         lineId: 'victoria',
@@ -98,6 +103,7 @@ describe('getArrivals handler', () => {
         destinationName: 'Brixton',
         timeToStationSeconds: 300,
         expectedArrival: '2026-08-08T09:05:00Z',
+        currentLocation: 'At Kings Cross St Pancras',
       },
     ]);
   });

@@ -28,6 +28,9 @@ export const ArrivalSchema = z.object({
   destinationName: z.string(),
   timeToStationSeconds: z.number().describe('Seconds until arrival'),
   expectedArrival: z.string().describe('ISO timestamp of expected arrival'),
+  currentLocation: z
+    .string()
+    .describe('Human-readable current position of the train, e.g. "At Green Park"'),
 });
 
 export const GetArrivalsResponseSchema = z.object({
@@ -56,6 +59,7 @@ export async function getArrivals(
       destinationName: arrival.destinationName,
       timeToStationSeconds: arrival.timeToStation,
       expectedArrival: arrival.expectedArrival,
+      currentLocation: arrival.currentLocation,
     }));
 
   return { arrivals: filtered };
