@@ -1,0 +1,446 @@
+{
+  "stopPointSequences": [
+    {
+      "stopPoint": [
+        {
+          "id": "940GZZLUUPM",
+          "name": "Upminster Underground Station"
+        },
+        {
+          "id": "940GZZLUUPB",
+          "name": "Upminster Bridge Underground Station"
+        },
+        {
+          "id": "940GZZLUHCH",
+          "name": "Hornchurch Underground Station"
+        },
+        {
+          "id": "940GZZLUEPK",
+          "name": "Elm Park Underground Station"
+        },
+        {
+          "id": "940GZZLUDGE",
+          "name": "Dagenham East Underground Station"
+        },
+        {
+          "id": "940GZZLUDGY",
+          "name": "Dagenham Heathway Underground Station"
+        },
+        {
+          "id": "940GZZLUBEC",
+          "name": "Becontree Underground Station"
+        },
+        {
+          "id": "940GZZLUUPY",
+          "name": "Upney Underground Station"
+        },
+        {
+          "id": "940GZZLUBKG",
+          "name": "Barking Underground Station"
+        },
+        {
+          "id": "940GZZLUEHM",
+          "name": "East Ham Underground Station"
+        },
+        {
+          "id": "940GZZLUUPK",
+          "name": "Upton Park Underground Station"
+        },
+        {
+          "id": "940GZZLUPLW",
+          "name": "Plaistow Underground Station"
+        },
+        {
+          "id": "940GZZLUWHM",
+          "name": "West Ham Underground Station"
+        },
+        {
+          "id": "940GZZLUBBB",
+          "name": "Bromley-by-Bow Underground Station"
+        },
+        {
+          "id": "940GZZLUBWR",
+          "name": "Bow Road Underground Station"
+        },
+        {
+          "id": "940GZZLUMED",
+          "name": "Mile End Underground Station"
+        },
+        {
+          "id": "940GZZLUSGN",
+          "name": "Stepney Green Underground Station"
+        },
+        {
+          "id": "940GZZLUWPL",
+          "name": "Whitechapel Underground Station"
+        },
+        {
+          "id": "940GZZLUADE",
+          "name": "Aldgate East Underground Station"
+        },
+        {
+          "id": "940GZZLUTWH",
+          "name": "Tower Hill Underground Station"
+        },
+        {
+          "id": "940GZZLUMMT",
+          "name": "Monument Underground Station"
+        },
+        {
+          "id": "940GZZLUCST",
+          "name": "Cannon Street Underground Station"
+        },
+        {
+          "id": "940GZZLUMSH",
+          "name": "Mansion House Underground Station"
+        },
+        {
+          "id": "940GZZLUBKF",
+          "name": "Blackfriars Underground Station"
+        },
+        {
+          "id": "940GZZLUTMP",
+          "name": "Temple Underground Station"
+        },
+        {
+          "id": "940GZZLUEMB",
+          "name": "Embankment Underground Station"
+        },
+        {
+          "id": "940GZZLUWSM",
+          "name": "Westminster Underground Station"
+        },
+        {
+          "id": "940GZZLUSJP",
+          "name": "St. James's Park Underground Station"
+        },
+        {
+          "id": "940GZZLUVIC",
+          "name": "Victoria Underground Station"
+        },
+        {
+          "id": "940GZZLUSSQ",
+          "name": "Sloane Square Underground Station"
+        },
+        {
+          "id": "940GZZLUSKS",
+          "name": "South Kensington Underground Station"
+        },
+        {
+          "id": "940GZZLUGTR",
+          "name": "Gloucester Road Underground Station"
+        },
+        {
+          "id": "940GZZLUECT",
+          "name": "Earl's Court Underground Station"
+        }
+      ]
+    },
+    {
+      "stopPoint": [
+        {
+          "id": "940GZZLUECT",
+          "name": "Earl's Court Underground Station"
+        },
+        {
+          "id": "940GZZLUWKN",
+          "name": "West Kensington Underground Station"
+        },
+        {
+          "id": "940GZZLUBSC",
+          "name": "Barons Court Underground Station"
+        },
+        {
+          "id": "940GZZLUHSD",
+          "name": "Hammersmith (Dist&Picc Line) Underground Station"
+        },
+        {
+          "id": "940GZZLURVP",
+          "name": "Ravenscourt Park Underground Station"
+        },
+        {
+          "id": "940GZZLUSFB",
+          "name": "Stamford Brook Underground Station"
+        },
+        {
+          "id": "940GZZLUTNG",
+          "name": "Turnham Green Underground Station"
+        }
+      ]
+    },
+    {
+      "stopPoint": [
+        {
+          "id": "940GZZLUTNG",
+          "name": "Turnham Green Underground Station"
+        },
+        {
+          "id": "940GZZLUCWP",
+          "name": "Chiswick Park Underground Station"
+        },
+        {
+          "id": "940GZZLUACT",
+          "name": "Acton Town Underground Station"
+        },
+        {
+          "id": "940GZZLUECM",
+          "name": "Ealing Common Underground Station"
+        },
+        {
+          "id": "940GZZLUEBY",
+          "name": "Ealing Broadway Underground Station"
+        }
+      ]
+    },
+    {
+      "stopPoint": [
+        {
+          "id": "940GZZLUTNG",
+          "name": "Turnham Green Underground Station"
+        },
+        {
+          "id": "940GZZLUGBY",
+          "name": "Gunnersbury Underground Station"
+        },
+        {
+          "id": "940GZZLUKWG",
+          "name": "Kew Gardens Underground Station"
+        },
+        {
+          "id": "940GZZLURMD",
+          "name": "Richmond Underground Station"
+        }
+      ]
+    },
+    {
+      "stopPoint": [
+        {
+          "id": "940GZZLUECT",
+          "name": "Earl's Court Underground Station"
+        },
+        {
+          "id": "940GZZLUWBN",
+          "name": "West Brompton Underground Station"
+        },
+        {
+          "id": "940GZZLUFBY",
+          "name": "Fulham Broadway Underground Station"
+        },
+        {
+          "id": "940GZZLUPSG",
+          "name": "Parsons Green Underground Station"
+        },
+        {
+          "id": "940GZZLUPYB",
+          "name": "Putney Bridge Underground Station"
+        },
+        {
+          "id": "940GZZLUEPY",
+          "name": "East Putney Underground Station"
+        },
+        {
+          "id": "940GZZLUSFS",
+          "name": "Southfields Underground Station"
+        },
+        {
+          "id": "940GZZLUWIP",
+          "name": "Wimbledon Park Underground Station"
+        },
+        {
+          "id": "940GZZLUWIM",
+          "name": "Wimbledon Underground Station"
+        }
+      ]
+    },
+    {
+      "stopPoint": [
+        {
+          "id": "940GZZLUERC",
+          "name": "Edgware Road (Circle Line) Underground Station"
+        },
+        {
+          "id": "940GZZLUPAC",
+          "name": "Paddington Underground Station"
+        },
+        {
+          "id": "940GZZLUBWT",
+          "name": "Bayswater Underground Station"
+        },
+        {
+          "id": "940GZZLUNHG",
+          "name": "Notting Hill Gate Underground Station"
+        },
+        {
+          "id": "940GZZLUHSK",
+          "name": "High Street Kensington Underground Station"
+        },
+        {
+          "id": "940GZZLUECT",
+          "name": "Earl's Court Underground Station"
+        }
+      ]
+    }
+  ],
+  "orderedLineRoutes": [
+    {
+      "name": "Upminster <-> Wimbledon",
+      "naptanIds": [
+        "940GZZLUUPM",
+        "940GZZLUUPB",
+        "940GZZLUHCH",
+        "940GZZLUEPK",
+        "940GZZLUDGE",
+        "940GZZLUDGY",
+        "940GZZLUBEC",
+        "940GZZLUUPY",
+        "940GZZLUBKG",
+        "940GZZLUEHM",
+        "940GZZLUUPK",
+        "940GZZLUPLW",
+        "940GZZLUWHM",
+        "940GZZLUBBB",
+        "940GZZLUBWR",
+        "940GZZLUMED",
+        "940GZZLUSGN",
+        "940GZZLUWPL",
+        "940GZZLUADE",
+        "940GZZLUTWH",
+        "940GZZLUMMT",
+        "940GZZLUCST",
+        "940GZZLUMSH",
+        "940GZZLUBKF",
+        "940GZZLUTMP",
+        "940GZZLUEMB",
+        "940GZZLUWSM",
+        "940GZZLUSJP",
+        "940GZZLUVIC",
+        "940GZZLUSSQ",
+        "940GZZLUSKS",
+        "940GZZLUGTR",
+        "940GZZLUECT",
+        "940GZZLUWBN",
+        "940GZZLUFBY",
+        "940GZZLUPSG",
+        "940GZZLUPYB",
+        "940GZZLUEPY",
+        "940GZZLUSFS",
+        "940GZZLUWIP",
+        "940GZZLUWIM"
+      ]
+    },
+    {
+      "name": "Edgware Road <-> Wimbledon",
+      "naptanIds": [
+        "940GZZLUERC",
+        "940GZZLUPAC",
+        "940GZZLUBWT",
+        "940GZZLUNHG",
+        "940GZZLUHSK",
+        "940GZZLUECT",
+        "940GZZLUWBN",
+        "940GZZLUFBY",
+        "940GZZLUPSG",
+        "940GZZLUPYB",
+        "940GZZLUEPY",
+        "940GZZLUSFS",
+        "940GZZLUWIP",
+        "940GZZLUWIM"
+      ]
+    },
+    {
+      "name": "Upminster <-> Richmond",
+      "naptanIds": [
+        "940GZZLUUPM",
+        "940GZZLUUPB",
+        "940GZZLUHCH",
+        "940GZZLUEPK",
+        "940GZZLUDGE",
+        "940GZZLUDGY",
+        "940GZZLUBEC",
+        "940GZZLUUPY",
+        "940GZZLUBKG",
+        "940GZZLUEHM",
+        "940GZZLUUPK",
+        "940GZZLUPLW",
+        "940GZZLUWHM",
+        "940GZZLUBBB",
+        "940GZZLUBWR",
+        "940GZZLUMED",
+        "940GZZLUSGN",
+        "940GZZLUWPL",
+        "940GZZLUADE",
+        "940GZZLUTWH",
+        "940GZZLUMMT",
+        "940GZZLUCST",
+        "940GZZLUMSH",
+        "940GZZLUBKF",
+        "940GZZLUTMP",
+        "940GZZLUEMB",
+        "940GZZLUWSM",
+        "940GZZLUSJP",
+        "940GZZLUVIC",
+        "940GZZLUSSQ",
+        "940GZZLUSKS",
+        "940GZZLUGTR",
+        "940GZZLUECT",
+        "940GZZLUWKN",
+        "940GZZLUBSC",
+        "940GZZLUHSD",
+        "940GZZLURVP",
+        "940GZZLUSFB",
+        "940GZZLUTNG",
+        "940GZZLUGBY",
+        "940GZZLUKWG",
+        "940GZZLURMD"
+      ]
+    },
+    {
+      "name": "Upminster <-> Ealing Broadway",
+      "naptanIds": [
+        "940GZZLUUPM",
+        "940GZZLUUPB",
+        "940GZZLUHCH",
+        "940GZZLUEPK",
+        "940GZZLUDGE",
+        "940GZZLUDGY",
+        "940GZZLUBEC",
+        "940GZZLUUPY",
+        "940GZZLUBKG",
+        "940GZZLUEHM",
+        "940GZZLUUPK",
+        "940GZZLUPLW",
+        "940GZZLUWHM",
+        "940GZZLUBBB",
+        "940GZZLUBWR",
+        "940GZZLUMED",
+        "940GZZLUSGN",
+        "940GZZLUWPL",
+        "940GZZLUADE",
+        "940GZZLUTWH",
+        "940GZZLUMMT",
+        "940GZZLUCST",
+        "940GZZLUMSH",
+        "940GZZLUBKF",
+        "940GZZLUTMP",
+        "940GZZLUEMB",
+        "940GZZLUWSM",
+        "940GZZLUSJP",
+        "940GZZLUVIC",
+        "940GZZLUSSQ",
+        "940GZZLUSKS",
+        "940GZZLUGTR",
+        "940GZZLUECT",
+        "940GZZLUWKN",
+        "940GZZLUBSC",
+        "940GZZLUHSD",
+        "940GZZLURVP",
+        "940GZZLUSFB",
+        "940GZZLUTNG",
+        "940GZZLUCWP",
+        "940GZZLUACT",
+        "940GZZLUECM",
+        "940GZZLUEBY"
+      ]
+    }
+  ]
+}
