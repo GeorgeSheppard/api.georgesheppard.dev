@@ -18,6 +18,12 @@ export const LineDirectionSchema = z.object({
     .describe(
       'Terminus station name(s) reached by travelling this direction from here — more than one means the line forks past this station'
     ),
+  compass: z
+    .string()
+    .optional()
+    .describe(
+      'Compass direction as shown on platform signage/tube maps (e.g. "Northbound") — best-effort, not always available'
+    ),
 });
 
 export type LineDirection = z.infer<typeof LineDirectionSchema>;

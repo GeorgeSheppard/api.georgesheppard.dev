@@ -32,6 +32,7 @@ describe('searchStations handler', () => {
         lineName: 'Victoria',
         direction: 'inbound',
         towards: ['Brixton Underground Station'],
+        compass: 'Southbound',
       },
       {
         lineId: 'victoria',
@@ -54,6 +55,7 @@ describe('searchStations handler', () => {
               lineName: 'Victoria',
               direction: 'inbound',
               towards: ['Brixton Underground Station'],
+              compass: 'Southbound',
             },
             {
               lineId: 'victoria',

@@ -1,6 +1,11 @@
 import { AxiosInstance } from 'axios';
 import { logger } from '@core/telemetry/logger.js';
-import { getTubeLines, getLineRouteSequence, TflLineDirection } from './tfl-api.js';
+import {
+  getTubeLines,
+  getLineRouteSequence,
+  getStopPointArrivals,
+  TflLineDirection,
+} from './tfl-api.js';
 
 const DIRECTIONS: TflLineDirection[] = ['inbound', 'outbound'];
 
@@ -12,6 +17,56 @@ export interface LineDirection {
   // District line fork means more than one. Raw TfL names (e.g. "Ealing Broadway Underground
   // Station"); display formatting happens at the edge, not here.
   towards: string[];
+  // Compass direction as shown on platform signage and tube maps (e.g. "Northbound"). Best-effort:
+  // derived from live arrivals at cache-build time, so it's only set when a train happened to be
+  // there to report it. inbound/outbound doesn't map to a fixed compass direction for every line
+  // (Jubilee flips from Northbound/Southbound on the Stanmore branch to Eastbound/Westbound
+  // further along), so this can't be hardcoded per line — it's genuinely per-station.
+  compass?: string;
+}
+
+const COMPASS_DIRECTIONS = ['Northbound', 'Southbound', 'Eastbound', 'Westbound'];
+
+function extractCompassDirection(platformName: string): string | undefined {
+  return COMPASS_DIRECTIONS.find((d) => platformName.includes(d));
+}
+
+// Best-effort enrichment with real platform compass directions, one live arrivals call per
+// station. Never throws and never blocks the topology data being usable — a station with no
+// live arrival at build time (or any other failure) just keeps its `towards`-based fallback
+// label instead of a compass one.
+async function enrichWithCompassDirections(
+  client: AxiosInstance,
+  result: Map<string, LineDirection[]>
+): Promise<void> {
+  const stationIds = Array.from(result.keys());
+  const CONCURRENCY = 8;
+  let nextIndex = 0;
+
+  async function worker(): Promise<void> {
+    while (nextIndex < stationIds.length) {
+      const stationId = stationIds[nextIndex++];
+      const lines = result.get(stationId);
+      if (!lines) continue;
+
+      try {
+        const arrivals = await getStopPointArrivals(client, stationId);
+        for (const line of lines) {
+          const match = arrivals.find(
+            (a) => a.lineId === line.lineId && a.direction === line.direction
+          );
+          const compass = match && extractCompassDirection(match.platformName);
+          if (compass) {
+            line.compass = compass;
+          }
+        }
+      } catch (error) {
+        logger.warn(`Failed to enrich compass directions for station ${stationId}`, error);
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
 }
 
 // station id -> lines/directions serving it, computed once from TfL's static route data (not
@@ -71,6 +126,15 @@ async function computeStationLines(client: AxiosInstance): Promise<Map<string, L
       })
     );
   }
+
+  try {
+    await enrichWithCompassDirections(client, result);
+  } catch (error) {
+    // Compass labels are a nice-to-have — the topology in `result` is already correct and
+    // usable on its own (via `towards`), so a failure here must not fail the whole computation.
+    logger.warn('Failed to enrich station lines with compass directions', error);
+  }
+
   return result;
 }
 
