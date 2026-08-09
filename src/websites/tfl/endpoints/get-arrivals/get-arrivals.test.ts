@@ -100,13 +100,12 @@ describe('getArrivals handler', () => {
     expect(result.arrivals.map((a) => a.timeToStationSeconds)).toEqual([30, 60, 90]);
   });
 
-  it('should filter by line and direction', async () => {
+  it('should filter by line, keeping both directions', async () => {
     vi.mocked(getStopPointArrivals).mockResolvedValue(arrivals);
 
     const result = await getArrivals(mockContext(), {
       stopPointId: '940GZZLUVIC',
       lineId: 'victoria',
-      direction: 'outbound',
       limit: 3,
     });
 
@@ -120,6 +119,16 @@ describe('getArrivals handler', () => {
         timeToStationSeconds: 60,
         expectedArrival: '2026-08-08T09:01:00Z',
         currentLocation: 'Approaching',
+      },
+      {
+        lineId: 'victoria',
+        lineName: 'Victoria',
+        platformName: 'Northbound - Platform 2',
+        direction: 'inbound',
+        destinationName: 'Walthamstow Central',
+        timeToStationSeconds: 120,
+        expectedArrival: '2026-08-08T09:02:00Z',
+        currentLocation: 'At Green Park',
       },
       {
         lineId: 'victoria',

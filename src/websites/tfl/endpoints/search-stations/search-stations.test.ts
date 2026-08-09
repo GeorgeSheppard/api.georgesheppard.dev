@@ -6,7 +6,7 @@ import type { Context } from 'hono';
 vi.mock('../../utils/tfl-api.js');
 vi.mock('../../utils/station-lines-cache.js');
 
-import { searchStopPoints } from '../../utils/tfl-api.js';
+import { searchStopPoints, resolveTubeStopPointId } from '../../utils/tfl-api.js';
 import { getStationLines } from '../../utils/station-lines-cache.js';
 
 function mockContext() {
@@ -19,6 +19,7 @@ describe('searchStations handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getStationLines).mockResolvedValue([]);
+    vi.mocked(resolveTubeStopPointId).mockImplementation((_client, id) => Promise.resolve(id));
   });
 
   it('should return tube stations matching the query, with their lines', async () => {
@@ -27,19 +28,8 @@ describe('searchStations handler', () => {
       { id: '490000173C', name: 'Oxford Street Bus Stop', modes: ['bus'] },
     ]);
     vi.mocked(getStationLines).mockResolvedValue([
-      {
-        lineId: 'victoria',
-        lineName: 'Victoria',
-        direction: 'inbound',
-        towards: ['Brixton Underground Station'],
-        compass: 'Southbound',
-      },
-      {
-        lineId: 'victoria',
-        lineName: 'Victoria',
-        direction: 'outbound',
-        towards: ['Walthamstow Central Underground Station'],
-      },
+      { lineId: 'victoria', lineName: 'Victoria' },
+      { lineId: 'bakerloo', lineName: 'Bakerloo' },
     ]);
 
     const result = await searchStations(mockContext(), { query: 'Oxford' });
@@ -50,19 +40,8 @@ describe('searchStations handler', () => {
           id: '940GZZLUOXC',
           name: 'Oxford Circus Underground Station',
           lines: [
-            {
-              lineId: 'victoria',
-              lineName: 'Victoria',
-              direction: 'inbound',
-              towards: ['Brixton Underground Station'],
-              compass: 'Southbound',
-            },
-            {
-              lineId: 'victoria',
-              lineName: 'Victoria',
-              direction: 'outbound',
-              towards: ['Walthamstow Central Underground Station'],
-            },
+            { lineId: 'victoria', lineName: 'Victoria' },
+            { lineId: 'bakerloo', lineName: 'Bakerloo' },
           ],
         },
       ],
@@ -76,6 +55,21 @@ describe('searchStations handler', () => {
     const result = await searchStations(mockContext(), { query: 'Nonexistent' });
 
     expect(result).toEqual({ stations: [] });
+  });
+
+  it('should resolve a HUB StopPoint id to its tube child before looking up lines', async () => {
+    vi.mocked(searchStopPoints).mockResolvedValue([
+      { id: 'HUBTOM', name: 'Tottenham Hale', modes: ['tube', 'national-rail', 'bus'] },
+    ]);
+    vi.mocked(resolveTubeStopPointId).mockResolvedValue('940GZZLUTMH');
+    vi.mocked(getStationLines).mockResolvedValue([{ lineId: 'victoria', lineName: 'Victoria' }]);
+
+    const result = await searchStations(mockContext(), { query: 'Tottenham Hale' });
+
+    expect(resolveTubeStopPointId).toHaveBeenCalledWith(expect.anything(), 'HUBTOM');
+    expect(getStationLines).toHaveBeenCalledWith(expect.anything(), '940GZZLUTMH');
+    expect(result.stations[0].id).toBe('940GZZLUTMH');
+    expect(result.stations[0].lines).toHaveLength(1);
   });
 
   it('should return an empty lines array when the cache has no data for a station', async () => {

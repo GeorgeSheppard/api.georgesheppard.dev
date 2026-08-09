@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Context } from 'hono';
-import { searchStopPoints } from '../../utils/tfl-api.js';
+import { searchStopPoints, resolveTubeStopPointId } from '../../utils/tfl-api.js';
 import { getStationLines } from '../../utils/station-lines-cache.js';
 
 export const SearchStationsQuerySchema = z.object({
@@ -9,29 +9,17 @@ export const SearchStationsQuerySchema = z.object({
 
 export type SearchStationsQuery = z.infer<typeof SearchStationsQuerySchema>;
 
-export const LineDirectionSchema = z.object({
+export const StationLineSchema = z.object({
   lineId: z.string().describe('TfL Line ID'),
   lineName: z.string().describe('Line name'),
-  direction: z.string().describe('Direction (inbound or outbound) — required by the arrivals API'),
-  towards: z
-    .array(z.string())
-    .describe(
-      'Terminus station name(s) reached by travelling this direction from here — more than one means the line forks past this station'
-    ),
-  compass: z
-    .string()
-    .optional()
-    .describe(
-      'Compass direction as shown on platform signage/tube maps (e.g. "Northbound") — best-effort, not always available'
-    ),
 });
 
-export type LineDirection = z.infer<typeof LineDirectionSchema>;
+export type StationLine = z.infer<typeof StationLineSchema>;
 
 export const StationSchema = z.object({
   id: z.string().describe('TfL StopPoint ID'),
   name: z.string().describe('Station name'),
-  lines: z.array(LineDirectionSchema).describe('Available lines and directions at this station'),
+  lines: z.array(StationLineSchema).describe('Lines serving this station'),
 });
 
 export type Station = z.infer<typeof StationSchema>;
@@ -51,11 +39,14 @@ export async function searchStations(
 
   const tubeMatches = matches.filter((match) => match.modes.includes('tube'));
   const stations = await Promise.all(
-    tubeMatches.map(async (match) => ({
-      id: match.id,
-      name: match.name,
-      lines: await getStationLines(tflClient.getClient(), match.id),
-    }))
+    tubeMatches.map(async (match) => {
+      const id = await resolveTubeStopPointId(tflClient.getClient(), match.id);
+      return {
+        id,
+        name: match.name,
+        lines: await getStationLines(tflClient.getClient(), id),
+      };
+    })
   );
 
   return { stations };
