@@ -47,22 +47,30 @@ export async function getArrivals(
 ): Promise<GetArrivalsResponse> {
   const tflClient = c.get('tflClient');
   const arrivals = await getStopPointArrivals(tflClient.getClient(), input.stopPointId);
+  const now = new Date();
 
   const filtered = arrivals
     .filter((arrival) => !input.lineId || arrival.lineId === input.lineId)
     .filter((arrival) => !input.direction || arrival.direction === input.direction)
     .sort((a, b) => a.timeToStation - b.timeToStation)
     .slice(0, input.limit)
-    .map((arrival) => ({
-      lineId: arrival.lineId,
-      lineName: arrival.lineName,
-      platformName: arrival.platformName,
-      direction: arrival.direction,
-      destinationName: arrival.destinationName,
-      timeToStationSeconds: arrival.timeToStation,
-      expectedArrival: arrival.expectedArrival,
-      currentLocation: arrival.currentLocation,
-    }));
+    .map((arrival) => {
+      const expectedArrivalTime = new Date(arrival.expectedArrival);
+      const timeToStationSeconds = Math.max(
+        0,
+        Math.round((expectedArrivalTime.getTime() - now.getTime()) / 1000)
+      );
+      return {
+        lineId: arrival.lineId,
+        lineName: arrival.lineName,
+        platformName: arrival.platformName,
+        direction: arrival.direction,
+        destinationName: arrival.destinationName,
+        timeToStationSeconds,
+        expectedArrival: arrival.expectedArrival,
+        currentLocation: arrival.currentLocation,
+      };
+    });
 
   return { arrivals: filtered };
 }
