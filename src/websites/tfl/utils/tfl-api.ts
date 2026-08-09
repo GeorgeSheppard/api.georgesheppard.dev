@@ -32,6 +32,16 @@ export interface TflMatchedStop {
   name: string;
 }
 
+interface TflStopPointChild {
+  id: string;
+  modes: string[];
+}
+
+interface TflStopPointDetail {
+  id: string;
+  children?: TflStopPointChild[];
+}
+
 export interface TflOrderedLineRoute {
   naptanIds: string[];
 }
@@ -73,6 +83,19 @@ export async function getStopPointArrivals(
   // own direction conventions (not TfL's tube inbound/outbound), which would otherwise flow
   // through into /tfl/branches and fail its direction validation.
   return (data ?? []).filter((arrival) => arrival.modeName === 'tube');
+}
+
+// Major interchanges are searched/returned as a multi-modal "HUB" StopPoint (e.g. Tottenham
+// Hale's HUBTOM, combining bus/national-rail/tube), but the topology data we key our lines cache
+// by (Line/Route/Sequence) only ever uses the underlying per-mode StopPoint id. Resolve a hub id
+// down to its tube child so lookups against that cache — and later Arrivals calls — line up. A
+// plain per-mode id (the common case) is returned unchanged.
+export async function resolveTubeStopPointId(client: AxiosInstance, id: string): Promise<string> {
+  if (!id.startsWith('HUB')) return id;
+
+  const { data } = await client.get<TflStopPointDetail>(`/StopPoint/${encodeURIComponent(id)}`);
+  const tubeChild = (data.children ?? []).find((child) => child.modes?.includes('tube'));
+  return tubeChild?.id ?? id;
 }
 
 export async function getTubeLines(client: AxiosInstance): Promise<TflLine[]> {

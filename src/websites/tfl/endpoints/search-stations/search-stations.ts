@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Context } from 'hono';
-import { searchStopPoints } from '../../utils/tfl-api.js';
+import { searchStopPoints, resolveTubeStopPointId } from '../../utils/tfl-api.js';
 import { getStationLines } from '../../utils/station-lines-cache.js';
 
 export const SearchStationsQuerySchema = z.object({
@@ -51,11 +51,14 @@ export async function searchStations(
 
   const tubeMatches = matches.filter((match) => match.modes.includes('tube'));
   const stations = await Promise.all(
-    tubeMatches.map(async (match) => ({
-      id: match.id,
-      name: match.name,
-      lines: await getStationLines(tflClient.getClient(), match.id),
-    }))
+    tubeMatches.map(async (match) => {
+      const id = await resolveTubeStopPointId(tflClient.getClient(), match.id);
+      return {
+        id,
+        name: match.name,
+        lines: await getStationLines(tflClient.getClient(), id),
+      };
+    })
   );
 
   return { stations };

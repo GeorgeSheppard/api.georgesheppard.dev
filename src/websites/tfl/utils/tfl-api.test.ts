@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getStopPointArrivals } from './tfl-api.js';
+import { getStopPointArrivals, resolveTubeStopPointId } from './tfl-api.js';
 import type { TflArrival } from './tfl-api.js';
 
 function mockClient(arrivals: TflArrival[]) {
@@ -41,5 +41,47 @@ describe('getStopPointArrivals', () => {
   it('returns an empty list when there are no arrivals', async () => {
     const result = await getStopPointArrivals(mockClient([]), '940GZZLUECT');
     expect(result).toEqual([]);
+  });
+});
+
+describe('resolveTubeStopPointId', () => {
+  it('resolves a HUB id to its tube child StopPoint id', async () => {
+    const client = {
+      get: vi.fn().mockResolvedValue({
+        data: {
+          id: 'HUBTOM',
+          children: [
+            { id: '490G000667', modes: ['bus'] },
+            { id: '910GTTNHMHL', modes: ['national-rail'] },
+            { id: '940GZZLUTMH', modes: ['tube'] },
+          ],
+        },
+      }),
+    } as never;
+
+    const result = await resolveTubeStopPointId(client, 'HUBTOM');
+
+    expect(result).toBe('940GZZLUTMH');
+  });
+
+  it('returns the id unchanged when it is not a HUB', async () => {
+    const client = { get: vi.fn() } as never;
+
+    const result = await resolveTubeStopPointId(client, '940GZZLUECT');
+
+    expect(result).toBe('940GZZLUECT');
+    expect((client as { get: ReturnType<typeof vi.fn> }).get).not.toHaveBeenCalled();
+  });
+
+  it('returns the HUB id unchanged when no tube child is present', async () => {
+    const client = {
+      get: vi.fn().mockResolvedValue({
+        data: { id: 'HUBXYZ', children: [{ id: '490G000667', modes: ['bus'] }] },
+      }),
+    } as never;
+
+    const result = await resolveTubeStopPointId(client, 'HUBXYZ');
+
+    expect(result).toBe('HUBXYZ');
   });
 });
