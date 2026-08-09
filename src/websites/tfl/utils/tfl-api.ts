@@ -27,15 +27,28 @@ export interface TflLine {
   name: string;
 }
 
-export interface TflRouteSection {
-  direction: string;
-  originator: string;
-  destination: string;
+export interface TflMatchedStop {
+  id: string;
+  name: string;
 }
 
-interface TflLineRouteResponse {
-  routeSections: TflRouteSection[];
+export interface TflOrderedLineRoute {
+  naptanIds: string[];
 }
+
+export interface TflStopPointSequence {
+  stopPoint: TflMatchedStop[];
+}
+
+export interface TflRouteSequence {
+  // The top-level `stations` list is incomplete (TfL omits some interchange stations from it) —
+  // stopPointSequences is the one place every station referenced by orderedLineRoutes is
+  // guaranteed to have a name.
+  stopPointSequences: TflStopPointSequence[];
+  orderedLineRoutes: TflOrderedLineRoute[];
+}
+
+export type TflLineDirection = 'inbound' | 'outbound';
 
 export async function searchStopPoints(
   client: AxiosInstance,
@@ -67,13 +80,20 @@ export async function getTubeLines(client: AxiosInstance): Promise<TflLine[]> {
   return data ?? [];
 }
 
-export async function getLineRouteSections(
+// Full stop-by-stop sequence for a line in one direction, including every intermediate station
+// and each branch's true terminus — unlike /Line/{id}/Route, which only lists terminus-to-terminus
+// pairs and misses every station in between.
+export async function getLineRouteSequence(
   client: AxiosInstance,
-  lineId: string
-): Promise<TflRouteSection[]> {
-  const { data } = await client.get<TflLineRouteResponse>(
-    `/Line/${encodeURIComponent(lineId)}/Route`,
+  lineId: string,
+  direction: TflLineDirection
+): Promise<TflRouteSequence> {
+  const { data } = await client.get<TflRouteSequence>(
+    `/Line/${encodeURIComponent(lineId)}/Route/Sequence/${direction}`,
     { params: { serviceTypes: 'Regular' } }
   );
-  return data.routeSections ?? [];
+  return {
+    stopPointSequences: data.stopPointSequences ?? [],
+    orderedLineRoutes: data.orderedLineRoutes ?? [],
+  };
 }

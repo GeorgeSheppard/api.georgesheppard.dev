@@ -12,7 +12,12 @@ export type SearchStationsQuery = z.infer<typeof SearchStationsQuerySchema>;
 export const LineDirectionSchema = z.object({
   lineId: z.string().describe('TfL Line ID'),
   lineName: z.string().describe('Line name'),
-  direction: z.string().describe('Direction (inbound or outbound)'),
+  direction: z.string().describe('Direction (inbound or outbound) — required by the arrivals API'),
+  towards: z
+    .array(z.string())
+    .describe(
+      'Terminus station name(s) reached by travelling this direction from here — more than one means the line forks past this station'
+    ),
 });
 
 export type LineDirection = z.infer<typeof LineDirectionSchema>;

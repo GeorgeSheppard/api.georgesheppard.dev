@@ -2113,13 +2113,21 @@
                                 },
                                 "direction": {
                                   "type": "string",
-                                  "description": "Direction (inbound or outbound)"
+                                  "description": "Direction (inbound or outbound) — required by the arrivals API"
+                                },
+                                "towards": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Terminus station name(s) reached by travelling this direction from here — more than one means the line forks past this station"
                                 }
                               },
                               "required": [
                                 "lineId",
                                 "lineName",
-                                "direction"
+                                "direction",
+                                "towards"
                               ]
                             },
                             "description": "Available lines and directions at this station"

@@ -27,8 +27,18 @@ describe('searchStations handler', () => {
       { id: '490000173C', name: 'Oxford Street Bus Stop', modes: ['bus'] },
     ]);
     vi.mocked(getStationLines).mockResolvedValue([
-      { lineId: 'victoria', lineName: 'Victoria', direction: 'inbound' },
-      { lineId: 'victoria', lineName: 'Victoria', direction: 'outbound' },
+      {
+        lineId: 'victoria',
+        lineName: 'Victoria',
+        direction: 'inbound',
+        towards: ['Brixton Underground Station'],
+      },
+      {
+        lineId: 'victoria',
+        lineName: 'Victoria',
+        direction: 'outbound',
+        towards: ['Walthamstow Central Underground Station'],
+      },
     ]);
 
     const result = await searchStations(mockContext(), { query: 'Oxford' });
@@ -39,8 +49,18 @@ describe('searchStations handler', () => {
           id: '940GZZLUOXC',
           name: 'Oxford Circus Underground Station',
           lines: [
-            { lineId: 'victoria', lineName: 'Victoria', direction: 'inbound' },
-            { lineId: 'victoria', lineName: 'Victoria', direction: 'outbound' },
+            {
+              lineId: 'victoria',
+              lineName: 'Victoria',
+              direction: 'inbound',
+              towards: ['Brixton Underground Station'],
+            },
+            {
+              lineId: 'victoria',
+              lineName: 'Victoria',
+              direction: 'outbound',
+              towards: ['Walthamstow Central Underground Station'],
+            },
           ],
         },
       ],
