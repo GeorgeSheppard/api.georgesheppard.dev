@@ -38,13 +38,14 @@ export async function searchStations(
   const tflClient = c.get('tflClient');
   const matches = await searchStopPoints(tflClient.getClient(), input.query);
 
-  const stations = matches
-    .filter((match) => match.modes.includes('tube'))
-    .map((match) => ({
+  const tubeMatches = matches.filter((match) => match.modes.includes('tube'));
+  const stations = await Promise.all(
+    tubeMatches.map(async (match) => ({
       id: match.id,
       name: match.name,
-      lines: getStationLines(match.id),
-    }));
+      lines: await getStationLines(tflClient.getClient(), match.id),
+    }))
+  );
 
   return { stations };
 }

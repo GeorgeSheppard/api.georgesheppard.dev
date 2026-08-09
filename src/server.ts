@@ -16,7 +16,8 @@ import { registerRoutes as registerTflRoutes } from '@websites/tfl/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
 import { isAllowedOrigin } from '@core/auth/redirect.js';
-import { initializeStationLinesCache } from '@websites/tfl/utils/station-lines-cache.js';
+import { warmStationLinesCache } from '@websites/tfl/utils/station-lines-cache.js';
+import { logger } from '@core/telemetry/logger.js';
 import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
@@ -49,8 +50,15 @@ export async function createApp(dependencies: AppDependencies) {
   } = dependencies;
   const app = new OpenAPIHono();
 
-  // Initialize TfL station lines cache on startup
-  initializeStationLinesCache();
+  // Warm the TfL station lines cache in the background. Fire-and-forget: this must never block
+  // or fail server startup, and a failure here doesn't affect any other TfL endpoint — the cache
+  // just stays empty and lazily retries on the next request that needs it. Wrapped in try/catch
+  // too, since even getting hold of the client could in principle throw synchronously.
+  try {
+    warmStationLinesCache(tflClient.getClient());
+  } catch (error) {
+    logger.warn('Failed to start TfL station lines cache warmup', error);
+  }
 
   // Store clients in app context
   app.use('*', async (c, next) => {

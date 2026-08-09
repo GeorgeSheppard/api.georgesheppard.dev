@@ -22,6 +22,21 @@ export interface TflArrival {
   modeName: string;
 }
 
+export interface TflLine {
+  id: string;
+  name: string;
+}
+
+export interface TflRouteSection {
+  direction: string;
+  originator: string;
+  destination: string;
+}
+
+interface TflLineRouteResponse {
+  routeSections: TflRouteSection[];
+}
+
 export async function searchStopPoints(
   client: AxiosInstance,
   query: string
@@ -45,4 +60,20 @@ export async function getStopPointArrivals(
   // own direction conventions (not TfL's tube inbound/outbound), which would otherwise flow
   // through into /tfl/branches and fail its direction validation.
   return (data ?? []).filter((arrival) => arrival.modeName === 'tube');
+}
+
+export async function getTubeLines(client: AxiosInstance): Promise<TflLine[]> {
+  const { data } = await client.get<TflLine[]>('/Line/Mode/tube');
+  return data ?? [];
+}
+
+export async function getLineRouteSections(
+  client: AxiosInstance,
+  lineId: string
+): Promise<TflRouteSection[]> {
+  const { data } = await client.get<TflLineRouteResponse>(
+    `/Line/${encodeURIComponent(lineId)}/Route`,
+    { params: { serviceTypes: 'Regular' } }
+  );
+  return data.routeSections ?? [];
 }
