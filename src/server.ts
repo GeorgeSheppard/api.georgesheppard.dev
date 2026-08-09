@@ -16,6 +16,7 @@ import { registerRoutes as registerTflRoutes } from '@websites/tfl/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
 import { isAllowedOrigin } from '@core/auth/redirect.js';
+import { initializeStationLinesCache } from '@websites/tfl/utils/station-lines-cache.js';
 import { config } from './config';
 import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
@@ -47,6 +48,9 @@ export async function createApp(dependencies: AppDependencies) {
     tflClient,
   } = dependencies;
   const app = new OpenAPIHono();
+
+  // Initialize TfL station lines cache on startup
+  initializeStationLinesCache();
 
   // Store clients in app context
   app.use('*', async (c, next) => {

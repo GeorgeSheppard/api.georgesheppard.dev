@@ -2097,11 +2097,38 @@
                           "name": {
                             "type": "string",
                             "description": "Station name"
+                          },
+                          "lines": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "lineId": {
+                                  "type": "string",
+                                  "description": "TfL Line ID"
+                                },
+                                "lineName": {
+                                  "type": "string",
+                                  "description": "Line name"
+                                },
+                                "direction": {
+                                  "type": "string",
+                                  "description": "Direction (inbound or outbound)"
+                                }
+                              },
+                              "required": [
+                                "lineId",
+                                "lineName",
+                                "direction"
+                              ]
+                            },
+                            "description": "Available lines and directions at this station"
                           }
                         },
                         "required": [
                           "id",
-                          "name"
+                          "name",
+                          "lines"
                         ]
                       }
                     }
@@ -2266,6 +2293,78 @@
                   },
                   "required": [
                     "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tfl/station-lines": {
+      "get": {
+        "tags": [
+          "TfL"
+        ],
+        "description": "Get pre-computed station lines and directions data for all tube stations",
+        "responses": {
+          "200": {
+            "description": "Station lines data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "stationId": {
+                            "type": "string",
+                            "description": "TfL StopPoint ID"
+                          },
+                          "stationName": {
+                            "type": "string",
+                            "description": "Station name"
+                          },
+                          "lines": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "lineId": {
+                                  "type": "string",
+                                  "description": "TfL Line ID"
+                                },
+                                "lineName": {
+                                  "type": "string",
+                                  "description": "Line name (e.g., Central, Circle)"
+                                },
+                                "direction": {
+                                  "type": "string",
+                                  "description": "Direction (e.g., Inbound, Outbound, Northbound)"
+                                }
+                              },
+                              "required": [
+                                "lineId",
+                                "lineName",
+                                "direction"
+                              ]
+                            },
+                            "description": "Available lines and directions at this station"
+                          }
+                        },
+                        "required": [
+                          "stationId",
+                          "stationName",
+                          "lines"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "stations"
                   ]
                 }
               }
