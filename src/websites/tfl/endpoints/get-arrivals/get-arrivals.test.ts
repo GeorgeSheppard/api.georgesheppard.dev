@@ -90,6 +90,8 @@ describe('getArrivals handler', () => {
 
   it('should return arrivals sorted by soonest, capped at the limit', async () => {
     vi.mocked(getStopPointArrivals).mockResolvedValue(arrivals);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-08T09:00:00Z'));
 
     const result = await getArrivals(mockContext(), {
       stopPointId: '940GZZLUVIC',
@@ -98,10 +100,13 @@ describe('getArrivals handler', () => {
 
     expect(result.arrivals).toHaveLength(3);
     expect(result.arrivals.map((a) => a.timeToStationSeconds)).toEqual([30, 60, 90]);
+    vi.useRealTimers();
   });
 
   it('should filter by line and direction', async () => {
     vi.mocked(getStopPointArrivals).mockResolvedValue(arrivals);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-08T09:00:00Z'));
 
     const result = await getArrivals(mockContext(), {
       stopPointId: '940GZZLUVIC',
@@ -132,10 +137,13 @@ describe('getArrivals handler', () => {
         currentLocation: 'At Kings Cross St Pancras',
       },
     ]);
+    vi.useRealTimers();
   });
 
   it('should return an empty list when there are no arrivals', async () => {
     vi.mocked(getStopPointArrivals).mockResolvedValue([]);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-08T09:00:00Z'));
 
     const result = await getArrivals(mockContext(), {
       stopPointId: '940GZZLUVIC',
@@ -143,5 +151,35 @@ describe('getArrivals handler', () => {
     });
 
     expect(result).toEqual({ arrivals: [] });
+    vi.useRealTimers();
+  });
+
+  it('should recalculate timeToStationSeconds based on expectedArrival, not stale timeToStation from API', async () => {
+    const staleArrivals: TflArrival[] = [
+      {
+        lineId: 'victoria',
+        lineName: 'Victoria',
+        platformName: 'Southbound - Platform 1',
+        direction: 'outbound',
+        destinationName: 'Brixton',
+        timeToStation: 120, // This was 120 when API responded 30s ago, but train arrives in 90s
+        expectedArrival: '2026-08-08T09:01:30Z',
+        currentLocation: 'Approaching',
+        modeName: 'tube',
+      },
+    ];
+    vi.mocked(getStopPointArrivals).mockResolvedValue(staleArrivals);
+    vi.useFakeTimers();
+    // Simulate 30 seconds elapsed since the API returned
+    vi.setSystemTime(new Date('2026-08-08T09:00:30Z'));
+
+    const result = await getArrivals(mockContext(), {
+      stopPointId: '940GZZLUVIC',
+      limit: 3,
+    });
+
+    // Should show 60 seconds (90 - 30), not the stale 120
+    expect(result.arrivals[0].timeToStationSeconds).toBe(60);
+    vi.useRealTimers();
   });
 });
