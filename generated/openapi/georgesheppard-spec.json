@@ -2097,11 +2097,50 @@
                           "name": {
                             "type": "string",
                             "description": "Station name"
+                          },
+                          "lines": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "lineId": {
+                                  "type": "string",
+                                  "description": "TfL Line ID"
+                                },
+                                "lineName": {
+                                  "type": "string",
+                                  "description": "Line name"
+                                },
+                                "direction": {
+                                  "type": "string",
+                                  "description": "Direction (inbound or outbound) — required by the arrivals API"
+                                },
+                                "towards": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Terminus station name(s) reached by travelling this direction from here — more than one means the line forks past this station"
+                                },
+                                "compass": {
+                                  "type": "string",
+                                  "description": "Compass direction as shown on platform signage/tube maps (e.g. \"Northbound\") — best-effort, not always available"
+                                }
+                              },
+                              "required": [
+                                "lineId",
+                                "lineName",
+                                "direction",
+                                "towards"
+                              ]
+                            },
+                            "description": "Available lines and directions at this station"
                           }
                         },
                         "required": [
                           "id",
-                          "name"
+                          "name",
+                          "lines"
                         ]
                       }
                     }
