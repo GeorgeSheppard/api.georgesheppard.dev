@@ -320,4 +320,88 @@ describe('station lines cache', () => {
       ]);
     });
   });
+
+  describe('compass top-up on later requests', () => {
+    it('self-heals: a station missed during warmup gets its compass direction from a later request', async () => {
+      vi.mocked(getTubeLines).mockResolvedValue([{ id: 'victoria', name: 'Victoria' }]);
+      mockSequences({
+        inbound: sequenceOf(
+          [
+            { id: 'A', name: 'Walthamstow Central Underground Station' },
+            { id: 'B', name: 'Brixton Underground Station' },
+          ],
+          [['A', 'B']]
+        ),
+      });
+      // No live arrivals for the bulk warmup pass specifically (e.g. built outside service
+      // hours) — every call after that simulates a train having since shown up.
+      vi.mocked(getStopPointArrivals).mockResolvedValueOnce([]);
+      vi.mocked(getStopPointArrivals).mockResolvedValue([
+        arrival({
+          lineId: 'victoria',
+          direction: 'inbound',
+          platformName: 'Southbound - Platform 4',
+        }),
+      ]);
+
+      await getStationLines(client, 'A');
+
+      // The station is a fixed, physical fact — it should keep being retried on later requests
+      // until it's actually found, not require this to be caught on one specific attempt.
+      await vi.waitFor(async () => {
+        const lines = await getStationLines(client, 'A');
+        expect(lines[0].compass).toBe('Southbound');
+      });
+    });
+
+    it('stops retrying once every entry for a station has a compass direction', async () => {
+      vi.mocked(getTubeLines).mockResolvedValue([{ id: 'victoria', name: 'Victoria' }]);
+      mockSequences({
+        inbound: sequenceOf(
+          [
+            { id: 'A', name: 'Walthamstow Central Underground Station' },
+            { id: 'B', name: 'Brixton Underground Station' },
+          ],
+          [['A', 'B']]
+        ),
+      });
+      vi.mocked(getStopPointArrivals).mockResolvedValue([
+        arrival({
+          lineId: 'victoria',
+          direction: 'inbound',
+          platformName: 'Southbound - Platform 4',
+        }),
+      ]);
+
+      await getStationLines(client, 'A');
+      await vi.waitFor(async () => {
+        const lines = await getStationLines(client, 'A');
+        expect(lines[0].compass).toBe('Southbound');
+      });
+      const callsOnceComplete = vi.mocked(getStopPointArrivals).mock.calls.length;
+
+      await getStationLines(client, 'A');
+      await getStationLines(client, 'A');
+
+      expect(getStopPointArrivals).toHaveBeenCalledTimes(callsOnceComplete);
+    });
+
+    it('never throws even though the top-up keeps failing on every retry', async () => {
+      vi.mocked(getTubeLines).mockResolvedValue([{ id: 'victoria', name: 'Victoria' }]);
+      mockSequences({
+        inbound: sequenceOf(
+          [
+            { id: 'A', name: 'Walthamstow Central Underground Station' },
+            { id: 'B', name: 'Brixton Underground Station' },
+          ],
+          [['A', 'B']]
+        ),
+      });
+      vi.mocked(getStopPointArrivals).mockRejectedValue(new Error('arrivals unavailable'));
+
+      await expect(getStationLines(client, 'A')).resolves.toBeDefined();
+      await expect(getStationLines(client, 'A')).resolves.toBeDefined();
+      await expect(getStationLines(client, 'A')).resolves.toBeDefined();
+    });
+  });
 });
