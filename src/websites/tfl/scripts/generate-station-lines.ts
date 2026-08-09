@@ -2,20 +2,23 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 
-interface TflStopPointMatch {
+interface TflLine {
   id: string;
   name: string;
-  modes: string[];
 }
 
-interface TflSearchResponse {
-  matches: TflStopPointMatch[];
-}
-
-interface TflArrival {
-  lineId: string;
-  lineName: string;
+interface TflRoute {
+  originationName: string;
+  destinationName: string;
   direction: string;
+  originator: string;
+  destination: string;
+}
+
+interface TflLineRoute {
+  id: string;
+  name: string;
+  routeSections: TflRoute[];
 }
 
 interface StationLineData {
@@ -31,79 +34,93 @@ interface StationLineData {
 const BASE_URL = 'https://api.tfl.gov.uk';
 const OUTPUT_FILE = path.join(process.cwd(), 'data', 'station-lines.json');
 
-async function getAllTubeStations(): Promise<TflStopPointMatch[]> {
+// Map of station IDs to names (discovered from routes)
+const stationNames = new Map<string, string>();
+
+// Map of station ID -> Set of (lineId:lineName:direction)
+const stationLines = new Map<string, Set<string>>();
+
+async function getAllTubeLines(): Promise<TflLine[]> {
   try {
-    const { data } = await axios.get<TflSearchResponse>(`${BASE_URL}/StopPoint/Search`, {
-      params: {
-        modes: 'tube',
-        maxResults: 500,
-      },
-    });
-    return data.matches ?? [];
+    const { data } = await axios.get<TflLine[]>(`${BASE_URL}/Line/Mode/tube`);
+    return data ?? [];
   } catch (error) {
-    console.error('Error fetching tube stations:', error);
+    console.error('Error fetching tube lines:', error);
     return [];
   }
 }
 
-async function getStationArrivals(stationId: string): Promise<TflArrival[]> {
+async function getLineRoutes(lineId: string): Promise<TflRoute[]> {
   try {
-    const { data } = await axios.get<TflArrival[]>(
-      `${BASE_URL}/StopPoint/${encodeURIComponent(stationId)}/Arrivals`
+    const { data } = await axios.get<TflLineRoute>(
+      `${BASE_URL}/Line/${encodeURIComponent(lineId)}/Route?serviceTypes=Regular`
     );
-    return data ?? [];
+    return data.routeSections ?? [];
   } catch (error) {
-    console.error(`Error fetching arrivals for station ${stationId}:`, error);
+    console.error(`Error fetching routes for line ${lineId}:`, error);
     return [];
   }
 }
 
 async function generateStationLines(): Promise<void> {
-  console.log('Starting station lines generation...');
+  console.log('Starting station lines generation using static route data...');
 
   try {
-    // Get all tube stations
-    const stations = await getAllTubeStations();
-    console.log(`Found ${stations.length} tube stations`);
+    // Get all tube lines
+    const lines = await getAllTubeLines();
+    console.log(`Found ${lines.length} tube lines`);
 
-    const stationLinesData: StationLineData[] = [];
+    // Process each line
+    for (const line of lines) {
+      const routes = await getLineRoutes(line.id);
 
-    // Process each station
-    for (const station of stations) {
-      const arrivals = await getStationArrivals(station.id);
-
-      if (arrivals.length === 0) {
-        console.log(`No arrivals for station ${station.name} (${station.id})`);
+      if (routes.length === 0) {
+        console.log(`No routes for line ${line.name} (${line.id})`);
         continue;
       }
 
-      // Extract unique line/direction combinations
-      const lineDirections = new Map<string, { lineId: string; lineName: string; direction: string }>();
-      for (const arrival of arrivals) {
-        const key = `${arrival.lineId}:${arrival.direction}`;
-        if (!lineDirections.has(key)) {
-          lineDirections.set(key, {
-            lineId: arrival.lineId,
-            lineName: arrival.lineName,
-            direction: arrival.direction,
-          });
+      // Extract all stations and their directions from the routes
+      const lineDirections = new Set<string>();
+      for (const route of routes) {
+        // Store station names
+        stationNames.set(route.originator, route.originationName);
+        stationNames.set(route.destination, route.destinationName);
+
+        // Add this line/direction to both stations in the route
+        const key = `${line.id}:${line.name}:${route.direction}`;
+
+        if (!stationLines.has(route.originator)) {
+          stationLines.set(route.originator, new Set());
         }
+        stationLines.get(route.originator)!.add(key);
+
+        if (!stationLines.has(route.destination)) {
+          stationLines.set(route.destination, new Set());
+        }
+        stationLines.get(route.destination)!.add(key);
+
+        lineDirections.add(`${route.direction}`);
       }
 
-      if (lineDirections.size > 0) {
-        stationLinesData.push({
-          stationId: station.id,
-          stationName: station.name,
-          lines: Array.from(lineDirections.values()).sort((a, b) =>
-            `${a.lineName}:${a.direction}`.localeCompare(`${b.lineName}:${b.direction}`)
-          ),
-        });
-        console.log(`Processed station ${station.name}: ${lineDirections.size} line/direction combos`);
-      }
+      console.log(`Processed line ${line.name}: ${lineDirections.size} directions, ${new Set(routes.map((r) => r.originator)).size} stations`);
 
       // Rate limit - be nice to TfL API
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
+
+    // Build the final data structure
+    const stationLinesData: StationLineData[] = Array.from(stationLines.entries())
+      .map(([stationId, lineSet]) => ({
+        stationId,
+        stationName: stationNames.get(stationId) || stationId,
+        lines: Array.from(lineSet)
+          .map((key) => {
+            const [lineId, lineName, direction] = key.split(':');
+            return { lineId, lineName, direction };
+          })
+          .sort((a, b) => `${a.lineName}:${a.direction}`.localeCompare(`${b.lineName}:${b.direction}`)),
+      }))
+      .sort((a, b) => a.stationName.localeCompare(b.stationName));
 
     // Ensure data directory exists
     if (!fs.existsSync(path.dirname(OUTPUT_FILE))) {
