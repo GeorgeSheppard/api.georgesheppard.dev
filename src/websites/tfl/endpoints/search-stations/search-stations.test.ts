@@ -28,19 +28,8 @@ describe('searchStations handler', () => {
       { id: '490000173C', name: 'Oxford Street Bus Stop', modes: ['bus'] },
     ]);
     vi.mocked(getStationLines).mockResolvedValue([
-      {
-        lineId: 'victoria',
-        lineName: 'Victoria',
-        direction: 'inbound',
-        towards: ['Brixton Underground Station'],
-        compass: 'Southbound',
-      },
-      {
-        lineId: 'victoria',
-        lineName: 'Victoria',
-        direction: 'outbound',
-        towards: ['Walthamstow Central Underground Station'],
-      },
+      { lineId: 'victoria', lineName: 'Victoria' },
+      { lineId: 'bakerloo', lineName: 'Bakerloo' },
     ]);
 
     const result = await searchStations(mockContext(), { query: 'Oxford' });
@@ -51,19 +40,8 @@ describe('searchStations handler', () => {
           id: '940GZZLUOXC',
           name: 'Oxford Circus Underground Station',
           lines: [
-            {
-              lineId: 'victoria',
-              lineName: 'Victoria',
-              direction: 'inbound',
-              towards: ['Brixton Underground Station'],
-              compass: 'Southbound',
-            },
-            {
-              lineId: 'victoria',
-              lineName: 'Victoria',
-              direction: 'outbound',
-              towards: ['Walthamstow Central Underground Station'],
-            },
+            { lineId: 'victoria', lineName: 'Victoria' },
+            { lineId: 'bakerloo', lineName: 'Bakerloo' },
           ],
         },
       ],
@@ -84,14 +62,7 @@ describe('searchStations handler', () => {
       { id: 'HUBTOM', name: 'Tottenham Hale', modes: ['tube', 'national-rail', 'bus'] },
     ]);
     vi.mocked(resolveTubeStopPointId).mockResolvedValue('940GZZLUTMH');
-    vi.mocked(getStationLines).mockResolvedValue([
-      {
-        lineId: 'victoria',
-        lineName: 'Victoria',
-        direction: 'outbound',
-        towards: ['Walthamstow Central Underground Station'],
-      },
-    ]);
+    vi.mocked(getStationLines).mockResolvedValue([{ lineId: 'victoria', lineName: 'Victoria' }]);
 
     const result = await searchStations(mockContext(), { query: 'Tottenham Hale' });
 
