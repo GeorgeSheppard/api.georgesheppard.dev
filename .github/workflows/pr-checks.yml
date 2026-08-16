@@ -87,6 +87,18 @@ jobs:
       - name: Run Shelfie Integration Tests
         run: pnpm test:integration:shelfie
 
+  integration-tfl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
+
+      - name: Run TfL Integration Tests
+        run: pnpm test:integration:tfl
+
   integration-db:
     runs-on: ubuntu-latest
     steps:

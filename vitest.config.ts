@@ -42,6 +42,13 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: 'integration:tfl',
+          include: ['src/websites/tfl/**/*.integration.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: 'integration:db',
           include: ['src/core/**/*.integration.test.ts', '!src/core/auth/**/*.integration.test.ts'],
           testTimeout: 60000,
