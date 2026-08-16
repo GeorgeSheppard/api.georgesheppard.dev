@@ -6,7 +6,7 @@ export const getArrivalsRoute = createRoute({
   method: 'get',
   path: '/tfl/arrivals',
   tags: ['tfl'],
-  description: 'Get the next arrivals for a station, optionally filtered by line',
+  description: 'Get the next arrivals for a line at a station',
   request: {
     query: GetArrivalsQuerySchema,
   },

@@ -53,18 +53,21 @@ export async function searchStopPoints(
   return data.matches ?? [];
 }
 
-export async function getStopPointArrivals(
+// TfL omits destinationName entirely (not even an empty string) for predictions whose
+// destination isn't confirmed yet — trains it can only report as "Check Front of Train" — rather
+// than always populating it, which broke callers relying on it always being a string.
+export async function getLineArrivals(
   client: AxiosInstance,
+  lineId: string,
   stopPointId: string
 ): Promise<TflArrival[]> {
   const { data } = await client.get<TflArrival[]>(
-    `/StopPoint/${encodeURIComponent(stopPointId)}/Arrivals`
+    `/Line/${encodeURIComponent(lineId)}/Arrivals/${encodeURIComponent(stopPointId)}`
   );
-  // Station search is filtered to tube stops, but a searched id can still be a multi-modal "HUB"
-  // StopPoint (e.g. major interchanges) whose Arrivals include other modes too — those have their
-  // own direction conventions (not TfL's tube inbound/outbound), which would otherwise flow
-  // through into /tfl/branches and fail its direction validation.
-  return (data ?? []).filter((arrival) => arrival.modeName === 'tube');
+  return (data ?? []).map((arrival) => ({
+    ...arrival,
+    destinationName: arrival.destinationName || 'Check front of train',
+  }));
 }
 
 // Major interchanges are searched/returned as a multi-modal "HUB" StopPoint (e.g. Tottenham

@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getStopPointArrivals, resolveTubeStopPointId } from './tfl-api.js';
+import { getLineArrivals, resolveTubeStopPointId } from './tfl-api.js';
 import type { TflArrival } from './tfl-api.js';
 
 function mockClient(arrivals: TflArrival[]) {
   return { get: vi.fn().mockResolvedValue({ data: arrivals }) } as never;
 }
 
-describe('getStopPointArrivals', () => {
-  it('filters out non-tube modes, e.g. a multi-modal HUB StopPoint mixing in bus arrivals', async () => {
+describe('getLineArrivals', () => {
+  it('requests arrivals scoped to the given line and stop point', async () => {
     const arrivals: TflArrival[] = [
       {
         lineId: 'district',
@@ -20,27 +20,39 @@ describe('getStopPointArrivals', () => {
         currentLocation: 'Approaching',
         modeName: 'tube',
       },
-      {
-        lineId: '25',
-        lineName: '25',
-        platformName: 'Stop A',
-        direction: '1',
-        destinationName: 'Ilford',
-        timeToStation: 90,
-        expectedArrival: '2026-08-08T09:01:30Z',
-        currentLocation: 'Approaching',
-        modeName: 'bus',
-      },
     ];
+    const client = mockClient(arrivals);
 
-    const result = await getStopPointArrivals(mockClient(arrivals), '940GZZLUECT');
+    const result = await getLineArrivals(client, 'district', '940GZZLUECT');
 
-    expect(result).toEqual([arrivals[0]]);
+    expect(result).toEqual(arrivals);
+    expect((client as { get: ReturnType<typeof vi.fn> }).get).toHaveBeenCalledWith(
+      '/Line/district/Arrivals/940GZZLUECT'
+    );
   });
 
   it('returns an empty list when there are no arrivals', async () => {
-    const result = await getStopPointArrivals(mockClient([]), '940GZZLUECT');
+    const result = await getLineArrivals(mockClient([]), 'district', '940GZZLUECT');
     expect(result).toEqual([]);
+  });
+
+  it('falls back to "Check front of train" when TfL omits destinationName', async () => {
+    // TfL drops the field entirely (not an empty string) for trains it can't yet assign a
+    // destination to, e.g. reversing District line trains near Earl's Court.
+    const arrivalWithoutDestination = {
+      lineId: 'district',
+      lineName: 'District',
+      platformName: 'Eastbound - Platform 2',
+      timeToStation: 300,
+      expectedArrival: '2026-08-08T09:01:00Z',
+      currentLocation: 'Approaching Fulham Broadway Platform 2',
+      modeName: 'tube',
+    } as unknown as TflArrival;
+    const client = mockClient([arrivalWithoutDestination]);
+
+    const result = await getLineArrivals(client, 'district', '940GZZLUECT');
+
+    expect(result[0].destinationName).toBe('Check front of train');
   });
 });
 
