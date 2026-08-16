@@ -53,18 +53,15 @@ export async function searchStopPoints(
   return data.matches ?? [];
 }
 
-export async function getStopPointArrivals(
+export async function getLineArrivals(
   client: AxiosInstance,
+  lineId: string,
   stopPointId: string
 ): Promise<TflArrival[]> {
   const { data } = await client.get<TflArrival[]>(
-    `/StopPoint/${encodeURIComponent(stopPointId)}/Arrivals`
+    `/Line/${encodeURIComponent(lineId)}/Arrivals/${encodeURIComponent(stopPointId)}`
   );
-  // Station search is filtered to tube stops, but a searched id can still be a multi-modal "HUB"
-  // StopPoint (e.g. major interchanges) whose Arrivals include other modes too — those have their
-  // own direction conventions (not TfL's tube inbound/outbound), which would otherwise flow
-  // through into /tfl/branches and fail its direction validation.
-  return (data ?? []).filter((arrival) => arrival.modeName === 'tube');
+  return data ?? [];
 }
 
 // Major interchanges are searched/returned as a multi-modal "HUB" StopPoint (e.g. Tottenham

@@ -2162,7 +2162,7 @@
         "tags": [
           "tfl"
         ],
-        "description": "Get the next arrivals for a station, optionally filtered by line",
+        "description": "Get the next arrivals for a line at a station",
         "parameters": [
           {
             "schema": {
@@ -2178,10 +2178,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Filter to a specific line, e.g. \"victoria\""
+              "minLength": 1,
+              "description": "TfL line ID, e.g. \"victoria\""
             },
-            "required": false,
-            "description": "Filter to a specific line, e.g. \"victoria\"",
+            "required": true,
+            "description": "TfL line ID, e.g. \"victoria\"",
             "name": "lineId",
             "in": "query"
           },

@@ -1,15 +1,15 @@
 import { z } from 'zod';
 import { Context } from 'hono';
-import { getStopPointArrivals } from '../../utils/tfl-api.js';
+import { getLineArrivals } from '../../utils/tfl-api.js';
 
 const DEFAULT_LIMIT = 3;
-// The frontend also uses an unfiltered, high-limit request to discover every line/direction
-// combo currently running at a station, so this needs to comfortably cover a busy interchange.
+// Enough to comfortably cover every direction/destination combo currently running on a line at a
+// busy interchange.
 const MAX_LIMIT = 50;
 
 export const GetArrivalsQuerySchema = z.object({
   stopPointId: z.string().min(1).describe('TfL StopPoint ID'),
-  lineId: z.string().optional().describe('Filter to a specific line, e.g. "victoria"'),
+  lineId: z.string().min(1).describe('TfL line ID, e.g. "victoria"'),
   limit: z.coerce
     .number()
     .int()
@@ -45,10 +45,9 @@ export async function getArrivals(
   input: GetArrivalsQuery
 ): Promise<GetArrivalsResponse> {
   const tflClient = c.get('tflClient');
-  const arrivals = await getStopPointArrivals(tflClient.getClient(), input.stopPointId);
+  const arrivals = await getLineArrivals(tflClient.getClient(), input.lineId, input.stopPointId);
 
   const filtered = arrivals
-    .filter((arrival) => !input.lineId || arrival.lineId === input.lineId)
     .sort((a, b) => a.timeToStation - b.timeToStation)
     .slice(0, input.limit)
     .map((arrival) => ({

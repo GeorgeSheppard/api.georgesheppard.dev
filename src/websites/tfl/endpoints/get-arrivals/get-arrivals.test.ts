@@ -6,7 +6,7 @@ import type { TflArrival } from '../../utils/tfl-api.js';
 
 vi.mock('../../utils/tfl-api.js');
 
-import { getStopPointArrivals } from '../../utils/tfl-api.js';
+import { getLineArrivals } from '../../utils/tfl-api.js';
 
 function mockContext() {
   return createMockContext<Context>({
@@ -48,39 +48,6 @@ const arrivals: TflArrival[] = [
     currentLocation: 'At Green Park',
     modeName: 'tube',
   },
-  {
-    lineId: 'jubilee',
-    lineName: 'Jubilee',
-    platformName: 'Westbound - Platform 3',
-    direction: 'outbound',
-    destinationName: 'Stanmore',
-    timeToStation: 30,
-    expectedArrival: '2026-08-08T09:00:30Z',
-    currentLocation: 'At Platform',
-    modeName: 'tube',
-  },
-  {
-    lineId: 'district',
-    lineName: 'District',
-    platformName: 'Westbound - Platform 1',
-    direction: 'outbound',
-    destinationName: 'Wimbledon',
-    timeToStation: 200,
-    expectedArrival: '2026-08-08T09:03:20Z',
-    currentLocation: 'At Gloucester Road',
-    modeName: 'tube',
-  },
-  {
-    lineId: 'district',
-    lineName: 'District',
-    platformName: 'Westbound - Platform 1',
-    direction: 'outbound',
-    destinationName: 'Richmond',
-    timeToStation: 90,
-    expectedArrival: '2026-08-08T09:01:30Z',
-    currentLocation: 'At Kensington (Olympia)',
-    modeName: 'tube',
-  },
 ];
 
 describe('getArrivals handler', () => {
@@ -88,25 +55,13 @@ describe('getArrivals handler', () => {
     vi.clearAllMocks();
   });
 
-  it('should return arrivals sorted by soonest, capped at the limit', async () => {
-    vi.mocked(getStopPointArrivals).mockResolvedValue(arrivals);
-
-    const result = await getArrivals(mockContext(), {
-      stopPointId: '940GZZLUVIC',
-      limit: 3,
-    });
-
-    expect(result.arrivals).toHaveLength(3);
-    expect(result.arrivals.map((a) => a.timeToStationSeconds)).toEqual([30, 60, 90]);
-  });
-
-  it('should filter by line, keeping both directions', async () => {
-    vi.mocked(getStopPointArrivals).mockResolvedValue(arrivals);
+  it('should return arrivals sorted by soonest, capped at the limit, keeping both directions', async () => {
+    vi.mocked(getLineArrivals).mockResolvedValue(arrivals);
 
     const result = await getArrivals(mockContext(), {
       stopPointId: '940GZZLUVIC',
       lineId: 'victoria',
-      limit: 3,
+      limit: 2,
     });
 
     expect(result.arrivals).toEqual([
@@ -130,24 +85,27 @@ describe('getArrivals handler', () => {
         expectedArrival: '2026-08-08T09:02:00Z',
         currentLocation: 'At Green Park',
       },
-      {
-        lineId: 'victoria',
-        lineName: 'Victoria',
-        platformName: 'Southbound - Platform 1',
-        direction: 'outbound',
-        destinationName: 'Brixton',
-        timeToStationSeconds: 300,
-        expectedArrival: '2026-08-08T09:05:00Z',
-        currentLocation: 'At Kings Cross St Pancras',
-      },
     ]);
   });
 
+  it('should request arrivals scoped to the requested line and stop point', async () => {
+    vi.mocked(getLineArrivals).mockResolvedValue(arrivals);
+
+    await getArrivals(mockContext(), {
+      stopPointId: '940GZZLUVIC',
+      lineId: 'victoria',
+      limit: 3,
+    });
+
+    expect(getLineArrivals).toHaveBeenCalledWith(expect.anything(), 'victoria', '940GZZLUVIC');
+  });
+
   it('should return an empty list when there are no arrivals', async () => {
-    vi.mocked(getStopPointArrivals).mockResolvedValue([]);
+    vi.mocked(getLineArrivals).mockResolvedValue([]);
 
     const result = await getArrivals(mockContext(), {
       stopPointId: '940GZZLUVIC',
+      lineId: 'victoria',
       limit: 3,
     });
 
