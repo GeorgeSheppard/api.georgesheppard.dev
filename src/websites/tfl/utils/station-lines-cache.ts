@@ -7,22 +7,28 @@ export interface StationLine {
   lineName: string;
 }
 
-// station id -> lines serving it, computed once from TfL's static per-line stop point lists (not
-// live arrivals) so it's available even when no trains are running.
-let cache: Map<string, StationLine[]> = new Map();
+export interface CachedStation {
+  id: string;
+  name: string;
+  lines: StationLine[];
+}
+
+// station id -> station + lines serving it, computed once from TfL's static per-line stop point
+// lists (not live arrivals) so it's available even when no trains are running.
+let cache: Map<string, CachedStation> = new Map();
 let isLoaded = false;
 let inFlightLoad: Promise<void> | null = null;
 
-async function computeStationLines(client: AxiosInstance): Promise<Map<string, StationLine[]>> {
+async function computeStations(client: AxiosInstance): Promise<Map<string, CachedStation>> {
   const lines = await getTubeLines(client);
-  const result = new Map<string, StationLine[]>();
+  const result = new Map<string, CachedStation>();
 
   for (const line of lines) {
     const stopPoints = await getLineStopPoints(client, line.id);
     for (const stop of stopPoints) {
-      const entries = result.get(stop.id) ?? [];
-      entries.push({ lineId: line.id, lineName: line.name });
-      result.set(stop.id, entries);
+      const station = result.get(stop.id) ?? { id: stop.id, name: stop.name, lines: [] };
+      station.lines.push({ lineId: line.id, lineName: line.name });
+      result.set(stop.id, station);
     }
   }
 
@@ -36,7 +42,7 @@ function loadCache(client: AxiosInstance): Promise<void> {
     return inFlightLoad;
   }
 
-  inFlightLoad = computeStationLines(client)
+  inFlightLoad = computeStations(client)
     .then((result) => {
       cache = result;
       isLoaded = true;
@@ -67,7 +73,16 @@ export async function getStationLines(
   if (!isLoaded) {
     await loadCache(client);
   }
-  return cache.get(stationId) ?? [];
+  return cache.get(stationId)?.lines ?? [];
+}
+
+// Every tube station and the lines serving it — the full dataset the frontend fetches once and
+// caches client-side, rather than searching per keystroke.
+export async function getAllStations(client: AxiosInstance): Promise<CachedStation[]> {
+  if (!isLoaded) {
+    await loadCache(client);
+  }
+  return [...cache.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // Test-only: resets the module-level singleton so each test starts from a clean cache.

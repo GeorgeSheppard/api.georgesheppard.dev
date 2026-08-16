@@ -2063,23 +2063,10 @@
         "tags": [
           "tfl"
         ],
-        "description": "Search for tube stations by name",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "description": "Station name to search for"
-            },
-            "required": true,
-            "description": "Station name to search for",
-            "name": "query",
-            "in": "query"
-          }
-        ],
+        "description": "List every tube station and the lines that serve it. Intended to be fetched once and cached client-side rather than queried per search.",
         "responses": {
           "200": {
-            "description": "Matching stations",
+            "description": "Every tube station with the lines serving it",
             "content": {
               "application/json": {
                 "schema": {

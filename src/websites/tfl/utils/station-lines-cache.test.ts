@@ -5,6 +5,7 @@ vi.mock('./tfl-api.js');
 import { getTubeLines, getLineStopPoints } from './tfl-api.js';
 import {
   getStationLines,
+  getAllStations,
   warmStationLinesCache,
   _resetStationLinesCacheForTests,
 } from './station-lines-cache.js';
@@ -107,5 +108,47 @@ describe('station lines cache', () => {
 
     const secondAttempt = await getStationLines(client, 'A');
     expect(secondAttempt).toEqual([{ lineId: 'victoria', lineName: 'Victoria' }]);
+  });
+
+  describe('getAllStations', () => {
+    it('returns every station with the lines serving it, sorted by name', async () => {
+      vi.mocked(getTubeLines).mockResolvedValue([
+        { id: 'district', name: 'District' },
+        { id: 'circle', name: 'Circle' },
+      ]);
+      vi.mocked(getLineStopPoints).mockImplementation(async (_client, lineId) => {
+        if (lineId === 'district') {
+          return [
+            { id: 'A', name: 'Wimbledon Underground Station' },
+            { id: 'B', name: "Earl's Court Underground Station" },
+          ];
+        }
+        return [{ id: 'B', name: "Earl's Court Underground Station" }];
+      });
+
+      const stations = await getAllStations(client);
+
+      expect(stations).toEqual([
+        {
+          id: 'B',
+          name: "Earl's Court Underground Station",
+          lines: [
+            { lineId: 'district', lineName: 'District' },
+            { lineId: 'circle', lineName: 'Circle' },
+          ],
+        },
+        {
+          id: 'A',
+          name: 'Wimbledon Underground Station',
+          lines: [{ lineId: 'district', lineName: 'District' }],
+        },
+      ]);
+    });
+
+    it('returns an empty array without throwing when the TfL API fails', async () => {
+      vi.mocked(getTubeLines).mockRejectedValue(new Error('TfL API unavailable'));
+
+      await expect(getAllStations(client)).resolves.toEqual([]);
+    });
   });
 });
