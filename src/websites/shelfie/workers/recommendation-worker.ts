@@ -44,7 +44,8 @@ export async function processRecommendationJob(
   const newRecommendations = await recommender.getRecommendations(
     user.booksProcessed.books,
     location,
-    previousBooks
+    previousBooks,
+    user.customPreferences
   );
 
   // Update recommendation record

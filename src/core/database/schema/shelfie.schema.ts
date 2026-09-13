@@ -31,6 +31,7 @@ export const requests = pgTable('requests', {
   location: text('location').notNull().default('Us'),
   nextRecommendationUtc: timestamp('next_recommendation_utc', { mode: 'date', withTimezone: true }),
   frequency: varchar('frequency', { length: 4 }),
+  customPreferences: text('custom_preferences'),
 });
 
 // images table (BookcaseImage)

@@ -5,6 +5,11 @@ import { registerDeleteEmailRoute } from './routes/recommendations/delete-email.
 import { registerFromBookcaseRoute } from './routes/recommendations/from-bookcase.js';
 import { registerQueueCronRoute } from './routes/queue-cron.js';
 import { registerReextractRecurringBooksRoute } from './routes/reextract-recurring-books.js';
+import { registerGetProfileRoute } from './routes/profile/get-profile.js';
+import { registerGetImageRoute } from './routes/profile/get-image.js';
+import { registerAddImagesRoute } from './routes/profile/add-images.js';
+import { registerDeleteImageRoute } from './routes/profile/delete-image.js';
+import { registerUpdatePreferencesRoute } from './routes/profile/update-preferences.js';
 
 export function registerShelfieRoutes(app: OpenAPIHono) {
   registerGetByIdRoute(app);
@@ -13,4 +18,9 @@ export function registerShelfieRoutes(app: OpenAPIHono) {
   registerFromBookcaseRoute(app);
   registerQueueCronRoute(app);
   registerReextractRecurringBooksRoute(app);
+  registerGetProfileRoute(app);
+  registerGetImageRoute(app);
+  registerAddImagesRoute(app);
+  registerDeleteImageRoute(app);
+  registerUpdatePreferencesRoute(app);
 }

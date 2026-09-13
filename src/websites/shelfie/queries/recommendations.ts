@@ -182,6 +182,110 @@ export async function updateBooksProcessed(
     .where(eq(requests.id, requestId));
 }
 
+export interface ProfileRow {
+  requestId: string;
+  customPreferences: string | null;
+  images: { id: number; contentType: string }[];
+}
+
+/**
+ * Find profile data (custom preferences + image metadata) for a request.
+ */
+export async function findProfileByRequestId(
+  db: DatabaseClient['db'],
+  requestId: string
+): Promise<ProfileRow | null> {
+  const [request] = await db
+    .select({ id: requests.id, customPreferences: requests.customPreferences })
+    .from(requests)
+    .where(eq(requests.id, requestId))
+    .limit(1);
+
+  if (!request) return null;
+
+  const imageRows = await db
+    .select({ id: images.id, contentType: images.contentType })
+    .from(images)
+    .where(eq(images.requestId, requestId));
+
+  return { requestId: request.id, customPreferences: request.customPreferences, images: imageRows };
+}
+
+export interface ImageRow {
+  id: number;
+  requestId: string;
+  image: Buffer;
+  contentType: string;
+}
+
+/**
+ * Find a single image, including its requestId, so callers can verify ownership.
+ */
+export async function findImageById(
+  db: DatabaseClient['db'],
+  imageId: number
+): Promise<ImageRow | null> {
+  const result = await db.select().from(images).where(eq(images.id, imageId)).limit(1);
+  return result[0] ?? null;
+}
+
+/**
+ * Fetch all image buffers for a request, e.g. for re-extraction.
+ */
+export async function findImagesByRequestId(
+  db: DatabaseClient['db'],
+  requestId: string
+): Promise<{ image: Buffer; contentType: string }[]> {
+  return db
+    .select({ image: images.image, contentType: images.contentType })
+    .from(images)
+    .where(eq(images.requestId, requestId));
+}
+
+/**
+ * Append more images to an existing request.
+ */
+export async function addImagesToRequest(
+  db: DatabaseClient['db'],
+  requestId: string,
+  files: UploadedFile[]
+): Promise<void> {
+  await db.insert(images).values(
+    files.map((file) => ({
+      requestId,
+      image: file.data,
+      contentType: file.mimetype,
+    }))
+  );
+}
+
+/**
+ * Delete a single image, scoped to the owning request.
+ */
+export async function deleteImage(
+  db: DatabaseClient['db'],
+  imageId: number,
+  requestId: string
+): Promise<boolean> {
+  const result = await db
+    .delete(images)
+    .where(and(eq(images.id, imageId), eq(images.requestId, requestId)))
+    .returning({ id: images.id });
+
+  return result.length > 0;
+}
+
+/**
+ * Update the free-text recommendation preferences for a request.
+ */
+export async function updateCustomPreferences(
+  db: DatabaseClient['db'],
+  requestId: string,
+  customPreferences: string | null
+): Promise<void> {
+  await db.update(requests).set({ customPreferences }).where(eq(requests.id, requestId));
+}
+
 export interface DueUser {
   id: string;
   location: string | null;
