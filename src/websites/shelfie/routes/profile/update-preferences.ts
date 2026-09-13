@@ -1,10 +1,15 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
-import { updateCustomPreferences } from '../../queries/recommendations.js';
+import {
+  updateCustomPreferences,
+  createRecommendationForRequest,
+} from '../../queries/recommendations.js';
 import { sanitizeCustomPreferences } from '@core/utils/openai-recommender.js';
 import { moderateCustomPreferences } from '@core/utils/preferences-moderator.js';
+import { enqueueRecommendationJob } from '@core/queue/client.js';
 import { ROUTES } from '../paths.js';
+import { logger } from '@core/telemetry/logger.js';
 
 const ParamsSchema = z.object({
   requestId: z.string().uuid(),
@@ -14,7 +19,7 @@ const BodySchema = z.object({
   customPreferences: z.string().max(2000).optional(),
 });
 
-const SuccessSchema = z.object({ success: z.literal(true) });
+const SuccessSchema = z.object({ recommendationId: z.string().uuid(), success: z.literal(true) });
 const ErrorSchema = z.object({ error: z.string(), success: z.literal(false) });
 
 const route = createRoute({
@@ -35,18 +40,23 @@ const route = createRoute({
   responses: {
     200: {
       content: { 'application/json': { schema: SuccessSchema } },
-      description: 'Preferences updated successfully',
+      description: 'Preferences updated and recommendations queued for regeneration',
     },
     400: {
       content: { 'application/json': { schema: ErrorSchema } },
       description: "Preferences don't look like a reading preference",
     },
+    500: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Failed to queue recommendation processing',
+    },
   },
 });
 
 export type UpdatePreferencesResult =
-  | { status: 200; body: { success: true } }
-  | { status: 400; body: { error: string; success: false } };
+  | { status: 200; body: { recommendationId: string; success: true } }
+  | { status: 400; body: { error: string; success: false } }
+  | { status: 500; body: { error: string; success: false } };
 
 export async function updateProfilePreferences(
   c: Context,
@@ -76,7 +86,26 @@ export async function updateProfilePreferences(
   }
 
   await updateCustomPreferences(db, requestId, sanitized);
-  return { status: 200, body: { success: true } };
+
+  // Saving preferences is the user asking for updated recommendations right now, not just
+  // storing a setting for next time — so regenerate immediately.
+  const recommendation = await createRecommendationForRequest(db, requestId);
+
+  const queueClient = c.get('queueClient');
+  try {
+    enqueueRecommendationJob(queueClient, {
+      userId: requestId,
+      recommendationId: recommendation.id,
+    });
+  } catch (error) {
+    logger.error('Failed to queue recommendation regeneration after updating preferences:', error);
+    return {
+      status: 500,
+      body: { error: 'Failed to queue recommendation processing', success: false },
+    };
+  }
+
+  return { status: 200, body: { recommendationId: recommendation.id, success: true } };
 }
 
 export function registerUpdatePreferencesRoute(app: OpenAPIHono) {
@@ -90,6 +119,8 @@ export function registerUpdatePreferencesRoute(app: OpenAPIHono) {
         return c.json(result.body, 200);
       case 400:
         return c.json(result.body, 400);
+      case 500:
+        return c.json(result.body, 500);
     }
   });
 }

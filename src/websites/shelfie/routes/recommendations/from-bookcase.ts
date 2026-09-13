@@ -7,6 +7,7 @@ import { parseMultipartFiles } from '@core/utils/multipart.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 import { ROUTES } from '../paths.js';
 import { logger } from '@core/telemetry/logger.js';
+import { enqueueRecommendationJob } from '@core/queue/client.js';
 
 const SuccessResponse = z.object({
   id: z.string().uuid(),
@@ -86,11 +87,10 @@ export async function fromBookcase(
 
   const queueClient = c.get('queueClient');
   try {
-    queueClient.channel.sendToQueue(
-      queueClient.recommendationQueue,
-      Buffer.from(JSON.stringify({ userId: newRequest.id, recommendationId: recommendation.id })),
-      { persistent: true }
-    );
+    enqueueRecommendationJob(queueClient, {
+      userId: newRequest.id,
+      recommendationId: recommendation.id,
+    });
   } catch (error) {
     logger.error('Failed to send queue message:', error);
     return {

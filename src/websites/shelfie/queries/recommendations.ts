@@ -122,6 +122,24 @@ export async function clearRequestEmailFields(
     .where(eq(requests.id, requestId));
 }
 
+export interface NewRecommendationResult {
+  id: string;
+}
+
+/**
+ * Create a fresh recommendation row for a request, to be generated against its current
+ * books/preferences — used when the user adds photos or edits preferences on their profile
+ * and we want to regenerate right away (as opposed to createRecurringRecommendation, which
+ * also advances the monthly schedule).
+ */
+export async function createRecommendationForRequest(
+  db: DatabaseClient['db'],
+  requestId: string
+): Promise<NewRecommendationResult> {
+  const [recommendation] = await db.insert(recommendations).values({ requestId }).returning();
+  return { id: recommendation.id };
+}
+
 export interface BookcaseRequestResult {
   newRequest: { id: string };
   recommendation: { id: string };

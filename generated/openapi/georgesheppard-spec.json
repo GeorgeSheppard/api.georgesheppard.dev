@@ -1264,7 +1264,7 @@
         },
         "responses": {
           "200": {
-            "description": "Images added successfully",
+            "description": "Images added and recommendations queued for regeneration",
             "content": {
               "application/json": {
                 "schema": {
@@ -1272,6 +1272,10 @@
                   "properties": {
                     "imagesAdded": {
                       "type": "number"
+                    },
+                    "recommendationId": {
+                      "type": "string",
+                      "format": "uuid"
                     },
                     "success": {
                       "type": "boolean",
@@ -1282,6 +1286,7 @@
                   },
                   "required": [
                     "imagesAdded",
+                    "recommendationId",
                     "success"
                   ]
                 }
@@ -1290,6 +1295,31 @@
           },
           "400": {
             "description": "No files uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to queue recommendation processing",
             "content": {
               "application/json": {
                 "schema": {
@@ -1350,12 +1380,16 @@
         },
         "responses": {
           "200": {
-            "description": "Preferences updated successfully",
+            "description": "Preferences updated and recommendations queued for regeneration",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "recommendationId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "success": {
                       "type": "boolean",
                       "enum": [
@@ -1364,6 +1398,7 @@
                     }
                   },
                   "required": [
+                    "recommendationId",
                     "success"
                   ]
                 }
@@ -1372,6 +1407,31 @@
           },
           "400": {
             "description": "Preferences don't look like a reading preference",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to queue recommendation processing",
             "content": {
               "application/json": {
                 "schema": {

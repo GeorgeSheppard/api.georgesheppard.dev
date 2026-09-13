@@ -1,11 +1,16 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
-import { addImagesToRequest } from '../../queries/recommendations.js';
+import {
+  addImagesToRequest,
+  createRecommendationForRequest,
+} from '../../queries/recommendations.js';
 import { extractAndStoreBooksPerImage } from '../../utils/image-extraction.js';
 import { parseMultipartFiles } from '@core/utils/multipart.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
+import { enqueueRecommendationJob } from '@core/queue/client.js';
 import { ROUTES } from '../paths.js';
+import { logger } from '@core/telemetry/logger.js';
 
 const ParamsSchema = z.object({
   requestId: z.string().uuid(),
@@ -13,6 +18,7 @@ const ParamsSchema = z.object({
 
 const SuccessSchema = z.object({
   imagesAdded: z.number(),
+  recommendationId: z.string().uuid(),
   success: z.literal(true),
 });
 
@@ -44,18 +50,23 @@ const route = createRoute({
   responses: {
     200: {
       content: { 'application/json': { schema: SuccessSchema } },
-      description: 'Images added successfully',
+      description: 'Images added and recommendations queued for regeneration',
     },
     400: {
       content: { 'application/json': { schema: ErrorSchema } },
       description: 'No files uploaded',
     },
+    500: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Failed to queue recommendation processing',
+    },
   },
 });
 
 export type AddImagesResult =
-  | { status: 200; body: { imagesAdded: number; success: true } }
-  | { status: 400; body: { error: string; success: false } };
+  | { status: 200; body: { imagesAdded: number; recommendationId: string; success: true } }
+  | { status: 400; body: { error: string; success: false } }
+  | { status: 500; body: { error: string; success: false } };
 
 export async function addImages(
   c: Context,
@@ -74,7 +85,28 @@ export async function addImages(
   // own extractedBooks stored, so this doesn't re-process the whole request each time.
   await extractAndStoreBooksPerImage(db, files, imageIds, openaiClient);
 
-  return { status: 200, body: { imagesAdded: files.length, success: true } };
+  // The user is adding photos specifically to get better recommendations, so regenerate
+  // immediately against the now-larger book list rather than waiting for the next cron run.
+  const recommendation = await createRecommendationForRequest(db, requestId);
+
+  const queueClient = c.get('queueClient');
+  try {
+    enqueueRecommendationJob(queueClient, {
+      userId: requestId,
+      recommendationId: recommendation.id,
+    });
+  } catch (error) {
+    logger.error('Failed to queue recommendation regeneration after adding images:', error);
+    return {
+      status: 500,
+      body: { error: 'Failed to queue recommendation processing', success: false },
+    };
+  }
+
+  return {
+    status: 200,
+    body: { imagesAdded: files.length, recommendationId: recommendation.id, success: true },
+  };
 }
 
 export function registerAddImagesRoute(app: OpenAPIHono) {
@@ -88,6 +120,8 @@ export function registerAddImagesRoute(app: OpenAPIHono) {
         return c.json(result.body, 200);
       case 400:
         return c.json(result.body, 400);
+      case 500:
+        return c.json(result.body, 500);
     }
   });
 }
