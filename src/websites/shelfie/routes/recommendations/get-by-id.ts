@@ -23,6 +23,7 @@ const SuccessSchema = z.object({
   recommendations: z.array(RecommendationSchema).nullable(),
   hasEmail: z.boolean(),
   isRecurringMonthly: z.boolean(),
+  requestId: z.string().uuid(),
   success: z.literal(true),
 });
 
@@ -58,6 +59,7 @@ export type GetByIdSuccess = {
   recommendations: Recommendation[] | null;
   hasEmail: boolean;
   isRecurringMonthly: boolean;
+  requestId: string;
   success: true;
 };
 
@@ -99,6 +101,7 @@ export async function getById(c: Context, id: string): Promise<GetByIdResult> {
       recommendations: recommendation.recommendations,
       hasEmail: !!recommendation.email,
       isRecurringMonthly: !!recommendation.frequency,
+      requestId: recommendation.requestId,
       success: true,
     },
   };

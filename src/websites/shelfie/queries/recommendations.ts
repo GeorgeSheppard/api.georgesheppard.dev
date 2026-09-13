@@ -5,6 +5,7 @@ import type { Recommendation, BooksProcessed } from '@core/types/recommendation.
 import type { UploadedFile } from '@core/utils/multipart.js';
 
 export interface RecommendationWithRequest {
+  requestId: string;
   recommendations: Recommendation[] | null;
   processedUtc: Date | null;
   email: string | null;
@@ -20,6 +21,7 @@ export async function findRecommendationWithRequest(
 ): Promise<RecommendationWithRequest | null> {
   const result = await db
     .select({
+      requestId: requests.id,
       recommendations: recommendations.recommendations,
       processedUtc: recommendations.processedUtc,
       email: requests.email,

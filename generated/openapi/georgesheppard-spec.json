@@ -467,6 +467,10 @@
                     "isRecurringMonthly": {
                       "type": "boolean"
                     },
+                    "requestId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "success": {
                       "type": "boolean",
                       "enum": [
@@ -478,6 +482,7 @@
                     "recommendations",
                     "hasEmail",
                     "isRecurringMonthly",
+                    "requestId",
                     "success"
                   ]
                 }
