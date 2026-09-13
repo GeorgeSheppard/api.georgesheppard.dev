@@ -1,12 +1,12 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
-import { findImageByAccessToken } from '../../queries/recommendations.js';
+import { findImageByIdForRequest } from '../../queries/recommendations.js';
 import { ROUTES } from '../paths.js';
 
 const ParamsSchema = z.object({
+  requestId: z.string().uuid(),
   imageId: z.string().regex(/^\d+$/).openapi({ type: 'integer' }),
-  accessToken: z.string().uuid(),
 });
 
 const route = createRoute({
@@ -34,11 +34,11 @@ export type GetImageResult =
 
 export async function getImage(
   c: Context,
-  imageId: number,
-  accessToken: string
+  requestId: string,
+  imageId: number
 ): Promise<GetImageResult> {
   const { db } = c.get('databaseClient');
-  const image = await findImageByAccessToken(db, imageId, accessToken);
+  const image = await findImageByIdForRequest(db, imageId, requestId);
 
   if (!image) {
     return { status: 404, body: { error: 'Image not found' } };
@@ -49,19 +49,13 @@ export async function getImage(
 
 export function registerGetImageRoute(app: OpenAPIHono) {
   app.openapi(route, async (c) => {
-    const { imageId, accessToken } = c.req.valid('param');
-    const result = await getImage(c, Number(imageId), accessToken);
+    const { requestId, imageId } = c.req.valid('param');
+    const result = await getImage(c, requestId, Number(imageId));
 
     if (result.status === 404) {
       return c.json(result.body, 404);
     }
 
-    // This URL carries a bearer capability (the accessToken) — never let it be cached by a
-    // shared/proxy cache or leak onward via a Referer header to another origin.
-    return c.body(new Uint8Array(result.body), 200, {
-      'Content-Type': result.contentType,
-      'Cache-Control': 'private, no-store',
-      'Referrer-Policy': 'no-referrer',
-    });
+    return c.body(new Uint8Array(result.body), 200, { 'Content-Type': result.contentType });
   });
 }

@@ -22,13 +22,6 @@
       "when": 1789298687033,
       "tag": "0002_bitter_forgotten_one",
       "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1789301646027,
-      "tag": "0003_late_human_torch",
-      "breakpoints": true
     }
   ]
 }
