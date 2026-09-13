@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { z } from 'zod';
 import { BookEntry } from '@core/types/recommendation.js';
+import { dedupeBooksByTitle } from './book-dedupe.js';
 
 export interface BookcaseImage {
   buffer: Buffer;
@@ -70,11 +71,5 @@ export async function extractBooksFromImages(
     throw new Error(`OpenAI returned invalid book extraction format: ${result.error.message}`);
   }
 
-  const seenTitles = new Set<string>();
-  return result.data.books.filter((book) => {
-    const key = book.title.toLowerCase();
-    if (seenTitles.has(key)) return false;
-    seenTitles.add(key);
-    return true;
-  });
+  return dedupeBooksByTitle(result.data.books);
 }

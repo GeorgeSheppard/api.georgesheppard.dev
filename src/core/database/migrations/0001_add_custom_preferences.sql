@@ -1,0 +1,1 @@
+ALTER TABLE "requests" ADD COLUMN "custom_preferences" text;

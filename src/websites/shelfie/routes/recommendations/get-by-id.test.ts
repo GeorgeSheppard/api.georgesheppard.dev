@@ -41,6 +41,7 @@ describe('getById handler', () => {
   describe('unprocessable (422)', () => {
     it('should return 422 when processed but recommendations are null', async () => {
       vi.mocked(findRecommendationWithRequest).mockResolvedValue({
+        requestId: 'request-id',
         recommendations: null,
         processedUtc: new Date(),
         email: null,
@@ -59,6 +60,7 @@ describe('getById handler', () => {
 
     it('should return 422 when processed but recommendations are empty', async () => {
       vi.mocked(findRecommendationWithRequest).mockResolvedValue({
+        requestId: 'request-id',
         recommendations: [],
         processedUtc: new Date(),
         email: null,
@@ -74,6 +76,7 @@ describe('getById handler', () => {
   describe('success (200)', () => {
     it('should return recommendations with metadata', async () => {
       vi.mocked(findRecommendationWithRequest).mockResolvedValue({
+        requestId: 'request-id',
         recommendations: testRecommendations,
         processedUtc: new Date(),
         email: 'encrypted-email',
@@ -88,6 +91,7 @@ describe('getById handler', () => {
           recommendations: testRecommendations,
           hasEmail: true,
           isRecurringMonthly: true,
+          requestId: 'request-id',
           success: true,
         },
       });
@@ -95,6 +99,7 @@ describe('getById handler', () => {
 
     it('should return hasEmail false when no email', async () => {
       vi.mocked(findRecommendationWithRequest).mockResolvedValue({
+        requestId: 'request-id',
         recommendations: testRecommendations,
         processedUtc: new Date(),
         email: null,
@@ -112,6 +117,7 @@ describe('getById handler', () => {
 
     it('should return null recommendations when not yet processed', async () => {
       vi.mocked(findRecommendationWithRequest).mockResolvedValue({
+        requestId: 'request-id',
         recommendations: null,
         processedUtc: null,
         email: null,

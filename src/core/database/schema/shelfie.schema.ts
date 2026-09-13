@@ -9,7 +9,7 @@ import {
   customType,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import type { Recommendation, BooksProcessed } from '@core/types/recommendation.js';
+import type { Recommendation, BookEntry } from '@core/types/recommendation.js';
 
 // Custom bytea type for binary data
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({
@@ -26,11 +26,10 @@ export const requests = pgTable('requests', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email'),
   createdUtc: timestamp('created_utc', { mode: 'date', withTimezone: true }).notNull().defaultNow(),
-  booksProcessed: jsonb('books_processed').$type<BooksProcessed>(),
-  booksProcessedUtc: timestamp('books_processed_utc', { mode: 'date', withTimezone: true }),
   location: text('location').notNull().default('Us'),
   nextRecommendationUtc: timestamp('next_recommendation_utc', { mode: 'date', withTimezone: true }),
   frequency: varchar('frequency', { length: 4 }),
+  customPreferences: text('custom_preferences'),
 });
 
 // images table (BookcaseImage)
@@ -41,6 +40,8 @@ export const images = pgTable('images', {
     .references(() => requests.id, { onDelete: 'cascade' }),
   image: bytea('image').notNull(),
   contentType: text('content_type').notNull(),
+  extractedBooks: jsonb('extracted_books').$type<BookEntry[]>(),
+  processedUtc: timestamp('processed_utc', { mode: 'date', withTimezone: true }),
 });
 
 // recommendations table (BookRecommendations)

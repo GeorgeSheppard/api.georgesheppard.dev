@@ -7,6 +7,7 @@ import { RecommendationJob } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
 import { Location } from '@core/types/location.js';
 import { logger } from '@core/telemetry/logger.js';
+import { getExtractedBooksForRequest } from '../queries/recommendations.js';
 
 export async function processRecommendationJob(
   job: RecommendationJob,
@@ -20,11 +21,15 @@ export async function processRecommendationJob(
 
   const { db } = databaseClient;
 
-  // Fetch user with books processed
   const [user] = await db.select().from(requests).where(eq(requests.id, userId));
 
-  if (!user || !user.booksProcessed) {
-    throw new Error(`User or books not found: ${userId}`);
+  if (!user) {
+    throw new Error(`User not found: ${userId}`);
+  }
+
+  const books = await getExtractedBooksForRequest(db, userId);
+  if (books.length === 0) {
+    throw new Error(`No processed books found for user: ${userId}`);
   }
 
   // Fetch previous recommendations (last 6)
@@ -42,9 +47,10 @@ export async function processRecommendationJob(
   // Generate new recommendations
   const location = (user.location as Location) || Location.Us;
   const newRecommendations = await recommender.getRecommendations(
-    user.booksProcessed.books,
+    books,
     location,
-    previousBooks
+    previousBooks,
+    user.customPreferences
   );
 
   // Update recommendation record

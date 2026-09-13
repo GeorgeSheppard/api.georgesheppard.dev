@@ -1,10 +1,12 @@
 import { recommendations, requests, images } from '@core/database/schema/index.js';
-import { eq, lt, isNotNull, and } from 'drizzle-orm';
+import { eq, lt, isNotNull, isNull, and } from 'drizzle-orm';
 import type { DatabaseClient } from '@core/database/client.js';
-import type { Recommendation, BooksProcessed } from '@core/types/recommendation.js';
+import type { Recommendation, BookEntry } from '@core/types/recommendation.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
+import { dedupeBooksByTitle } from '@core/utils/book-dedupe.js';
 
 export interface RecommendationWithRequest {
+  requestId: string;
   recommendations: Recommendation[] | null;
   processedUtc: Date | null;
   email: string | null;
@@ -20,6 +22,7 @@ export async function findRecommendationWithRequest(
 ): Promise<RecommendationWithRequest | null> {
   const result = await db
     .select({
+      requestId: requests.id,
       recommendations: recommendations.recommendations,
       processedUtc: recommendations.processedUtc,
       email: requests.email,
@@ -122,10 +125,13 @@ export async function clearRequestEmailFields(
 export interface BookcaseRequestResult {
   newRequest: { id: string };
   recommendation: { id: string };
+  imageIds: number[];
 }
 
 /**
  * Create a new bookcase request with images and recommendation in a transaction.
+ * Returns the inserted image ids in the same order as `files`, so callers can
+ * extract and store books per image.
  */
 export async function createBookcaseRequest(
   db: DatabaseClient['db'],
@@ -141,50 +147,181 @@ export async function createBookcaseRequest(
       })
       .returning();
 
-    const [recommendationResults] = await Promise.all([
+    const [recommendationResults, insertedImages] = await Promise.all([
       tx
         .insert(recommendations)
         .values({
           requestId: newRequest.id,
         })
         .returning(),
-      tx.insert(images).values(
-        files.map((file) => ({
-          requestId: newRequest.id,
-          image: file.data,
-          contentType: file.mimetype,
-        }))
-      ),
+      tx
+        .insert(images)
+        .values(
+          files.map((file) => ({
+            requestId: newRequest.id,
+            image: file.data,
+            contentType: file.mimetype,
+          }))
+        )
+        .returning({ id: images.id }),
     ]);
 
     const [recommendation] = recommendationResults;
 
-    return { newRequest, recommendation };
+    return { newRequest, recommendation, imageIds: insertedImages.map((row) => row.id) };
   });
 }
 
 /**
- * Save extracted books against a request.
+ * Store the books extracted from a single image, and when it was processed.
  */
-export async function updateBooksProcessed(
+export async function setImageExtractedBooks(
   db: DatabaseClient['db'],
-  requestId: string,
-  books: BooksProcessed['books']
+  imageId: number,
+  books: BookEntry[]
 ): Promise<void> {
   await db
-    .update(requests)
-    .set({
-      booksProcessed: { books },
-      booksProcessedUtc: new Date(),
+    .update(images)
+    .set({ extractedBooks: books, processedUtc: new Date() })
+    .where(eq(images.id, imageId));
+}
+
+/**
+ * Amalgamate the books extracted across every image of a request, deduping by title.
+ * This is the single source of truth for "what books has this user shown us" —
+ * removing an image's row automatically drops its books from this list.
+ */
+export async function getExtractedBooksForRequest(
+  db: DatabaseClient['db'],
+  requestId: string
+): Promise<BookEntry[]> {
+  const rows = await db
+    .select({ extractedBooks: images.extractedBooks })
+    .from(images)
+    .where(eq(images.requestId, requestId));
+
+  return dedupeBooksByTitle(rows.flatMap((row) => row.extractedBooks ?? []));
+}
+
+export interface ProfileImageRow {
+  id: number;
+  contentType: string;
+  extractedBooks: BookEntry[] | null;
+  processedUtc: Date | null;
+}
+
+export interface ProfileRow {
+  requestId: string;
+  customPreferences: string | null;
+  images: ProfileImageRow[];
+}
+
+/**
+ * Find profile data (custom preferences + image metadata) for a request.
+ */
+export async function findProfileByRequestId(
+  db: DatabaseClient['db'],
+  requestId: string
+): Promise<ProfileRow | null> {
+  const [request] = await db
+    .select({ id: requests.id, customPreferences: requests.customPreferences })
+    .from(requests)
+    .where(eq(requests.id, requestId))
+    .limit(1);
+
+  if (!request) return null;
+
+  const imageRows = await db
+    .select({
+      id: images.id,
+      contentType: images.contentType,
+      extractedBooks: images.extractedBooks,
+      processedUtc: images.processedUtc,
     })
-    .where(eq(requests.id, requestId));
+    .from(images)
+    .where(eq(images.requestId, requestId));
+
+  return { requestId: request.id, customPreferences: request.customPreferences, images: imageRows };
+}
+
+export interface ImageRow {
+  id: number;
+  requestId: string;
+  image: Buffer;
+  contentType: string;
+}
+
+/**
+ * Find a single image, scoped to the owning request, so one request can never
+ * read another request's image by guessing/enumerating imageId.
+ */
+export async function findImageByIdForRequest(
+  db: DatabaseClient['db'],
+  imageId: number,
+  requestId: string
+): Promise<ImageRow | null> {
+  const result = await db
+    .select()
+    .from(images)
+    .where(and(eq(images.id, imageId), eq(images.requestId, requestId)))
+    .limit(1);
+  return result[0] ?? null;
+}
+
+/**
+ * Append more images to an existing request. Returns the inserted image ids in
+ * the same order as `files`, so callers can extract and store books per image.
+ */
+export async function addImagesToRequest(
+  db: DatabaseClient['db'],
+  requestId: string,
+  files: UploadedFile[]
+): Promise<number[]> {
+  const inserted = await db
+    .insert(images)
+    .values(
+      files.map((file) => ({
+        requestId,
+        image: file.data,
+        contentType: file.mimetype,
+      }))
+    )
+    .returning({ id: images.id });
+
+  return inserted.map((row) => row.id);
+}
+
+/**
+ * Delete a single image, scoped to the owning request.
+ */
+export async function deleteImage(
+  db: DatabaseClient['db'],
+  imageId: number,
+  requestId: string
+): Promise<boolean> {
+  const result = await db
+    .delete(images)
+    .where(and(eq(images.id, imageId), eq(images.requestId, requestId)))
+    .returning({ id: images.id });
+
+  return result.length > 0;
+}
+
+/**
+ * Update the free-text recommendation preferences for a request.
+ */
+export async function updateCustomPreferences(
+  db: DatabaseClient['db'],
+  requestId: string,
+  customPreferences: string | null
+): Promise<void> {
+  await db.update(requests).set({ customPreferences }).where(eq(requests.id, requestId));
 }
 
 export interface DueUser {
   id: string;
   location: string | null;
   email: string | null;
-  booksProcessed: BooksProcessed | null;
 }
 
 /**
@@ -196,10 +333,35 @@ export async function findDueUsers(db: DatabaseClient['db']): Promise<DueUser[]>
       id: requests.id,
       location: requests.location,
       email: requests.email,
-      booksProcessed: requests.booksProcessed,
     })
     .from(requests)
     .where(and(lt(requests.nextRecommendationUtc, new Date()), isNotNull(requests.frequency)));
+}
+
+export interface UnprocessedImageRow {
+  id: number;
+  requestId: string;
+  image: Buffer;
+  contentType: string;
+}
+
+/**
+ * Find images belonging to recurring users that have not yet had their books extracted
+ * (new uploads that failed extraction, or images that predate per-image extraction).
+ */
+export async function findUnprocessedImagesForRecurringUsers(
+  db: DatabaseClient['db']
+): Promise<UnprocessedImageRow[]> {
+  return db
+    .select({
+      id: images.id,
+      requestId: images.requestId,
+      image: images.image,
+      contentType: images.contentType,
+    })
+    .from(images)
+    .innerJoin(requests, eq(images.requestId, requests.id))
+    .where(and(isNotNull(requests.frequency), isNull(images.extractedBooks)));
 }
 
 export interface RecurringRecommendationResult {
