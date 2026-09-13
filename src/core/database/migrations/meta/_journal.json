@@ -13,14 +13,14 @@
       "idx": 1,
       "version": "7",
       "when": 1789293499920,
-      "tag": "0001_wild_wallflower",
+      "tag": "0001_add_custom_preferences",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
       "when": 1789298687033,
-      "tag": "0002_bitter_forgotten_one",
+      "tag": "0002_move_book_extraction_to_images",
       "breakpoints": true
     }
   ]
