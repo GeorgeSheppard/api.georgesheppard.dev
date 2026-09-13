@@ -19,6 +19,20 @@ export interface QueueClient {
   close(): Promise<void>;
 }
 
+/**
+ * Queue a recommendation generation job. Throws if the channel rejects the message, so
+ * callers can decide how to surface that (e.g. a 500 response).
+ */
+export function enqueueRecommendationJob(queueClient: QueueClient, job: RecommendationJob): void {
+  queueClient.channel.sendToQueue(
+    queueClient.recommendationQueue,
+    Buffer.from(JSON.stringify(job)),
+    {
+      persistent: true,
+    }
+  );
+}
+
 export async function createQueueClient(url: string): Promise<QueueClient> {
   const connection = await amqp.connect(url);
   const channel = await connection.createChannel();
