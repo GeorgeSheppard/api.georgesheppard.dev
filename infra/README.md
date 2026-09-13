@@ -22,6 +22,12 @@ only recreates containers whose image or config actually changed, so this is saf
 5 minutes — no manual diffing needed. Secrets are no longer kept in a hand-edited `.env` on the box — updating a
 credential in Infisical takes effect on the next run, no SSH session needed.
 
+`deploy.sh` pings a [healthchecks.io](https://healthchecks.io) check at the start and end of every run (and its
+`/fail` variant if any step errors, via a `trap`). That check has a grace period longer than 5 minutes, so if this
+job stops succeeding — an expired Infisical credential, the `launchd` agent itself no longer running, Docker being
+down, anything — healthchecks.io emails an alert instead of the outage going unnoticed. The ping URL is a plain
+constant near the top of `deploy.sh`; update it there if the check is ever recreated.
+
 One-time setup on the mac mini:
 
 1. Create a Machine Identity in Infisical (Universal Auth) scoped to read access on the production environment.
@@ -91,32 +97,34 @@ Add sample data into requests and images:
 
 ```sql
 WITH req AS (
-  INSERT INTO requests (email, createdUtc, booksProcessed, booksProcessedUtc)
-  VALUES
-    ('testuser2@example.com', '2025-02-02 13:00:00+00',
-     '{"books": ["Moby Dick", "Pride and Prejudice"]}',
-     '2025-02-02 13:10:00+00')
+  INSERT INTO requests (email, created_utc)
+  VALUES ('testuser2@example.com', '2025-02-02 13:00:00+00')
   RETURNING id
 )
-INSERT INTO images (request_id, image)
-SELECT req.id, '\\x89504e470d0a1a0a0000000d4948445200000001000000010802000000c2eb6b0d0000'
+INSERT INTO images (request_id, image, content_type, extracted_books, processed_utc)
+SELECT req.id, '\\x89504e470d0a1a0a0000000d4948445200000001000000010802000000c2eb6b0d0000', 'image/png',
+       '[{"title": "Moby Dick", "author": null}, {"title": "Pride and Prejudice", "author": null}]',
+       '2025-02-02 13:10:00+00'
 FROM req;
 ```
 
-Update row in requests to add books based on the email (Note: There can be multiple rows associated to one email):
+Update the extracted books for a request's images based on the email (Note: there can be multiple requests, and
+multiple images per request, associated with one email — this updates every image belonging to the most recent
+request):
 
 ```sql
 WITH req AS (
   SELECT id
   FROM requests
   WHERE email = 'testuser2@example.com'
+  ORDER BY created_utc DESC
   LIMIT 1
 )
-UPDATE requests
-SET booksProcessed = '{"books": ["The Hobbit", "Harry Potter"]}',
-    booksProcessedUtc = '2025-02-02 14:30:00+00'
+UPDATE images
+SET extracted_books = '[{"title": "The Hobbit", "author": null}, {"title": "Harry Potter", "author": null}]',
+    processed_utc = '2025-02-02 14:30:00+00'
 FROM req
-WHERE requests.id = req.id;
+WHERE images.request_id = req.id;
 ```
 
 ## RabbitMQ
