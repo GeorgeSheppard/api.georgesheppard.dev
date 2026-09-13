@@ -219,13 +219,19 @@ export interface ImageRow {
 }
 
 /**
- * Find a single image, including its requestId, so callers can verify ownership.
+ * Find a single image, scoped to the owning request, so one request can never
+ * read another request's image by guessing/enumerating imageId.
  */
-export async function findImageById(
+export async function findImageByIdForRequest(
   db: DatabaseClient['db'],
-  imageId: number
+  imageId: number,
+  requestId: string
 ): Promise<ImageRow | null> {
-  const result = await db.select().from(images).where(eq(images.id, imageId)).limit(1);
+  const result = await db
+    .select()
+    .from(images)
+    .where(and(eq(images.id, imageId), eq(images.requestId, requestId)))
+    .limit(1);
   return result[0] ?? null;
 }
 

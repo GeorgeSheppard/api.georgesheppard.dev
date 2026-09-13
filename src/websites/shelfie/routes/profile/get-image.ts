@@ -1,11 +1,12 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
-import { findImageById } from '../../queries/recommendations.js';
+import { findImageByIdForRequest } from '../../queries/recommendations.js';
 import { ROUTES } from '../paths.js';
 
 const ParamsSchema = z.object({
-  imageId: z.coerce.number().int(),
+  requestId: z.string().uuid(),
+  imageId: z.string().regex(/^\d+$/).openapi({ type: 'integer' }),
 });
 
 const route = createRoute({
@@ -31,9 +32,13 @@ export type GetImageResult =
   | { status: 200; body: Buffer; contentType: string }
   | { status: 404; body: { error: string } };
 
-export async function getImage(c: Context, imageId: number): Promise<GetImageResult> {
+export async function getImage(
+  c: Context,
+  requestId: string,
+  imageId: number
+): Promise<GetImageResult> {
   const { db } = c.get('databaseClient');
-  const image = await findImageById(db, imageId);
+  const image = await findImageByIdForRequest(db, imageId, requestId);
 
   if (!image) {
     return { status: 404, body: { error: 'Image not found' } };
@@ -44,8 +49,8 @@ export async function getImage(c: Context, imageId: number): Promise<GetImageRes
 
 export function registerGetImageRoute(app: OpenAPIHono) {
   app.openapi(route, async (c) => {
-    const { imageId } = c.req.valid('param');
-    const result = await getImage(c, imageId);
+    const { requestId, imageId } = c.req.valid('param');
+    const result = await getImage(c, requestId, Number(imageId));
 
     if (result.status === 404) {
       return c.json(result.body, 404);

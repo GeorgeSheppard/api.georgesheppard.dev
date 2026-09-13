@@ -6,7 +6,7 @@ import { ROUTES } from '../paths.js';
 
 const ParamsSchema = z.object({
   requestId: z.string().uuid(),
-  imageId: z.coerce.number().int(),
+  imageId: z.string().regex(/^\d+$/).openapi({ type: 'integer' }),
 });
 
 const SuccessSchema = z.object({ success: z.literal(true) });
@@ -53,7 +53,7 @@ export async function deleteImage(
 export function registerDeleteImageRoute(app: OpenAPIHono) {
   app.openapi(route, async (c) => {
     const { requestId, imageId } = c.req.valid('param');
-    const result = await deleteImage(c, requestId, imageId);
+    const result = await deleteImage(c, requestId, Number(imageId));
 
     switch (result.status) {
       case 200:
