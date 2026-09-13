@@ -42,6 +42,10 @@ export const images = pgTable('images', {
   contentType: text('content_type').notNull(),
   extractedBooks: jsonb('extracted_books').$type<BookEntry[]>(),
   processedUtc: timestamp('processed_utc', { mode: 'date', withTimezone: true }),
+  // A capability separate from requestId for viewing this one image: requestId also grants
+  // write access to the whole profile (add/delete images, preferences), so it should never be
+  // the only thing standing between an <img src> URL leaking and someone controlling the profile.
+  accessToken: uuid('access_token').notNull().defaultRandom(),
 });
 
 // recommendations table (BookRecommendations)

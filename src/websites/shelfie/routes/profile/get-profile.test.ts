@@ -31,6 +31,7 @@ describe('getProfile handler', () => {
         {
           id: 1,
           contentType: 'image/jpeg',
+          accessToken: 'token-1',
           extractedBooks: [{ title: 'Dune', author: 'Frank Herbert' }],
           processedUtc,
         },
@@ -46,6 +47,7 @@ describe('getProfile handler', () => {
           {
             id: 1,
             contentType: 'image/jpeg',
+            accessToken: 'token-1',
             extractedBooks: [{ title: 'Dune', author: 'Frank Herbert' }],
             processedUtc: processedUtc.toISOString(),
           },
@@ -60,7 +62,15 @@ describe('getProfile handler', () => {
     vi.mocked(findProfileByRequestId).mockResolvedValue({
       requestId: 'request-id',
       customPreferences: null,
-      images: [{ id: 1, contentType: 'image/jpeg', extractedBooks: null, processedUtc: null }],
+      images: [
+        {
+          id: 1,
+          contentType: 'image/jpeg',
+          accessToken: 'token-1',
+          extractedBooks: null,
+          processedUtc: null,
+        },
+      ],
     });
 
     const result = await getProfile(mockContext(), 'request-id');
@@ -68,7 +78,13 @@ describe('getProfile handler', () => {
     expect(result.status).toBe(200);
     if (result.status === 200) {
       expect(result.body.images).toEqual([
-        { id: 1, contentType: 'image/jpeg', extractedBooks: null, processedUtc: null },
+        {
+          id: 1,
+          contentType: 'image/jpeg',
+          accessToken: 'token-1',
+          extractedBooks: null,
+          processedUtc: null,
+        },
       ]);
     }
   });

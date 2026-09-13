@@ -13,7 +13,7 @@ export const ROUTES = {
 
   // Profile
   GET_PROFILE: '/api/profile/{requestId}',
-  GET_PROFILE_IMAGE: '/api/profile/{requestId}/images/{imageId}',
+  GET_PROFILE_IMAGE: '/api/profile/images/{imageId}/{accessToken}',
   ADD_PROFILE_IMAGES: '/api/profile/{requestId}/images',
   DELETE_PROFILE_IMAGE: '/api/profile/{requestId}/images/{imageId}',
   UPDATE_PROFILE_PREFERENCES: '/api/profile/{requestId}/preferences',

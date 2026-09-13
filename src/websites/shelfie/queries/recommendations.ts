@@ -206,6 +206,7 @@ export async function getExtractedBooksForRequest(
 export interface ProfileImageRow {
   id: number;
   contentType: string;
+  accessToken: string;
   extractedBooks: BookEntry[] | null;
   processedUtc: Date | null;
 }
@@ -235,6 +236,7 @@ export async function findProfileByRequestId(
     .select({
       id: images.id,
       contentType: images.contentType,
+      accessToken: images.accessToken,
       extractedBooks: images.extractedBooks,
       processedUtc: images.processedUtc,
     })
@@ -253,7 +255,8 @@ export interface ImageRow {
 
 /**
  * Find a single image, scoped to the owning request, so one request can never
- * read another request's image by guessing/enumerating imageId.
+ * read another request's image by guessing/enumerating imageId. Used by
+ * write/control operations (delete) where possessing the requestId is the point.
  */
 export async function findImageByIdForRequest(
   db: DatabaseClient['db'],
@@ -264,6 +267,25 @@ export async function findImageByIdForRequest(
     .select()
     .from(images)
     .where(and(eq(images.id, imageId), eq(images.requestId, requestId)))
+    .limit(1);
+  return result[0] ?? null;
+}
+
+/**
+ * Find a single image by its own access token rather than the owning request's id.
+ * This is what image *viewing* URLs use: unlike requestId, a leaked accessToken only
+ * ever exposes this one image — never the rest of the profile, and never write access
+ * (add/delete images, edit preferences) to it.
+ */
+export async function findImageByAccessToken(
+  db: DatabaseClient['db'],
+  imageId: number,
+  accessToken: string
+): Promise<ImageRow | null> {
+  const result = await db
+    .select()
+    .from(images)
+    .where(and(eq(images.id, imageId), eq(images.accessToken, accessToken)))
     .limit(1);
   return result[0] ?? null;
 }

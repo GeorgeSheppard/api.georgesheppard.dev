@@ -1,0 +1,1 @@
+ALTER TABLE "images" ADD COLUMN "access_token" uuid DEFAULT gen_random_uuid() NOT NULL;

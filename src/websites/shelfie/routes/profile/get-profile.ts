@@ -17,6 +17,9 @@ const BookEntrySchema = z.object({
 const ImageSchema = z.object({
   id: z.number(),
   contentType: z.string(),
+  // Separate from requestId on purpose: this is the capability the frontend uses to build
+  // the viewing URL, so leaking one photo's URL never exposes the rest of the profile.
+  accessToken: z.string().uuid(),
   extractedBooks: z.array(BookEntrySchema).nullable(),
   processedUtc: z.string().datetime().nullable(),
 });
@@ -55,6 +58,7 @@ export type GetProfileSuccess = {
   images: {
     id: number;
     contentType: string;
+    accessToken: string;
     extractedBooks: BookEntry[] | null;
     processedUtc: string | null;
   }[];
@@ -82,6 +86,7 @@ export async function getProfile(c: Context, requestId: string): Promise<GetProf
       images: profile.images.map((image) => ({
         id: image.id,
         contentType: image.contentType,
+        accessToken: image.accessToken,
         extractedBooks: image.extractedBooks,
         processedUtc: image.processedUtc?.toISOString() ?? null,
       })),
