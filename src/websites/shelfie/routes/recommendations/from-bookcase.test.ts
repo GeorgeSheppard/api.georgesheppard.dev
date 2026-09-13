@@ -4,10 +4,8 @@ import { createMockContext } from '@test/utils/mock-context.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 
 vi.mock('../../queries/recommendations.js');
-vi.mock('../../utils/image-extraction.js');
 
 import { createBookcaseRequest } from '../../queries/recommendations.js';
-import { extractAndStoreBooksPerImage } from '../../utils/image-extraction.js';
 
 const mockSendToQueue = vi.fn();
 const mockGetLocation = vi.fn();
@@ -37,7 +35,6 @@ describe('fromBookcase handler', () => {
       recommendation: { id: 'rec-1' },
       imageIds: [1],
     });
-    vi.mocked(extractAndStoreBooksPerImage).mockResolvedValue(undefined);
   });
 
   describe('bad request (400)', () => {
@@ -52,7 +49,7 @@ describe('fromBookcase handler', () => {
   });
 
   describe('success (200)', () => {
-    it('should create bookcase request and queue message', async () => {
+    it('should create bookcase request and queue message without waiting on book extraction', async () => {
       const result = await fromBookcase(mockContext(), testFiles, '1.2.3.4');
 
       expect(result).toEqual({
@@ -60,12 +57,6 @@ describe('fromBookcase handler', () => {
         body: { id: 'rec-1', success: true },
       });
       expect(createBookcaseRequest).toHaveBeenCalledWith({}, 'London, UK', testFiles);
-      expect(extractAndStoreBooksPerImage).toHaveBeenCalledWith(
-        {},
-        testFiles,
-        [1],
-        expect.objectContaining({ getClient: expect.any(Function) })
-      );
       expect(mockSendToQueue).toHaveBeenCalledWith('recommendations', expect.any(Buffer), {
         persistent: true,
       });

@@ -1,28 +1,42 @@
-import { setImageExtractedBooks } from '../queries/recommendations.js';
+import {
+  findUnprocessedImagesForRequest,
+  setImageExtractedBooks,
+} from '../queries/recommendations.js';
 import { extractBooksFromImages } from '@core/utils/openai-book-extractor.js';
-import type { UploadedFile } from '@core/utils/multipart.js';
+import { convertHeicToJpeg, isHeicFile } from '@core/utils/heic-converter.js';
 import type { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import type { DatabaseClient } from '@core/database/client.js';
+import { logger } from '@core/telemetry/logger.js';
 
 /**
- * Extract books per image (rather than one combined call across all images) so each
- * image's books can be stored alongside it — this is what lets deleting a photo later
- * cleanly drop just its books from the amalgamated list, and lets a failed extraction
- * on one image be retried without redoing the others.
+ * Extract and store books for any of a request's images that don't have extractedBooks yet.
+ * Runs in the recommendation worker rather than the upload HTTP handler, so a slow OpenAI
+ * vision call never blocks the upload response — the worker picks up unprocessed images
+ * right before generating recommendations. A failure on one image is logged and skipped
+ * rather than failing the whole job, so it can be picked up again by a later run.
  */
-export async function extractAndStoreBooksPerImage(
+export async function extractAndStoreBooksForRequest(
   db: DatabaseClient['db'],
-  files: UploadedFile[],
-  imageIds: number[],
+  requestId: string,
   openaiClient: OpenAIClientWrapper
 ): Promise<void> {
+  const unprocessedImages = await findUnprocessedImagesForRequest(db, requestId);
+
   await Promise.all(
-    files.map(async (file, index) => {
-      const books = await extractBooksFromImages(
-        [{ buffer: file.data, contentType: file.mimetype }],
-        openaiClient.getClient()
-      );
-      await setImageExtractedBooks(db, imageIds[index], books);
+    unprocessedImages.map(async (image) => {
+      try {
+        const converted = isHeicFile(image.contentType, '')
+          ? { buffer: await convertHeicToJpeg(image.image), contentType: 'image/jpeg' }
+          : { buffer: image.image, contentType: image.contentType };
+
+        const books = await extractBooksFromImages([converted], openaiClient.getClient());
+        await setImageExtractedBooks(db, image.id, books);
+      } catch (error) {
+        logger.error(
+          `Failed to extract books for image ${image.id} (request ${requestId}):`,
+          error
+        );
+      }
     })
   );
 }

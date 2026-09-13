@@ -4,13 +4,11 @@ import { createMockContext } from '@test/utils/mock-context.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 
 vi.mock('../../queries/recommendations.js');
-vi.mock('../../utils/image-extraction.js');
 
 import {
   addImagesToRequest,
   createRecommendationForRequest,
 } from '../../queries/recommendations.js';
-import { extractAndStoreBooksPerImage } from '../../utils/image-extraction.js';
 
 const mockSendToQueue = vi.fn();
 
@@ -33,7 +31,6 @@ describe('addImages handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(addImagesToRequest).mockResolvedValue([2]);
-    vi.mocked(extractAndStoreBooksPerImage).mockResolvedValue(undefined);
     vi.mocked(createRecommendationForRequest).mockResolvedValue({ id: 'rec-2' });
   });
 
@@ -44,16 +41,10 @@ describe('addImages handler', () => {
     expect(addImagesToRequest).not.toHaveBeenCalled();
   });
 
-  it('should store the new images, extract books for only the new images, and queue regeneration', async () => {
+  it('should store the new images and queue regeneration without waiting on book extraction', async () => {
     const result = await addImages(mockContext(), 'request-id', testFiles);
 
     expect(addImagesToRequest).toHaveBeenCalledWith({}, 'request-id', testFiles);
-    expect(extractAndStoreBooksPerImage).toHaveBeenCalledWith(
-      {},
-      testFiles,
-      [2],
-      expect.objectContaining({ getClient: expect.any(Function) })
-    );
     expect(createRecommendationForRequest).toHaveBeenCalledWith({}, 'request-id');
     expect(mockSendToQueue).toHaveBeenCalledWith('recommendations', expect.any(Buffer), {
       persistent: true,

@@ -5,7 +5,6 @@ import {
   addImagesToRequest,
   createRecommendationForRequest,
 } from '../../queries/recommendations.js';
-import { extractAndStoreBooksPerImage } from '../../utils/image-extraction.js';
 import { parseMultipartFiles } from '@core/utils/multipart.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 import { enqueueRecommendationJob } from '@core/queue/client.js';
@@ -78,13 +77,12 @@ export async function addImages(
   }
 
   const { db } = c.get('databaseClient');
-  const imageIds = await addImagesToRequest(db, requestId, files);
+  await addImagesToRequest(db, requestId, files);
 
-  const openaiClient = c.get('openaiClient');
-  // Only the newly added images need extraction — existing images already have their
-  // own extractedBooks stored, so this doesn't re-process the whole request each time.
-  await extractAndStoreBooksPerImage(db, files, imageIds, openaiClient);
-
+  // Book extraction for the new images happens in the recommendation worker (see
+  // extractAndStoreBooksForRequest), not here — an OpenAI vision call per image would
+  // otherwise make this response wait on however long that takes.
+  //
   // The user is adding photos specifically to get better recommendations, so regenerate
   // immediately against the now-larger book list rather than waiting for the next cron run.
   const recommendation = await createRecommendationForRequest(db, requestId);

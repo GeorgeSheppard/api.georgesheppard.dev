@@ -382,6 +382,26 @@ export async function findUnprocessedImagesForRecurringUsers(
     .where(and(isNotNull(requests.frequency), isNull(images.extractedBooks)));
 }
 
+/**
+ * Find a single request's images that have not yet had their books extracted — used by the
+ * recommendation worker to extract newly uploaded images before generating recommendations,
+ * so the upload HTTP response never has to wait on OpenAI vision calls.
+ */
+export async function findUnprocessedImagesForRequest(
+  db: DatabaseClient['db'],
+  requestId: string
+): Promise<UnprocessedImageRow[]> {
+  return db
+    .select({
+      id: images.id,
+      requestId: images.requestId,
+      image: images.image,
+      contentType: images.contentType,
+    })
+    .from(images)
+    .where(and(eq(images.requestId, requestId), isNull(images.extractedBooks)));
+}
+
 export interface RecurringRecommendationResult {
   id: string;
 }

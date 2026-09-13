@@ -56,6 +56,11 @@ export function registerGetImageRoute(app: OpenAPIHono) {
       return c.json(result.body, 404);
     }
 
-    return c.body(new Uint8Array(result.body), 200, { 'Content-Type': result.contentType });
+    // An image's bytes never change for a given id (edits are delete-and-re-add), so the
+    // browser can cache it indefinitely and skip re-fetching it on every profile page visit.
+    return c.body(new Uint8Array(result.body), 200, {
+      'Content-Type': result.contentType,
+      'Cache-Control': 'private, max-age=31536000, immutable',
+    });
   });
 }

@@ -7,13 +7,16 @@ import { RecommendationJob } from '@core/queue/client.js';
 import { DatabaseClient } from '@core/database/client.js';
 import { Location } from '@core/types/location.js';
 import { logger } from '@core/telemetry/logger.js';
+import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import { getExtractedBooksForRequest } from '../queries/recommendations.js';
+import { extractAndStoreBooksForRequest } from '../utils/image-extraction.js';
 
 export async function processRecommendationJob(
   job: RecommendationJob,
   databaseClient: DatabaseClient,
   emailClient: EmailClient,
-  recommender: Recommender
+  recommender: Recommender,
+  openaiClient: OpenAIClientWrapper
 ) {
   const { userId, recommendationId } = job;
 
@@ -26,6 +29,10 @@ export async function processRecommendationJob(
   if (!user) {
     throw new Error(`User not found: ${userId}`);
   }
+
+  // Uploads respond immediately without waiting on OpenAI vision, so any images added since
+  // the last recommendation may still need extracting before we can amalgamate the book list.
+  await extractAndStoreBooksForRequest(db, userId, openaiClient);
 
   const books = await getExtractedBooksForRequest(db, userId);
   if (books.length === 0) {

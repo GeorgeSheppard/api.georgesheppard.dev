@@ -2,7 +2,6 @@ import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
 import { createBookcaseRequest } from '../../queries/recommendations.js';
-import { extractAndStoreBooksPerImage } from '../../utils/image-extraction.js';
 import { parseMultipartFiles } from '@core/utils/multipart.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 import { ROUTES } from '../paths.js';
@@ -76,15 +75,15 @@ export async function fromBookcase(
   const ipLocator = c.get('ipLocator');
   const location = await ipLocator.getLocation(forwardedFor);
 
-  const { newRequest, recommendation, imageIds } = await createBookcaseRequest(
+  const { newRequest, recommendation } = await createBookcaseRequest(
     db,
     location.toString(),
     files
   );
 
-  const openaiClient = c.get('openaiClient');
-  await extractAndStoreBooksPerImage(db, files, imageIds, openaiClient);
-
+  // Book extraction happens in the recommendation worker (see extractAndStoreBooksForRequest),
+  // not here — an OpenAI vision call per image would otherwise make this response wait on
+  // however long that takes.
   const queueClient = c.get('queueClient');
   try {
     enqueueRecommendationJob(queueClient, {
