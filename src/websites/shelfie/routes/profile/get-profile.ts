@@ -3,14 +3,22 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
 import { findProfileByRequestId } from '../../queries/recommendations.js';
 import { ROUTES } from '../paths.js';
+import type { BookEntry } from '@core/types/recommendation.js';
 
 const ParamsSchema = z.object({
   requestId: z.string().uuid(),
 });
 
+const BookEntrySchema = z.object({
+  title: z.string(),
+  author: z.string().nullable(),
+});
+
 const ImageSchema = z.object({
   id: z.number(),
   contentType: z.string(),
+  extractedBooks: z.array(BookEntrySchema).nullable(),
+  processedUtc: z.string().datetime().nullable(),
 });
 
 const SuccessSchema = z.object({
@@ -44,7 +52,12 @@ const route = createRoute({
 });
 
 export type GetProfileSuccess = {
-  images: { id: number; contentType: string }[];
+  images: {
+    id: number;
+    contentType: string;
+    extractedBooks: BookEntry[] | null;
+    processedUtc: string | null;
+  }[];
   customPreferences: string | null;
   success: true;
 };
@@ -66,7 +79,12 @@ export async function getProfile(c: Context, requestId: string): Promise<GetProf
   return {
     status: 200,
     body: {
-      images: profile.images,
+      images: profile.images.map((image) => ({
+        id: image.id,
+        contentType: image.contentType,
+        extractedBooks: image.extractedBooks,
+        processedUtc: image.processedUtc?.toISOString() ?? null,
+      })),
       customPreferences: profile.customPreferences,
       success: true,
     },

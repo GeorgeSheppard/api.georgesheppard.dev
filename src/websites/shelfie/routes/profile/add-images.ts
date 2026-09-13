@@ -1,12 +1,8 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
-import {
-  addImagesToRequest,
-  findImagesByRequestId,
-  updateBooksProcessed,
-} from '../../queries/recommendations.js';
-import { extractBooksFromImages } from '@core/utils/openai-book-extractor.js';
+import { addImagesToRequest } from '../../queries/recommendations.js';
+import { extractAndStoreBooksPerImage } from '../../utils/image-extraction.js';
 import { parseMultipartFiles } from '@core/utils/multipart.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 import { ROUTES } from '../paths.js';
@@ -71,15 +67,12 @@ export async function addImages(
   }
 
   const { db } = c.get('databaseClient');
-  await addImagesToRequest(db, requestId, files);
+  const imageIds = await addImagesToRequest(db, requestId, files);
 
   const openaiClient = c.get('openaiClient');
-  const allImages = await findImagesByRequestId(db, requestId);
-  const books = await extractBooksFromImages(
-    allImages.map((image) => ({ buffer: image.image, contentType: image.contentType })),
-    openaiClient.getClient()
-  );
-  await updateBooksProcessed(db, requestId, books);
+  // Only the newly added images need extraction — existing images already have their
+  // own extractedBooks stored, so this doesn't re-process the whole request each time.
+  await extractAndStoreBooksPerImage(db, files, imageIds, openaiClient);
 
   return { status: 200, body: { imagesAdded: files.length, success: true } };
 }

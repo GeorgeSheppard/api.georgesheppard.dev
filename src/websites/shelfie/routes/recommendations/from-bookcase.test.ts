@@ -4,10 +4,10 @@ import { createMockContext } from '@test/utils/mock-context.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 
 vi.mock('../../queries/recommendations.js');
-vi.mock('@core/utils/openai-book-extractor.js');
+vi.mock('../../utils/image-extraction.js');
 
-import { createBookcaseRequest, updateBooksProcessed } from '../../queries/recommendations.js';
-import { extractBooksFromImages } from '@core/utils/openai-book-extractor.js';
+import { createBookcaseRequest } from '../../queries/recommendations.js';
+import { extractAndStoreBooksPerImage } from '../../utils/image-extraction.js';
 
 const mockSendToQueue = vi.fn();
 const mockGetLocation = vi.fn();
@@ -35,11 +35,9 @@ describe('fromBookcase handler', () => {
     vi.mocked(createBookcaseRequest).mockResolvedValue({
       newRequest: { id: 'req-1' },
       recommendation: { id: 'rec-1' },
+      imageIds: [1],
     });
-    vi.mocked(extractBooksFromImages).mockResolvedValue([
-      { title: 'Dune', author: 'Frank Herbert' },
-    ]);
-    vi.mocked(updateBooksProcessed).mockResolvedValue(undefined);
+    vi.mocked(extractAndStoreBooksPerImage).mockResolvedValue(undefined);
   });
 
   describe('bad request (400)', () => {
@@ -62,13 +60,12 @@ describe('fromBookcase handler', () => {
         body: { id: 'rec-1', success: true },
       });
       expect(createBookcaseRequest).toHaveBeenCalledWith({}, 'London, UK', testFiles);
-      expect(extractBooksFromImages).toHaveBeenCalledWith(
-        [{ buffer: testFiles[0].data, contentType: testFiles[0].mimetype }],
-        {}
+      expect(extractAndStoreBooksPerImage).toHaveBeenCalledWith(
+        {},
+        testFiles,
+        [1],
+        expect.objectContaining({ getClient: expect.any(Function) })
       );
-      expect(updateBooksProcessed).toHaveBeenCalledWith({}, 'req-1', [
-        { title: 'Dune', author: 'Frank Herbert' },
-      ]);
       expect(mockSendToQueue).toHaveBeenCalledWith('recommendations', expect.any(Buffer), {
         persistent: true,
       });

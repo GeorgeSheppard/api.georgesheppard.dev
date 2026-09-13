@@ -1,8 +1,8 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
-import { createBookcaseRequest, updateBooksProcessed } from '../../queries/recommendations.js';
-import { extractBooksFromImages } from '@core/utils/openai-book-extractor.js';
+import { createBookcaseRequest } from '../../queries/recommendations.js';
+import { extractAndStoreBooksPerImage } from '../../utils/image-extraction.js';
 import { parseMultipartFiles } from '@core/utils/multipart.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
 import { ROUTES } from '../paths.js';
@@ -75,18 +75,14 @@ export async function fromBookcase(
   const ipLocator = c.get('ipLocator');
   const location = await ipLocator.getLocation(forwardedFor);
 
-  const { newRequest, recommendation } = await createBookcaseRequest(
+  const { newRequest, recommendation, imageIds } = await createBookcaseRequest(
     db,
     location.toString(),
     files
   );
 
   const openaiClient = c.get('openaiClient');
-  const books = await extractBooksFromImages(
-    files.map((file) => ({ buffer: file.data, contentType: file.mimetype })),
-    openaiClient.getClient()
-  );
-  await updateBooksProcessed(db, newRequest.id, books);
+  await extractAndStoreBooksPerImage(db, files, imageIds, openaiClient);
 
   const queueClient = c.get('queueClient');
   try {

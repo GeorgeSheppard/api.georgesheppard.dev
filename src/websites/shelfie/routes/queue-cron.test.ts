@@ -33,8 +33,8 @@ describe('queueDueRecommendations handler', () => {
 
   it('should process all due users and queue recommendations', async () => {
     vi.mocked(findDueUsers).mockResolvedValue([
-      { id: 'user-1', location: 'London', email: 'enc-email-1', booksProcessed: null },
-      { id: 'user-2', location: 'Paris', email: 'enc-email-2', booksProcessed: null },
+      { id: 'user-1', location: 'London', email: 'enc-email-1' },
+      { id: 'user-2', location: 'Paris', email: 'enc-email-2' },
     ]);
     vi.mocked(createRecurringRecommendation)
       .mockResolvedValueOnce({ id: 'rec-1' })
@@ -48,9 +48,7 @@ describe('queueDueRecommendations handler', () => {
   });
 
   it('should count queue failures separately from DB failures', async () => {
-    vi.mocked(findDueUsers).mockResolvedValue([
-      { id: 'user-1', location: 'London', email: null, booksProcessed: null },
-    ]);
+    vi.mocked(findDueUsers).mockResolvedValue([{ id: 'user-1', location: 'London', email: null }]);
     vi.mocked(createRecurringRecommendation).mockResolvedValue({ id: 'rec-1' });
     mockSendToQueue.mockImplementation(() => {
       throw new Error('Queue down');
@@ -63,8 +61,8 @@ describe('queueDueRecommendations handler', () => {
 
   it('should continue processing when one user fails at DB level', async () => {
     vi.mocked(findDueUsers).mockResolvedValue([
-      { id: 'user-1', location: 'London', email: null, booksProcessed: null },
-      { id: 'user-2', location: 'Paris', email: null, booksProcessed: null },
+      { id: 'user-1', location: 'London', email: null },
+      { id: 'user-2', location: 'Paris', email: null },
     ]);
     vi.mocked(createRecurringRecommendation)
       .mockRejectedValueOnce(new Error('DB error'))
@@ -76,9 +74,7 @@ describe('queueDueRecommendations handler', () => {
   });
 
   it('should send correct queue message format', async () => {
-    vi.mocked(findDueUsers).mockResolvedValue([
-      { id: 'user-1', location: 'London', email: null, booksProcessed: null },
-    ]);
+    vi.mocked(findDueUsers).mockResolvedValue([{ id: 'user-1', location: 'London', email: null }]);
     vi.mocked(createRecurringRecommendation).mockResolvedValue({ id: 'rec-1' });
 
     await queueDueRecommendations(mockContext());

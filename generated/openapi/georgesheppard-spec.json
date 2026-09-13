@@ -938,19 +938,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Books re-extracted for recurring users",
+            "description": "Books extracted for recurring users' unprocessed images",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "totalUsers": {
+                    "totalImages": {
                       "type": "number"
                     },
-                    "processedUsers": {
-                      "type": "number"
-                    },
-                    "skippedUsers": {
+                    "processedImages": {
                       "type": "number"
                     },
                     "failures": {
@@ -958,9 +955,8 @@
                     }
                   },
                   "required": [
-                    "totalUsers",
-                    "processedUsers",
-                    "skippedUsers",
+                    "totalImages",
+                    "processedImages",
                     "failures"
                   ]
                 }
@@ -1022,11 +1018,38 @@
                           },
                           "contentType": {
                             "type": "string"
+                          },
+                          "extractedBooks": {
+                            "type": "array",
+                            "nullable": true,
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string"
+                                },
+                                "author": {
+                                  "type": "string",
+                                  "nullable": true
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "author"
+                              ]
+                            }
+                          },
+                          "processedUtc": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
                           }
                         },
                         "required": [
                           "id",
-                          "contentType"
+                          "contentType",
+                          "extractedBooks",
+                          "processedUtc"
                         ]
                       }
                     },
