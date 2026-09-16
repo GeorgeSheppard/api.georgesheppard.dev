@@ -8,18 +8,8 @@ vi.mock('./heic-converter.js', () => ({
   convertHeicToJpeg: vi.fn(async () => Buffer.from('converted-jpeg-data')),
 }));
 
-vi.mock('./image-resizer.js', () => ({
-  // Pass data through unchanged by default so existing assertions on file contents still
-  // hold; individual tests override this when they care about the resize step itself.
-  resizeAndCompressImage: vi.fn(async (data: Buffer) => ({
-    buffer: data,
-    contentType: 'image/jpeg',
-  })),
-}));
-
 const { parseMultipartFiles, MAX_UPLOAD_SIZE_BYTES } = await import('./multipart.js');
 const { convertHeicToJpeg } = await import('./heic-converter.js');
-const { resizeAndCompressImage } = await import('./image-resizer.js');
 
 function contextWithFormData(formData: FormData): Context {
   return { req: { formData: async () => formData } } as unknown as Context;
@@ -60,22 +50,6 @@ describe('parseMultipartFiles', () => {
     expect(convertHeicToJpeg).toHaveBeenCalledWith(Buffer.from('heic-bytes'));
     expect(files).toEqual([
       { filename: 'a.heic', mimetype: 'image/jpeg', data: Buffer.from('converted-jpeg-data') },
-    ]);
-  });
-
-  it('resizes and compresses every uploaded image', async () => {
-    vi.mocked(resizeAndCompressImage).mockResolvedValueOnce({
-      buffer: Buffer.from('resized-data'),
-      contentType: 'image/jpeg',
-    });
-    const formData = new FormData();
-    formData.append('bookcase', new Blob([Buffer.from('data')], { type: 'image/png' }), 'a.png');
-
-    const files = await parseMultipartFiles(contextWithFormData(formData), 'bookcase');
-
-    expect(resizeAndCompressImage).toHaveBeenCalledWith(Buffer.from('data'));
-    expect(files).toEqual([
-      { filename: 'a.png', mimetype: 'image/jpeg', data: Buffer.from('resized-data') },
     ]);
   });
 

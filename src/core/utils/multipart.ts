@@ -1,7 +1,6 @@
 import { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { convertHeicToJpeg, isHeicFile } from './heic-converter.js';
-import { resizeAndCompressImage } from './image-resizer.js';
 
 export interface UploadedFile {
   filename: string;
@@ -34,10 +33,6 @@ export async function parseMultipartFiles(
         data = await convertHeicToJpeg(data);
         mimetype = 'image/jpeg';
       }
-
-      const resized = await resizeAndCompressImage(data);
-      data = resized.buffer;
-      mimetype = resized.contentType;
 
       files.push({ filename: value.name, mimetype, data });
     }
