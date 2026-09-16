@@ -71,7 +71,10 @@ export async function processRecommendationJob(
 
   logger.info(`Generated ${newRecommendations.length} recommendations`);
 
-  // Send email if user has email
+  // Send email if user has email. The address is kept regardless of whether they opted into
+  // monthly recurring emails — a request can get several ad-hoc recommendations (e.g. via the
+  // profile page's "add photos"/"tailor recommendations" actions), and someone who gave their
+  // email for the first one clearly wants to hear about the rest too, not re-enter it each time.
   if (user.email) {
     try {
       const plaintextEmail = encryption.decrypt(user.email);
@@ -84,16 +87,11 @@ export async function processRecommendationJob(
         variables: {
           recommendationsurl: `https://shelfie.georgesheppard.dev/recommendations/${recommendationId}`,
           unsubscribeUrl: `https://shelfie.georgesheppard.dev/unsubscribe/${userId}`,
-          unsubscribeText: user.frequency ? 'Unsubscribe' : '',
+          unsubscribeText: 'Unsubscribe',
         },
       });
 
       logger.info('Email sent successfully');
-
-      // Clear email if one-time subscription
-      if (!user.frequency) {
-        await db.update(requests).set({ email: null }).where(eq(requests.id, userId));
-      }
     } catch (error) {
       logger.error(`Failed to send email: ${error}`);
       // Don't fail the job if email fails
