@@ -1123,6 +1123,19 @@
             "required": true,
             "name": "imageId",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ],
+              "description": "Return a small resized preview instead of the full-resolution original"
+            },
+            "required": false,
+            "description": "Return a small resized preview instead of the full-resolution original",
+            "name": "thumbnail",
+            "in": "query"
           }
         ],
         "responses": {

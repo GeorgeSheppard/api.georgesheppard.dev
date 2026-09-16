@@ -2,11 +2,18 @@ import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
 import { findImageByIdForRequest } from '../../queries/recommendations.js';
+import { createThumbnail } from '@core/utils/image-thumbnail.js';
 import { ROUTES } from '../paths.js';
 
 const ParamsSchema = z.object({
   requestId: z.string().uuid(),
   imageId: z.string().regex(/^\d+$/).openapi({ type: 'integer' }),
+});
+
+const QuerySchema = z.object({
+  thumbnail: z.enum(['true']).optional().openapi({
+    description: 'Return a small resized preview instead of the full-resolution original',
+  }),
 });
 
 const route = createRoute({
@@ -15,6 +22,7 @@ const route = createRoute({
   tags: ['profile'],
   request: {
     params: ParamsSchema,
+    query: QuerySchema,
   },
   responses: {
     200: {
@@ -35,7 +43,8 @@ export type GetImageResult =
 export async function getImage(
   c: Context,
   requestId: string,
-  imageId: number
+  imageId: number,
+  thumbnail: boolean
 ): Promise<GetImageResult> {
   const { db } = c.get('databaseClient');
   const image = await findImageByIdForRequest(db, imageId, requestId);
@@ -44,13 +53,19 @@ export async function getImage(
     return { status: 404, body: { error: 'Image not found' } };
   }
 
+  if (thumbnail) {
+    const resized = await createThumbnail(image.image);
+    return { status: 200, body: resized.buffer, contentType: resized.contentType };
+  }
+
   return { status: 200, body: image.image, contentType: image.contentType };
 }
 
 export function registerGetImageRoute(app: OpenAPIHono) {
   app.openapi(route, async (c) => {
     const { requestId, imageId } = c.req.valid('param');
-    const result = await getImage(c, requestId, Number(imageId));
+    const { thumbnail } = c.req.valid('query');
+    const result = await getImage(c, requestId, Number(imageId), thumbnail === 'true');
 
     if (result.status === 404) {
       return c.json(result.body, 404);
