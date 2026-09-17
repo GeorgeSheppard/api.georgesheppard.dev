@@ -1,5 +1,5 @@
 import { recommendations, requests, images } from '@core/database/schema/index.js';
-import { eq, lt, isNotNull, isNull, and } from 'drizzle-orm';
+import { eq, lt, isNotNull, isNull, and, desc } from 'drizzle-orm';
 import type { DatabaseClient } from '@core/database/client.js';
 import type { Recommendation, BookEntry } from '@core/types/recommendation.js';
 import type { UploadedFile } from '@core/utils/multipart.js';
@@ -62,6 +62,33 @@ export async function findRecommendationById(
     .limit(1);
 
   return result[0] ?? null;
+}
+
+export interface RecommendationSummary {
+  id: string;
+  createdUtc: Date;
+  processedUtc: Date | null;
+}
+
+/**
+ * Find the most recent recommendations generated for a request, newest first — lets the
+ * profile page link back to past results instead of only the one it was reached from.
+ */
+export async function findRecentRecommendationsForRequest(
+  db: DatabaseClient['db'],
+  requestId: string,
+  limit: number
+): Promise<RecommendationSummary[]> {
+  return db
+    .select({
+      id: recommendations.id,
+      createdUtc: recommendations.createdUtc,
+      processedUtc: recommendations.processedUtc,
+    })
+    .from(recommendations)
+    .where(eq(recommendations.requestId, requestId))
+    .orderBy(desc(recommendations.createdUtc))
+    .limit(limit);
 }
 
 export interface RequestRow {

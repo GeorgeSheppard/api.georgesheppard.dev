@@ -10,6 +10,7 @@ import { registerGetImageRoute } from './routes/profile/get-image.js';
 import { registerAddImagesRoute } from './routes/profile/add-images.js';
 import { registerDeleteImageRoute } from './routes/profile/delete-image.js';
 import { registerUpdatePreferencesRoute } from './routes/profile/update-preferences.js';
+import { registerGetRecentRecommendationsRoute } from './routes/profile/get-recent-recommendations.js';
 
 export function registerShelfieRoutes(app: OpenAPIHono) {
   registerGetByIdRoute(app);
@@ -23,4 +24,5 @@ export function registerShelfieRoutes(app: OpenAPIHono) {
   registerAddImagesRoute(app);
   registerDeleteImageRoute(app);
   registerUpdatePreferencesRoute(app);
+  registerGetRecentRecommendationsRoute(app);
 }
