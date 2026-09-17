@@ -19,8 +19,8 @@ describe('createThumbnail', () => {
     expect(contentType).toBe('image/jpeg');
     const metadata = await sharp(buffer).metadata();
     expect(metadata.format).toBe('jpeg');
-    expect(metadata.width).toBeLessThanOrEqual(640);
-    expect(metadata.height).toBeLessThanOrEqual(640);
+    expect(metadata.width).toBeLessThanOrEqual(1024);
+    expect(metadata.height).toBeLessThanOrEqual(1024);
     expect(buffer.length).toBeLessThan(original.length);
   });
 
@@ -30,8 +30,8 @@ describe('createThumbnail', () => {
     const { buffer } = await createThumbnail(original);
 
     const metadata = await sharp(buffer).metadata();
-    expect(metadata.width).toBe(640);
-    expect(metadata.height).toBe(320);
+    expect(metadata.width).toBe(1024);
+    expect(metadata.height).toBe(512);
   });
 
   it('does not upscale an image already smaller than the max dimension', async () => {

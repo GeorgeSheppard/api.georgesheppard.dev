@@ -3,8 +3,8 @@ import sharp from 'sharp';
 // Originals are kept at full resolution — the OpenAI vision extraction needs that detail to
 // read book spines reliably — but the profile page only ever displays them as small squares,
 // so there's no reason to ship the full multi-MB original there too.
-const THUMBNAIL_MAX_DIMENSION = 640;
-const THUMBNAIL_JPEG_QUALITY = 80;
+const THUMBNAIL_MAX_DIMENSION = 1024;
+const THUMBNAIL_JPEG_QUALITY = 88;
 
 export interface Thumbnail {
   buffer: Buffer;
