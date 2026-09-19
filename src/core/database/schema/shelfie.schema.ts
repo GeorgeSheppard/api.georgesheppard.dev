@@ -51,6 +51,7 @@ export const recommendations = pgTable('recommendations', {
     .notNull()
     .references(() => requests.id, { onDelete: 'cascade' }),
   recommendations: jsonb('recommendations').$type<Recommendation[]>(),
+  createdUtc: timestamp('created_utc', { mode: 'date', withTimezone: true }).notNull().defaultNow(),
   processedUtc: timestamp('processed_utc', { mode: 'date', withTimezone: true }),
 });
 

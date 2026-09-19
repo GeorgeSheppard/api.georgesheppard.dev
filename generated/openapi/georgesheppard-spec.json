@@ -1458,6 +1458,99 @@
         }
       }
     },
+    "/api/profile/{requestId}/recommendations": {
+      "get": {
+        "tags": [
+          "profile"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "requestId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent recommendations retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recommendations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "createdUtc": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "processedUtc": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "createdUtc",
+                          "processedUtc"
+                        ]
+                      }
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "recommendations",
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mcp/auth/token": {
       "post": {
         "tags": [

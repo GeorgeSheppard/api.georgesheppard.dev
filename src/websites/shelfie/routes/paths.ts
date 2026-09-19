@@ -17,6 +17,7 @@ export const ROUTES = {
   ADD_PROFILE_IMAGES: '/api/profile/{requestId}/images',
   DELETE_PROFILE_IMAGE: '/api/profile/{requestId}/images/{imageId}',
   UPDATE_PROFILE_PREFERENCES: '/api/profile/{requestId}/preferences',
+  GET_PROFILE_RECOMMENDATIONS: '/api/profile/{requestId}/recommendations',
 
   // Cron (Protected)
   QUEUE_DUE_RECOMMENDATIONS: '/api/queue-due-recommendations',

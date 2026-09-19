@@ -1,0 +1,1 @@
+ALTER TABLE "recommendations" ADD COLUMN "created_utc" timestamp with time zone DEFAULT now() NOT NULL;
