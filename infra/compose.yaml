@@ -10,6 +10,7 @@ services:
   api:
     image: georgeshep/bord:api.georgesheppard.dev
     platform: linux/amd64
+    restart: unless-stopped
     ports:
       - '5240:5240'
     env_file:
@@ -29,6 +30,7 @@ services:
 
   db:
     image: postgres:17
+    restart: unless-stopped
     environment:
       # POSTGRES_PASSWORD: Without this line a random password is used
       POSTGRES_USER: '${DATABASE_USER}'
@@ -49,7 +51,7 @@ services:
   queues:
     image: rabbitmq:4.0.5-management
     container_name: rabbitmq
-    restart: always
+    restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: '${RABBITMQ_USER}'
       RABBITMQ_DEFAULT_PASS: '${RABBITMQ_PASSWORD}'
@@ -62,13 +64,39 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    # Management UI (15672) is reachable inside the docker network only (cloudflared
+    # can reach it as http://queues:15672); not published to the host.
 
   scheduler:
     image: ubuntu:22.04
     container_name: scheduler
-    restart: always
+    restart: unless-stopped
     depends_on:
       - api
     volumes:
       - ./cronjobs:/etc/cron.d
     command: /bin/bash -c "apt-get update && apt-get install -y curl cron && cron -f"
+
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: 'db'
+    depends_on:
+      db:
+        condition: service_healthy
+    # Reachable inside the docker network only, as http://adminer:8080.
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    restart: unless-stopped
+    command: ['--config=/etc/otel-collector-config.yaml']
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      queues:
+        condition: service_healthy

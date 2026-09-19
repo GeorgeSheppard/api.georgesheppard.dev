@@ -1,0 +1,43 @@
+receivers:
+  hostmetrics:
+    collection_interval: 60s
+    scrapers:
+      cpu: {}
+      memory: {}
+      disk: {}
+      filesystem: {}
+      load: {}
+      network: {}
+
+  postgresql:
+    endpoint: db:5432
+    transport: tcp
+    username: ${env:DATABASE_USER}
+    password: ${env:DATABASE_PASSWORD}
+    databases:
+      - ${env:DATABASE_DB}
+    tls:
+      insecure: true
+    collection_interval: 60s
+
+  rabbitmq:
+    endpoint: http://queues:15672
+    username: ${env:RABBITMQ_USER}
+    password: ${env:RABBITMQ_PASSWORD}
+    collection_interval: 60s
+
+processors:
+  batch: {}
+
+exporters:
+  otlphttp:
+    endpoint: ${env:OTEL_EXPORTER_OTLP_ENDPOINT}
+    headers:
+      Authorization: ${env:OTEL_COLLECTOR_AUTHORIZATION_HEADER}
+
+service:
+  pipelines:
+    metrics:
+      receivers: [hostmetrics, postgresql, rabbitmq]
+      processors: [batch]
+      exporters: [otlphttp]

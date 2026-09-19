@@ -44,6 +44,9 @@ ping_healthcheck "$HEALTHCHECK_URL/start"
 log "Refreshing compose.yaml from master"
 curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o ~/Documents/root/compose.yaml
 
+log "Refreshing otel-collector-config.yaml from master"
+curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/otel-collector-config.yaml -o ~/Documents/root/otel-collector-config.yaml
+
 log "Authenticating with Infisical"
 INFISICAL_TOKEN="$(infisical login --method=universal-auth \
   --client-id="$INFISICAL_CLIENT_ID" \
