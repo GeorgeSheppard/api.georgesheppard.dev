@@ -26,11 +26,18 @@ export interface CognitoIdTokenPayload extends CognitoJwtPayload {
   nonce?: string;
 }
 
-export async function verifyCognitoIdToken(token: string): Promise<CognitoIdTokenPayload> {
+export async function verifyCognitoIdTokenForClient(
+  token: string,
+  audience: string
+): Promise<CognitoIdTokenPayload> {
   const verified = await jwtVerify(token, jwks, {
     issuer: cognitoUrl,
-    audience: config.COGNITO_CLIENT_ID,
+    audience,
   });
 
   return verified.payload as unknown as CognitoIdTokenPayload;
+}
+
+export async function verifyCognitoIdToken(token: string): Promise<CognitoIdTokenPayload> {
+  return verifyCognitoIdTokenForClient(token, config.COGNITO_CLIENT_ID);
 }

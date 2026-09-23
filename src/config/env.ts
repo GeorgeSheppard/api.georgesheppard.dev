@@ -37,6 +37,12 @@ const envSchema = z.object({
     .string()
     .url()
     .describe('Cognito hosted UI domain, e.g. https://my-pool.auth.us-east-1.amazoncognito.com'),
+  COGNITO_MANAGEMENT_ACCESS_KEY_ID: z
+    .string()
+    .describe('IAM access key with cognito-idp:CreateUserPoolClient, used for MCP DCR'),
+  COGNITO_MANAGEMENT_SECRET_ACCESS_KEY: z
+    .string()
+    .describe('IAM secret key with cognito-idp:CreateUserPoolClient, used for MCP DCR'),
 
   // Auth session / OAuth
   SESSION_SECRET: z

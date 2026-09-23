@@ -14,6 +14,7 @@ import { registerShelfieRoutes } from '@websites/shelfie/index.js';
 import { registerRoutes as registerMiseRoutes, tools as miseTools } from '@websites/mise/index.js';
 import { registerRoutes as registerTflRoutes } from '@websites/tfl/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
+import { registerMcpOauthRoutes } from '@core/mcp/oauth/index.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
 import { isAllowedOrigin } from '@core/auth/redirect.js';
 import { warmStationLinesCache } from '@websites/tfl/utils/station-lines-cache.js';
@@ -103,6 +104,7 @@ export async function createApp(dependencies: AppDependencies) {
   // Register MCP with all tools from all websites
   const allMcpTools = [...miseTools];
   registerMcpSseRoute(app, allMcpTools);
+  registerMcpOauthRoutes(app);
 
   // Register Swagger UI and OpenAPI spec
   if (config.NODE_ENV === 'development') {
