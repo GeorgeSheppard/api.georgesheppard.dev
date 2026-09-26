@@ -3,6 +3,7 @@ export const ALLOWED_FRONTEND_URLS = [
   'http://localhost:5173',
   'https://mise.georgesheppard.dev',
   'https://shelfie.georgesheppard.dev',
+  'https://flights.georgesheppard.dev',
   'https://platform.georgesheppard.dev',
 ];
 
