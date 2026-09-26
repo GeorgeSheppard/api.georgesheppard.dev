@@ -61,4 +61,13 @@ describe('GET /flights/search', () => {
 
     expect(response.status).toBe(400);
   });
+
+  it('returns 501 when FlightAware is not configured', async () => {
+    const { flightAwareClient } = createMockFlightAwareClient({}, { configured: false });
+    const app = await createTestApp({ flightAwareClient });
+
+    const response = await app.request('http://localhost/flights/search?flightNumber=BA123');
+
+    expect(response.status).toBe(501);
+  });
 });

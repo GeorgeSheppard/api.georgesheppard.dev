@@ -16,4 +16,8 @@ export class FlightAwareClientWrapper {
   getClient(): AxiosInstance {
     return this.client;
   }
+
+  isConfigured(): boolean {
+    return Boolean(config.FLIGHTAWARE_API_KEY);
+  }
 }

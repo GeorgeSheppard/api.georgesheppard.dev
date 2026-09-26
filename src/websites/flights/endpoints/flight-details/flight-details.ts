@@ -80,9 +80,12 @@ export async function flightDetails(
   const state = await getStateByIcao24(openSkyClient.getClient(), input.icao24);
   const callsign = input.callsign?.trim() || state?.callsign || null;
 
-  const flights = callsign
-    ? await searchFlightsByIdent(flightAwareClient.getClient(), callsign)
-    : [];
+  // Route/airline enrichment is a nice-to-have on top of the live position: while FlightAware
+  // isn't configured, or there's no callsign to look up, this endpoint still returns position.
+  const flights =
+    callsign && flightAwareClient.isConfigured()
+      ? await searchFlightsByIdent(flightAwareClient.getClient(), callsign)
+      : [];
   const flight = pickCurrentFlight(flights);
 
   return {

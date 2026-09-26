@@ -11,10 +11,10 @@ vi.mock('../../utils/flightaware-api.js');
 import { getStateByIcao24 } from '../../utils/opensky-api.js';
 import { searchFlightsByIdent } from '../../utils/flightaware-api.js';
 
-function mockContext() {
+function mockContext({ configured = true }: { configured?: boolean } = {}) {
   return createMockContext<Context>({
     openSkyClient: { getClient: () => ({}) },
-    flightAwareClient: { getClient: () => ({}) },
+    flightAwareClient: { getClient: () => ({}), isConfigured: () => configured },
   });
 }
 
@@ -139,6 +139,16 @@ describe('flightDetails handler', () => {
     const result = await flightDetails(mockContext(), { icao24: '4ca7b3' });
 
     expect(searchFlightsByIdent).not.toHaveBeenCalled();
+    expect(result.route).toBeNull();
+  });
+
+  it('should still return the live position, with a null route, when FlightAware is not configured', async () => {
+    vi.mocked(getStateByIcao24).mockResolvedValue(state);
+
+    const result = await flightDetails(mockContext({ configured: false }), { icao24: '4ca7b3' });
+
+    expect(searchFlightsByIdent).not.toHaveBeenCalled();
+    expect(result.position).not.toBeNull();
     expect(result.route).toBeNull();
   });
 });

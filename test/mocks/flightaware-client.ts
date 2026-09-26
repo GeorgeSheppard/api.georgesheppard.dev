@@ -5,7 +5,10 @@ import type { FlightAwareClientWrapper } from '@core/utils/flightaware-client.js
 // FlightAware responses it cares about, instead of mocking axios end to end. Throws on any
 // unmocked path so a test's assumptions about which FlightAware endpoints get called are
 // enforced, not just assumed.
-export function createMockFlightAwareClient(responses: Record<string, unknown> = {}) {
+export function createMockFlightAwareClient(
+  responses: Record<string, unknown> = {},
+  { configured = true }: { configured?: boolean } = {}
+) {
   const get = vi.fn(async (url: string) => {
     if (Object.prototype.hasOwnProperty.call(responses, url)) {
       return { data: responses[url] };
@@ -13,6 +16,9 @@ export function createMockFlightAwareClient(responses: Record<string, unknown> =
     throw new Error(`Unexpected FlightAware request: ${url}`);
   });
 
-  const flightAwareClient = { getClient: () => ({ get }) } as unknown as FlightAwareClientWrapper;
+  const flightAwareClient = {
+    getClient: () => ({ get }),
+    isConfigured: () => configured,
+  } as unknown as FlightAwareClientWrapper;
   return { flightAwareClient, get };
 }

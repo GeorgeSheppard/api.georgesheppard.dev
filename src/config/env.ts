@@ -29,8 +29,8 @@ const envSchema = z.object({
   OPENSKY_CLIENT_ID: z.string(),
   OPENSKY_CLIENT_SECRET: z.string(),
 
-  // FlightAware AeroAPI
-  FLIGHTAWARE_API_KEY: z.string(),
+  // FlightAware AeroAPI (optional — endpoints that need it respond 501 while unset)
+  FLIGHTAWARE_API_KEY: z.string().optional(),
 
   // JWT
   JWT_SECRET: z.string().min(32).describe('Secret for signing JWTs (min 32 chars)'),

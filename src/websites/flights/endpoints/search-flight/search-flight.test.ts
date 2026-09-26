@@ -8,9 +8,9 @@ vi.mock('../../utils/flightaware-api.js');
 
 import { searchFlightsByIdent } from '../../utils/flightaware-api.js';
 
-function mockContext() {
+function mockContext({ configured = true }: { configured?: boolean } = {}) {
   return createMockContext<Context>({
-    flightAwareClient: { getClient: () => ({}) },
+    flightAwareClient: { getClient: () => ({}), isConfigured: () => configured },
   });
 }
 
@@ -41,7 +41,7 @@ describe('searchFlight handler', () => {
 
     const result = await searchFlight(mockContext(), { flightNumber: 'BA123' });
 
-    expect(result).toEqual({ flights: [flight] });
+    expect(result).toEqual({ status: 200, body: { flights: [flight] } });
   });
 
   it('should search using the given flight number', async () => {
@@ -57,6 +57,15 @@ describe('searchFlight handler', () => {
 
     const result = await searchFlight(mockContext(), { flightNumber: 'ZZ999' });
 
-    expect(result).toEqual({ flights: [] });
+    expect(result).toEqual({ status: 200, body: { flights: [] } });
+  });
+
+  it('should return 501 without calling FlightAware when it is not configured', async () => {
+    const result = await searchFlight(mockContext({ configured: false }), {
+      flightNumber: 'BA123',
+    });
+
+    expect(result.status).toBe(501);
+    expect(searchFlightsByIdent).not.toHaveBeenCalled();
   });
 });

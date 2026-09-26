@@ -39,12 +39,27 @@ export const SearchFlightResponseSchema = z.object({
 
 export type SearchFlightResponse = z.infer<typeof SearchFlightResponseSchema>;
 
+export const NotImplementedResponseSchema = z.object({
+  error: z.string(),
+});
+
+export type SearchFlightResult =
+  | { status: 200; body: SearchFlightResponse }
+  | { status: 501; body: z.infer<typeof NotImplementedResponseSchema> };
+
 export async function searchFlight(
   c: Context,
   input: SearchFlightQuery
-): Promise<SearchFlightResponse> {
+): Promise<SearchFlightResult> {
   const flightAwareClient = c.get('flightAwareClient');
+  if (!flightAwareClient.isConfigured()) {
+    return {
+      status: 501,
+      body: { error: 'Flight search is not available: FlightAware is not configured yet' },
+    };
+  }
+
   const flights = await searchFlightsByIdent(flightAwareClient.getClient(), input.flightNumber);
 
-  return { flights };
+  return { status: 200, body: { flights } };
 }

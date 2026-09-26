@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createTestApp } from '@test/utils/app.js';
 import { createMockOpenSkyClient } from '@test/mocks/opensky-client.js';
 import { createMockFlightAwareClient } from '@test/mocks/flightaware-client.js';
+import type { FlightDetailsResponse } from './flight-details.js';
 
 describe('GET /flights/details', () => {
   it('returns merged position and route details for the aircraft', async () => {
@@ -114,5 +115,43 @@ describe('GET /flights/details', () => {
       position: null,
       route: null,
     });
+  });
+
+  it('still returns the live position, with a null route, when FlightAware is not configured', async () => {
+    const { openSkyClient } = createMockOpenSkyClient({
+      '/states/all': {
+        time: 1700000000,
+        states: [
+          [
+            '4ca7b3',
+            'BAW123  ',
+            'United Kingdom',
+            1700000000,
+            1700000000,
+            0.1,
+            51.5,
+            10000,
+            false,
+            230,
+            90,
+            0,
+            null,
+            10100,
+            null,
+            false,
+            0,
+          ],
+        ],
+      },
+    });
+    const { flightAwareClient } = createMockFlightAwareClient({}, { configured: false });
+    const app = await createTestApp({ openSkyClient, flightAwareClient });
+
+    const response = await app.request('http://localhost/flights/details?icao24=4ca7b3');
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as FlightDetailsResponse;
+    expect(body.position).not.toBeNull();
+    expect(body.route).toBeNull();
   });
 });

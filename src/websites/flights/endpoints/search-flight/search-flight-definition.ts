@@ -1,6 +1,10 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
-import { SearchFlightQuerySchema, SearchFlightResponseSchema } from './search-flight.js';
+import {
+  SearchFlightQuerySchema,
+  SearchFlightResponseSchema,
+  NotImplementedResponseSchema,
+} from './search-flight.js';
 
 export const searchFlightRoute = createRoute({
   method: 'get',
@@ -28,6 +32,14 @@ export const searchFlightRoute = createRoute({
         },
       },
       description: 'Internal server error',
+    },
+    501: {
+      content: {
+        'application/json': {
+          schema: NotImplementedResponseSchema,
+        },
+      },
+      description: 'FlightAware is not configured yet',
     },
   },
 });

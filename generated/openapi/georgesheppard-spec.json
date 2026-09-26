@@ -3161,6 +3161,24 @@
                 }
               }
             }
+          },
+          "501": {
+            "description": "FlightAware is not configured yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       }
