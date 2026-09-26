@@ -2837,6 +2837,579 @@
           }
         }
       }
+    },
+    "/flights/area": {
+      "get": {
+        "tags": [
+          "flights"
+        ],
+        "description": "Get live aircraft positions within a geographical bounding box",
+        "parameters": [
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -90,
+              "maximum": 90,
+              "description": "Southern edge of the search box"
+            },
+            "required": false,
+            "description": "Southern edge of the search box",
+            "name": "minLatitude",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -90,
+              "maximum": 90,
+              "description": "Northern edge of the search box"
+            },
+            "required": false,
+            "description": "Northern edge of the search box",
+            "name": "maxLatitude",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -180,
+              "maximum": 180,
+              "description": "Western edge of the search box"
+            },
+            "required": false,
+            "description": "Western edge of the search box",
+            "name": "minLongitude",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -180,
+              "maximum": 180,
+              "description": "Eastern edge of the search box"
+            },
+            "required": false,
+            "description": "Eastern edge of the search box",
+            "name": "maxLongitude",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aircraft currently within the bounding box",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "aircraft": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "icao24": {
+                            "type": "string",
+                            "description": "24-bit ICAO transponder address, e.g. \"4ca7b3\""
+                          },
+                          "callsign": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Callsign currently broadcast by the aircraft"
+                          },
+                          "latitude": {
+                            "type": "number"
+                          },
+                          "longitude": {
+                            "type": "number"
+                          },
+                          "onGround": {
+                            "type": "boolean"
+                          },
+                          "altitudeMeters": {
+                            "type": "number",
+                            "nullable": true,
+                            "description": "Barometric altitude in meters"
+                          },
+                          "velocityMetersPerSecond": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "headingDegrees": {
+                            "type": "number",
+                            "nullable": true,
+                            "description": "True track in degrees, 0 is north"
+                          },
+                          "verticalRateMetersPerSecond": {
+                            "type": "number",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "icao24",
+                          "callsign",
+                          "latitude",
+                          "longitude",
+                          "onGround",
+                          "altitudeMeters",
+                          "velocityMetersPerSecond",
+                          "headingDegrees",
+                          "verticalRateMetersPerSecond"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "aircraft"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/search": {
+      "get": {
+        "tags": [
+          "flights"
+        ],
+        "description": "Search for flights by flight number, e.g. to find where a specific plane is",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Flight number, e.g. \"BA123\""
+            },
+            "required": true,
+            "description": "Flight number, e.g. \"BA123\"",
+            "name": "flightNumber",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Flights matching the given flight number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "flights": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "faFlightId": {
+                            "type": "string",
+                            "description": "Opaque identifier to pass to the flight details endpoint"
+                          },
+                          "ident": {
+                            "type": "string"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Operating airline"
+                          },
+                          "aircraftType": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "registration": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "origin": {
+                            "type": "object",
+                            "nullable": true,
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "name": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "city": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "name",
+                              "city"
+                            ]
+                          },
+                          "destination": {
+                            "type": "object",
+                            "nullable": true,
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "name": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "city": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "name",
+                              "city"
+                            ]
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "scheduledOut": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "estimatedOut": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "actualOut": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "scheduledIn": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "estimatedIn": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "actualIn": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "faFlightId",
+                          "ident",
+                          "operator",
+                          "aircraftType",
+                          "registration",
+                          "origin",
+                          "destination",
+                          "status",
+                          "scheduledOut",
+                          "estimatedOut",
+                          "actualOut",
+                          "scheduledIn",
+                          "estimatedIn",
+                          "actualIn"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "flights"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "FlightAware is not configured yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flights/details": {
+      "get": {
+        "tags": [
+          "flights"
+        ],
+        "description": "Get full details for a specific aircraft, combining its live position with route/airline information",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "24-bit ICAO transponder address from the area search"
+            },
+            "required": true,
+            "description": "24-bit ICAO transponder address from the area search",
+            "name": "icao24",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Callsign from the area search, used to look up route/airline details"
+            },
+            "required": false,
+            "description": "Callsign from the area search, used to look up route/airline details",
+            "name": "callsign",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Combined position and route details for the aircraft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "icao24": {
+                      "type": "string"
+                    },
+                    "callsign": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "position": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "latitude": {
+                          "type": "number"
+                        },
+                        "longitude": {
+                          "type": "number"
+                        },
+                        "onGround": {
+                          "type": "boolean"
+                        },
+                        "altitudeMeters": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "velocityMetersPerSecond": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "headingDegrees": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "verticalRateMetersPerSecond": {
+                          "type": "number",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "latitude",
+                        "longitude",
+                        "onGround",
+                        "altitudeMeters",
+                        "velocityMetersPerSecond",
+                        "headingDegrees",
+                        "verticalRateMetersPerSecond"
+                      ]
+                    },
+                    "route": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "faFlightId": {
+                          "type": "string"
+                        },
+                        "operator": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Operating airline"
+                        },
+                        "aircraftType": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "registration": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "origin": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "city": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "name",
+                            "city"
+                          ]
+                        },
+                        "destination": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "city": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "name",
+                            "city"
+                          ]
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "scheduledOut": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "estimatedOut": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "actualOut": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "scheduledIn": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "estimatedIn": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "actualIn": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "faFlightId",
+                        "operator",
+                        "aircraftType",
+                        "registration",
+                        "origin",
+                        "destination",
+                        "status",
+                        "scheduledOut",
+                        "estimatedOut",
+                        "actualOut",
+                        "scheduledIn",
+                        "estimatedIn",
+                        "actualIn"
+                      ],
+                      "description": "Route/airline details, null when no match could be found"
+                    }
+                  },
+                  "required": [
+                    "icao24",
+                    "callsign",
+                    "position",
+                    "route"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

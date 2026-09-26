@@ -10,6 +10,8 @@ import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { CountryIsIpLocator } from '@core/utils/ip-locator.js';
 import { TflClientWrapper } from '@core/utils/tfl-client.js';
+import { OpenSkyClientWrapper } from '@core/utils/opensky-client.js';
+import { FlightAwareClientWrapper } from '@core/utils/flightaware-client.js';
 import { logger } from '@core/telemetry/logger.js';
 
 async function main() {
@@ -33,6 +35,8 @@ async function main() {
   const ipLocator = new CountryIsIpLocator();
   const openaiClient = new OpenAIClientWrapper();
   const tflClient = new TflClientWrapper();
+  const openSkyClient = new OpenSkyClientWrapper();
+  const flightAwareClient = new FlightAwareClientWrapper();
   const app = await createApp({
     databaseClient,
     queueClient,
@@ -42,6 +46,8 @@ async function main() {
     ipLocator,
     openaiClient,
     tflClient,
+    openSkyClient,
+    flightAwareClient,
   });
 
   const server = serve({

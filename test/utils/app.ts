@@ -44,6 +44,9 @@ export async function createTestApp(dependencies: Partial<AppDependencies>): Pro
     s3Client: dependencies.s3Client ?? createMissingDependencyProxy('s3Client'),
     openaiClient: dependencies.openaiClient ?? createMissingDependencyProxy('openaiClient'),
     tflClient: dependencies.tflClient ?? createMissingDependencyProxy('tflClient'),
+    openSkyClient: dependencies.openSkyClient ?? createMissingDependencyProxy('openSkyClient'),
+    flightAwareClient:
+      dependencies.flightAwareClient ?? createMissingDependencyProxy('flightAwareClient'),
   };
 
   return createApp(fullDependencies);
