@@ -13,6 +13,7 @@ import { OpenAIClientWrapper } from '@core/utils/openai-client.js';
 import { registerShelfieRoutes } from '@websites/shelfie/index.js';
 import { registerRoutes as registerMiseRoutes, tools as miseTools } from '@websites/mise/index.js';
 import { registerRoutes as registerTflRoutes } from '@websites/tfl/index.js';
+import { registerRoutes as registerFlightsRoutes } from '@websites/flights/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
 import { isAllowedOrigin } from '@core/auth/redirect.js';
@@ -23,6 +24,8 @@ import { Env } from 'hono/types';
 import { EmailClient } from '@core/utils/mailgun';
 import { IpLocator } from '@core/utils/ip-locator';
 import { TflClientWrapper } from '@core/utils/tfl-client.js';
+import { OpenSkyClientWrapper } from '@core/utils/opensky-client.js';
+import { FlightAwareClientWrapper } from '@core/utils/flightaware-client.js';
 
 export type App = OpenAPIHono<Env, {}, '/'>;
 
@@ -35,6 +38,8 @@ export interface AppDependencies {
   s3Client: S3ClientWrapper;
   openaiClient: OpenAIClientWrapper;
   tflClient: TflClientWrapper;
+  openSkyClient: OpenSkyClientWrapper;
+  flightAwareClient: FlightAwareClientWrapper;
 }
 
 export async function createApp(dependencies: AppDependencies) {
@@ -47,6 +52,8 @@ export async function createApp(dependencies: AppDependencies) {
     s3Client,
     openaiClient,
     tflClient,
+    openSkyClient,
+    flightAwareClient,
   } = dependencies;
   const app = new OpenAPIHono();
 
@@ -70,6 +77,8 @@ export async function createApp(dependencies: AppDependencies) {
     c.set('s3Client', s3Client);
     c.set('openaiClient', openaiClient);
     c.set('tflClient', tflClient);
+    c.set('openSkyClient', openSkyClient);
+    c.set('flightAwareClient', flightAwareClient);
     await next();
   });
 
@@ -99,6 +108,7 @@ export async function createApp(dependencies: AppDependencies) {
   registerShelfieRoutes(app);
   registerMiseRoutes(app);
   registerTflRoutes(app);
+  registerFlightsRoutes(app);
 
   // Register MCP with all tools from all websites
   const allMcpTools = [...miseTools];
@@ -140,5 +150,7 @@ declare module 'hono' {
     s3Client: S3ClientWrapper;
     openaiClient: OpenAIClientWrapper;
     tflClient: TflClientWrapper;
+    openSkyClient: OpenSkyClientWrapper;
+    flightAwareClient: FlightAwareClientWrapper;
   }
 }

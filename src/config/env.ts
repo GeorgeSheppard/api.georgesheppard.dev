@@ -25,6 +25,13 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string(),
   TFL_API_KEY: z.string(),
 
+  // OpenSky Network (OAuth2 client credentials)
+  OPENSKY_CLIENT_ID: z.string(),
+  OPENSKY_CLIENT_SECRET: z.string(),
+
+  // FlightAware AeroAPI
+  FLIGHTAWARE_API_KEY: z.string(),
+
   // JWT
   JWT_SECRET: z.string().min(32).describe('Secret for signing JWTs (min 32 chars)'),
 

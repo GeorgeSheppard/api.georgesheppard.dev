@@ -49,6 +49,13 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: 'integration:flights',
+          include: ['src/websites/flights/**/*.integration.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: 'integration:db',
           include: ['src/core/**/*.integration.test.ts', '!src/core/auth/**/*.integration.test.ts'],
           testTimeout: 60000,
