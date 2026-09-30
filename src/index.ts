@@ -58,6 +58,7 @@ async function main() {
 
   logger.info(`Server is running on http://localhost:${config.PORT}`);
   logger.info(`Swagger UI available at http://localhost:${config.PORT}/swagger`);
+  logger.info(`FlightAware configured: ${flightAwareClient.isConfigured()}`);
 
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received. Shutting down gracefully...`);
