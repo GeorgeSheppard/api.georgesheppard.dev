@@ -1,125 +1,39 @@
-# Data Migration Script
+# Account Merge Script
 
-This script migrates recipes and meal plans from one user account to another.
+Merges recipes and the meal plan from a **source** account into a **target** account, optionally deleting the source account's data afterwards.
+
+- Recipes whose title already exists on the target (case/whitespace-insensitive) are skipped, so nothing is duplicated.
+- Existing target recipes are never modified. If a copied recipe's UUID already exists on the target, it gets a new UUID.
+- Recipe images are copied in S3 from `{sourceUserId}/...` to `{targetUserId}/...`.
+- Meal plans are merged by date. Entries for skipped duplicates are pointed at the target's matching recipe (components matched by name), and a recipe already planned on a day is not added twice.
 
 ## Prerequisites
 
-- Node.js and pnpm installed
-- Environment variables configured in `.env` file:
-  - `AWS_REGION`
-  - `AWS_ACCESS_KEY_ID`
-  - `AWS_SECRET_ACCESS_KEY`
-  - `DYNAMODB_TABLE_NAME`
-  - `JWT_SECRET`
+`.env` must contain the production `DYNAMODB_*`, `S3_*` and `JWT_SECRET` values.
 
-## Obtaining MCP Tokens
+## Obtaining Tokens
 
-To get an MCP token for an account:
-
-1. Log in to the account in your application
-2. Make a POST request to `/mcp/auth/token` with a valid Cognito JWT
-3. The response will contain the MCP token
-
-Alternatively, if you already have the user's Cognito JWT, you can use the auth endpoint to exchange it for an MCP token.
+Log in to each account and exchange its Cognito JWT for an MCP token via `POST /mcp/auth/token`. The script only reads the `userId` claim from the token.
 
 ## Usage
 
-### Option 1: Using Environment Variables (Recommended)
-
-Add the MCP tokens to your `.env` file:
+Tokens can be passed as arguments or set as `SOURCE_ACCOUNT` / `TARGET_ACCOUNT` (a `Bearer ` prefix is fine).
 
 ```bash
-SOURCE_ACCOUNT="Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJzb3VyY2UtdXNlci1pZCIsImlhdCI6MTcwMDAwMDAwMH0.abc123..."
-TARGET_ACCOUNT="Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJ0YXJnZXQtdXNlci1pZCIsImlhdCI6MTcwMDAwMDAwMH0.def456..."
-```
-
-Then run:
-
-```bash
-pnpm tsx scripts/migrate-data/migrate.ts
-```
-
-### Option 2: Using Command-Line Arguments
-
-```bash
+# 1. Dry run (default): shows what would be copied/skipped, writes nothing
 pnpm tsx scripts/migrate-data/migrate.ts <source-token> <target-token>
+
+# 2. Merge
+pnpm tsx scripts/migrate-data/migrate.ts --apply <source-token> <target-token>
+
+# 3. Merge and delete the source account's recipes, images and meal plan
+pnpm tsx scripts/migrate-data/migrate.ts --apply --delete-source <source-token> <target-token>
 ```
 
-**Parameters:**
+The merge is safe to re-run: recipes copied on a previous run are detected as duplicates.
 
-- `source-token`: MCP JWT token for the source account (without "Bearer " prefix)
-- `target-token`: MCP JWT token for the target account (without "Bearer " prefix)
+`--delete-source` is refused if any image copy failed. It deletes the source account's data only, not its Cognito login; remove that from the Cognito user pool in the AWS console.
 
-**Example:**
+## Throttling
 
-```bash
-pnpm tsx scripts/migrate-data/migrate.ts \
-  "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJzb3VyY2UtdXNlci1pZCIsImlhdCI6MTcwMDAwMDAwMH0.abc123..." \
-  "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJ0YXJnZXQtdXNlci1pZCIsImlhdCI6MTcwMDAwMDAwMH0.def456..."
-```
-
-## What Gets Migrated
-
-The script migrates:
-
-1. **All recipes** - Including name, description, components, ingredients, and instructions
-2. **All recipe images** - The actual image files are copied from the source user's S3 folder to the target user's S3 folder
-3. **Meal plan** - All meal plan entries with their dates and associated recipes
-
-## Important Notes
-
-### Performance and Throttling
-
-- The script processes recipes **sequentially** (one at a time) to avoid DynamoDB throttling errors
-- There's a 200ms delay between each recipe write to DynamoDB
-- There's a 100ms delay between each S3 image copy operation
-- For large recipe collections, the migration may take several minutes
-- This throttling is necessary to stay within DynamoDB's provisioned throughput limits
-
-### Images
-
-- The script automatically copies all image files from the source user to the target user in S3
-- Image keys are updated from `{sourceUserId}/{filename}` to `{targetUserId}/{filename}`
-- If an image copy fails, the script will log an error but continue with the migration
-- The recipe will keep the original image key if the copy fails (the target user won't be able to access it)
-
-### UUIDs
-
-- Recipe UUIDs are preserved during migration
-- Component UUIDs are preserved during migration
-- This ensures that meal plan references remain valid after migration
-
-### Data Overwriting
-
-- **CAUTION**: This script will overwrite any existing recipes in the target account that have the same UUID
-- The meal plan in the target account will be completely replaced with the source account's meal plan
-
-### Dry Run
-
-If you want to test the migration without actually writing data, you can comment out the `updateRecipe` and `updateMealPlan` calls in the script and just let it fetch and display the data.
-
-## Troubleshooting
-
-### "Failed to decode token"
-
-- Ensure the tokens are valid MCP JWT tokens
-- Check that the tokens contain a `userId` field
-- Verify the tokens are not expired (though the script doesn't validate expiration)
-
-### "Failed to fetch recipes/meal plan"
-
-- Ensure your AWS credentials are correct in the `.env` file
-- Verify the DynamoDB table name is correct
-- Check that the source user actually has data to migrate
-
-### "Failed to update recipe/meal plan"
-
-- Ensure the target user exists in the system
-- Verify your AWS credentials have write permissions to DynamoDB
-- Check the DynamoDB table has the correct schema
-
-## Safety Recommendations
-
-1. **Backup**: Before running this script, consider backing up the target account's data if it has any
-2. **Test first**: Run the script with a test account first to ensure it works as expected
-3. **Verify**: After migration, manually verify that the data appears correctly in the target account
+Recipes are processed sequentially with a 1s delay between DynamoDB writes and 100ms between S3 operations, so large accounts take a few minutes.
