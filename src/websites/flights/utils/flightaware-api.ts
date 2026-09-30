@@ -88,3 +88,16 @@ export async function searchFlightsByIdent(
   );
   return (data.flights ?? []).map(toFlight);
 }
+
+interface FlightAwareRawOperator {
+  name: string | null;
+  shortname: string | null;
+}
+
+// `code` is an airline ICAO (e.g. "BAW") or IATA code; `operator` on a flight is the ICAO code.
+export async function getOperatorName(client: AxiosInstance, code: string): Promise<string | null> {
+  const { data } = await client.get<FlightAwareRawOperator>(
+    `/operators/${encodeURIComponent(code)}`
+  );
+  return data.shortname || data.name || null;
+}

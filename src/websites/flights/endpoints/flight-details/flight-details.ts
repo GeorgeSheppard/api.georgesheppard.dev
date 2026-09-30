@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { Context } from 'hono';
 import { getStateByIcao24 } from '../../utils/opensky-api.js';
 import { searchFlightsByIdent, FlightAwareFlight } from '../../utils/flightaware-api.js';
+import { airlineCodeFromCallsign, getAirlineName } from '../../utils/airline-names.js';
+import { logger } from '@core/telemetry/logger.js';
 
 export const FlightDetailsQuerySchema = z.object({
   icao24: z.string().min(1).describe('24-bit ICAO transponder address from the area search'),
@@ -36,7 +38,7 @@ const AirportSchema = z
 const RouteSchema = z
   .object({
     faFlightId: z.string(),
-    operator: z.string().nullable().describe('Operating airline'),
+    operator: z.string().nullable().describe('ICAO code of the operating airline'),
     aircraftType: z.string().nullable(),
     registration: z.string().nullable(),
     origin: AirportSchema,
@@ -51,9 +53,19 @@ const RouteSchema = z
   })
   .nullable();
 
+const AirlineSchema = z
+  .object({
+    code: z.string().describe('ICAO airline code, e.g. "BAW"'),
+    name: z.string().nullable().describe('Airline name, null when it could not be looked up'),
+  })
+  .nullable();
+
 export const FlightDetailsResponseSchema = z.object({
   icao24: z.string(),
   callsign: z.string().nullable(),
+  airline: AirlineSchema.describe(
+    'Operating airline, from the matched route or the callsign prefix; null for non-airline callsigns'
+  ),
   position: PositionSchema,
   route: RouteSchema.describe('Route/airline details, null when no match could be found'),
 });
@@ -82,15 +94,26 @@ export async function flightDetails(
 
   // Route/airline enrichment is a nice-to-have on top of the live position: while FlightAware
   // isn't configured, or there's no callsign to look up, this endpoint still returns position.
+  const flightAwareConfigured = flightAwareClient.isConfigured();
   const flights =
-    callsign && flightAwareClient.isConfigured()
-      ? await searchFlightsByIdent(flightAwareClient.getClient(), callsign)
+    callsign && flightAwareConfigured
+      ? await searchFlightsByIdent(flightAwareClient.getClient(), callsign).catch((error) => {
+          logger.warn(`FlightAware flight lookup failed for ${callsign}`, error);
+          return [];
+        })
       : [];
   const flight = pickCurrentFlight(flights);
+
+  const airlineCode = flight?.operator ?? airlineCodeFromCallsign(callsign);
+  const airlineName =
+    airlineCode && flightAwareConfigured
+      ? await getAirlineName(flightAwareClient.getClient(), airlineCode)
+      : null;
 
   return {
     icao24: input.icao24,
     callsign,
+    airline: airlineCode ? { code: airlineCode, name: airlineName } : null,
     position:
       state?.latitude != null && state?.longitude != null
         ? {
