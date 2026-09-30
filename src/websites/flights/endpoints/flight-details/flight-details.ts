@@ -29,7 +29,13 @@ const PositionSchema = z
 
 const AirportSchema = z
   .object({
-    code: z.string().nullable(),
+    code: z.string().nullable().describe('ICAO airport code, e.g. "EGLL"'),
+    iataCode: z
+      .string()
+      .nullable()
+      .describe(
+        'IATA airport code as shown to passengers, e.g. "LHR"; null for many small airfields'
+      ),
     name: z.string().nullable(),
     city: z.string().nullable(),
   })

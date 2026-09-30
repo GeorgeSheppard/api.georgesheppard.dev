@@ -3049,7 +3049,13 @@
                             "properties": {
                               "code": {
                                 "type": "string",
-                                "nullable": true
+                                "nullable": true,
+                                "description": "ICAO airport code, e.g. \"EGLL\""
+                              },
+                              "iataCode": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "IATA airport code as shown to passengers, e.g. \"LHR\"; null for many small airfields"
                               },
                               "name": {
                                 "type": "string",
@@ -3062,6 +3068,7 @@
                             },
                             "required": [
                               "code",
+                              "iataCode",
                               "name",
                               "city"
                             ]
@@ -3072,7 +3079,13 @@
                             "properties": {
                               "code": {
                                 "type": "string",
-                                "nullable": true
+                                "nullable": true,
+                                "description": "ICAO airport code, e.g. \"EGLL\""
+                              },
+                              "iataCode": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "IATA airport code as shown to passengers, e.g. \"LHR\"; null for many small airfields"
                               },
                               "name": {
                                 "type": "string",
@@ -3085,6 +3098,7 @@
                             },
                             "required": [
                               "code",
+                              "iataCode",
                               "name",
                               "city"
                             ]
@@ -3313,7 +3327,13 @@
                           "properties": {
                             "code": {
                               "type": "string",
-                              "nullable": true
+                              "nullable": true,
+                              "description": "ICAO airport code, e.g. \"EGLL\""
+                            },
+                            "iataCode": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "IATA airport code as shown to passengers, e.g. \"LHR\"; null for many small airfields"
                             },
                             "name": {
                               "type": "string",
@@ -3326,6 +3346,7 @@
                           },
                           "required": [
                             "code",
+                            "iataCode",
                             "name",
                             "city"
                           ]
@@ -3336,7 +3357,13 @@
                           "properties": {
                             "code": {
                               "type": "string",
-                              "nullable": true
+                              "nullable": true,
+                              "description": "ICAO airport code, e.g. \"EGLL\""
+                            },
+                            "iataCode": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "IATA airport code as shown to passengers, e.g. \"LHR\"; null for many small airfields"
                             },
                             "name": {
                               "type": "string",
@@ -3349,6 +3376,7 @@
                           },
                           "required": [
                             "code",
+                            "iataCode",
                             "name",
                             "city"
                           ]
