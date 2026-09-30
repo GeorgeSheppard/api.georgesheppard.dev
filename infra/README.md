@@ -9,29 +9,38 @@ Create a `.env.server` from the `.env.server.example` file (Paths should be rela
 Start the text extraction service from the `ml` root with:
 `uv run --env-file=.env.server fastapi run app/main.py`
 
-Copy the `Infra` folder and make a folder outside of the Shelfie repository (once the docker images start we will
+Copy the `Infra` folder and make a folder outside of the Shelfie repository (once the containers start we will
 have volumes so best to keep those outside the repo).
+
+### Container runtime (OrbStack)
+
+The stack runs on [OrbStack](https://orbstack.dev) rather than Docker Desktop. OrbStack ships the standard `docker` and
+`docker compose` CLIs (installed to `~/.orbstack/bin` and linked into `/usr/local/bin`), so every `docker ...` command
+in this README works unchanged.
+
+1. Install it: `brew install orbstack` (or download from orbstack.dev), then open it once to finish setup.
+2. In OrbStack's settings enable **Start at login**, so the stack comes back after a reboot.
+3. Check the `docker` CLI is pointing at OrbStack: `docker context use orbstack` then `docker info`.
 
 ### Deployment polling + secrets via Infisical
 
 There's no inbound deploy webhook and no self-hosted runner. A `launchd` job (`com.docker.compose.update`) on the
 mac mini runs every 5 minutes from the compose directory (e.g. `~/Documents/root`) and runs `deploy.sh`, which
 overwrites the local `compose.yaml` with the latest `infra/compose.yaml` from `master`, regenerates `.env` from
-Infisical, and then does `docker compose pull && docker compose up -d --remove-orphans`. `docker compose up -d`
-only recreates containers whose image or config actually changed, so this is safe to run unconditionally every
-5 minutes — no manual diffing needed. Secrets are no longer kept in a hand-edited `.env` on the box — updating a
+Infisical, makes sure OrbStack is running, and then does `docker compose pull && docker compose up -d
+--remove-orphans`. `docker compose up -d` containers whose image or config actually changed, so this is safe to run unconditionally every 5 minutes — no manual diffing needed. Secrets are no longer kept in a hand-edited `.env` on the box — updating a
 credential in Infisical takes effect on the next run, no SSH session needed.
 
 `deploy.sh` pings a [healthchecks.io](https://healthchecks.io) check at the start and end of every run (and its
 `/fail` variant if any step errors, via a `trap`). That check has a grace period longer than 5 minutes, so if this
-job stops succeeding — an expired Infisical credential, the `launchd` agent itself no longer running, Docker being
+job stops succeeding — an expired Infisical credential, the `launchd` agent itself no longer running, OrbStack being
 down, anything — healthchecks.io emails an alert instead of the outage going unnoticed. The ping URL is a plain
 constant near the top of `deploy.sh`; update it there if the check is ever recreated.
 
 One-time setup on the mac mini:
 
 1. Create a Machine Identity in Infisical (Universal Auth) scoped to read access on the production environment.
-2. Install the [Infisical CLI](https://infisical.com/docs/cli/overview) and Docker.
+2. Install the [Infisical CLI](https://infisical.com/docs/cli/overview) and OrbStack (see above).
 3. Copy `deploy.sh` into the compose directory (alongside `compose.yaml`) and make it executable:
    ```
    chmod +x ~/Documents/root/deploy.sh
@@ -56,6 +65,23 @@ mini pulls the new image, refreshes secrets from Infisical, and restarts anythin
 
 You should now be good to test.
 
+### Migrating from Docker Desktop
+
+Postgres and RabbitMQ data live in bind mounts (`./pgdata`, `./rabbitmq`) in the compose directory, not in Docker
+Desktop's VM, so nothing needs copying across — images are re-pulled by `deploy.sh`.
+
+1. Stop the stack while Docker Desktop is still running (no `-v`!):
+   ```
+   cd ~/Documents/root && docker compose down
+   ```
+2. Quit Docker Desktop and turn off its "Start Docker Desktop when you sign in" setting.
+3. Install and configure OrbStack as described in [Container runtime (OrbStack)](#container-runtime-orbstack).
+4. Replace the launchd plist with the checked in copy (its `PATH` now includes OrbStack's CLI) and reload it, as in
+   steps 5 and 6 above. `RunAtLoad` triggers a deploy straight away, bringing the stack up on OrbStack.
+5. Check everything came up with `docker compose ps` and `tail ~/docker-launchd.log`.
+6. Once happy, uninstall Docker Desktop. Optionally, `orb migrate docker` can import any leftover images/volumes
+   from Docker Desktop first, but the stack itself doesn't need it.
+
 ## Manual updates
 
 ### Update to latest images
@@ -71,9 +97,9 @@ See individual readme's for information on building.
 
 The database is persisted to a volume in `pg_data`. This means whatever you do do not delete that volume. E.g. DO NOT RUN `docker compose down -v` as this deletes volumes.
 
-The database isn't exposed outside of the docker network, so to access it you need to exec into it.
+The database isn't exposed outside of the compose network, so to access it you need to exec into it.
 
-To do this, first list the docker containers with:  
+To do this, first list the containers with:  
 `docker ps`
 
 Then exec into the postgres container with:  
