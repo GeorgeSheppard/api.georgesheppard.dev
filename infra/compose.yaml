@@ -10,6 +10,7 @@ services:
   api:
     image: georgeshep/bord:api.georgesheppard.dev
     platform: linux/amd64
+    restart: always
     ports:
       - '5240:5240'
     env_file:
@@ -29,6 +30,7 @@ services:
 
   db:
     image: postgres:17
+    restart: always
     environment:
       # POSTGRES_PASSWORD: Without this line a random password is used
       POSTGRES_USER: '${DATABASE_USER}'
