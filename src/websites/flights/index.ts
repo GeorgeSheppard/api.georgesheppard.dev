@@ -5,6 +5,8 @@ import { searchFlight } from './endpoints/search-flight/search-flight.js';
 import { searchFlightRoute } from './endpoints/search-flight/search-flight-definition.js';
 import { flightDetails } from './endpoints/flight-details/flight-details.js';
 import { flightDetailsRoute } from './endpoints/flight-details/flight-details-definition.js';
+import { aircraftPhoto } from './endpoints/aircraft-photo/aircraft-photo.js';
+import { aircraftPhotoRoute } from './endpoints/aircraft-photo/aircraft-photo-definition.js';
 
 export function registerRoutes(app: OpenAPIHono) {
   app.openapi(searchAreaRoute, async (c) => {
@@ -27,6 +29,12 @@ export function registerRoutes(app: OpenAPIHono) {
   app.openapi(flightDetailsRoute, async (c) => {
     const query = c.req.valid('query');
     const result = await flightDetails(c, query);
+    return c.json(result, 200);
+  });
+
+  app.openapi(aircraftPhotoRoute, async (c) => {
+    const query = c.req.valid('query');
+    const result = await aircraftPhoto(c, query);
     return c.json(result, 200);
   });
 }

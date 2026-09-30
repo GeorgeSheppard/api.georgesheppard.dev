@@ -2,6 +2,7 @@ import { AxiosInstance } from 'axios';
 
 export interface FlightAwareAirport {
   code: string | null;
+  iataCode: string | null;
   name: string | null;
   city: string | null;
 }
@@ -25,6 +26,7 @@ export interface FlightAwareFlight {
 
 interface FlightAwareRawAirport {
   code: string | null;
+  code_iata?: string | null;
   name: string | null;
   city: string | null;
 }
@@ -54,7 +56,12 @@ function toAirport(airport: FlightAwareRawAirport | null): FlightAwareAirport | 
   if (!airport) {
     return null;
   }
-  return { code: airport.code, name: airport.name, city: airport.city };
+  return {
+    code: airport.code,
+    iataCode: airport.code_iata ?? null,
+    name: airport.name,
+    city: airport.city,
+  };
 }
 
 function toFlight(flight: FlightAwareRawFlight): FlightAwareFlight {
