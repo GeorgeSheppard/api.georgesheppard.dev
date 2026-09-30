@@ -3431,6 +3431,95 @@
           }
         }
       }
+    },
+    "/flights/photo": {
+      "get": {
+        "tags": [
+          "flights"
+        ],
+        "description": "Get a photo of a specific aircraft from Planespotters.net, with its attribution",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "24-bit ICAO transponder address from the area search"
+            },
+            "required": true,
+            "description": "24-bit ICAO transponder address from the area search",
+            "name": "icao24",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The aircraft photo, or null when none is available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "photo": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "description": "Image URL, hosted by Planespotters.net"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "type": "number"
+                        },
+                        "photographer": {
+                          "type": "string",
+                          "description": "Must be credited wherever the photo is shown"
+                        },
+                        "link": {
+                          "type": "string",
+                          "description": "Photo page on Planespotters.net, which the photo must link to"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "width",
+                        "height",
+                        "photographer",
+                        "link"
+                      ],
+                      "description": "A photo of this exact aircraft, null when none is available"
+                    }
+                  },
+                  "required": [
+                    "photo"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

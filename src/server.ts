@@ -26,6 +26,7 @@ import { IpLocator } from '@core/utils/ip-locator';
 import { TflClientWrapper } from '@core/utils/tfl-client.js';
 import { OpenSkyClientWrapper } from '@core/utils/opensky-client.js';
 import { FlightAwareClientWrapper } from '@core/utils/flightaware-client.js';
+import { PlanespottersClientWrapper } from '@core/utils/planespotters-client.js';
 
 export type App = OpenAPIHono<Env, {}, '/'>;
 
@@ -40,6 +41,7 @@ export interface AppDependencies {
   tflClient: TflClientWrapper;
   openSkyClient: OpenSkyClientWrapper;
   flightAwareClient: FlightAwareClientWrapper;
+  planespottersClient: PlanespottersClientWrapper;
 }
 
 export async function createApp(dependencies: AppDependencies) {
@@ -54,6 +56,7 @@ export async function createApp(dependencies: AppDependencies) {
     tflClient,
     openSkyClient,
     flightAwareClient,
+    planespottersClient,
   } = dependencies;
   const app = new OpenAPIHono();
 
@@ -79,6 +82,7 @@ export async function createApp(dependencies: AppDependencies) {
     c.set('tflClient', tflClient);
     c.set('openSkyClient', openSkyClient);
     c.set('flightAwareClient', flightAwareClient);
+    c.set('planespottersClient', planespottersClient);
     await next();
   });
 
@@ -152,5 +156,6 @@ declare module 'hono' {
     tflClient: TflClientWrapper;
     openSkyClient: OpenSkyClientWrapper;
     flightAwareClient: FlightAwareClientWrapper;
+    planespottersClient: PlanespottersClientWrapper;
   }
 }
