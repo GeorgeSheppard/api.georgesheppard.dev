@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Run by com.docker.compose.update launchd job every 5 minutes from the compose directory
+# Installed by install.sh and run by its com.docker.compose.update launchd job every 5 minutes from the compose directory
 # on the mac mini (e.g. ~/Documents/root). Refreshes compose.yaml from the repo, regenerates
 # .env from Infisical (Machine Identity / Universal Auth, no login needed), then pulls and
 # (re)starts the stack. `docker compose up -d` only recreates containers whose config actually
@@ -42,7 +42,7 @@ log "Starting deploy"
 ping_healthcheck "$HEALTHCHECK_URL/start"
 
 log "Refreshing compose.yaml from master"
-curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o ~/Documents/root/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o compose.yaml
 
 log "Authenticating with Infisical"
 INFISICAL_TOKEN="$(infisical login --method=universal-auth \
