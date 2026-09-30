@@ -28,8 +28,9 @@ There's no inbound deploy webhook and no self-hosted runner. A `launchd` job (`c
 mac mini runs every 5 minutes from the compose directory (e.g. `~/Documents/root`) and runs `deploy.sh`, which
 overwrites the local `compose.yaml` with the latest `infra/compose.yaml` from `master`, regenerates `.env` from
 Infisical, makes sure OrbStack is running, and then does `docker compose pull && docker compose up -d
---remove-orphans`. `docker compose up -d` containers whose image or config actually changed, so this is safe to run unconditionally every 5 minutes — no manual diffing needed. Secrets are no longer kept in a hand-edited `.env` on the box — updating a
-credential in Infisical takes effect on the next run, no SSH session needed.
+--remove-orphans`. `docker compose up -d` only recreates containers whose image or config actually changed, so this
+is safe to run unconditionally every 5 minutes — no manual diffing needed. Secrets are no longer kept in a
+hand-edited `.env` on the box — updating a credential in Infisical takes effect on the next run, no SSH session needed.
 
 `deploy.sh` pings a [healthchecks.io](https://healthchecks.io) check at the start and end of every run (and its
 `/fail` variant if any step errors, via a `trap`). That check has a grace period longer than 5 minutes, so if this

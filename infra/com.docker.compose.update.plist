@@ -13,7 +13,7 @@
         <string>-c</string>
         <string>
             export PATH="$HOME/.orbstack/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin";
-            source ~/.config/infisical/mac-mini.env &&
+            source ~/.config/infisical/mac-mini.env &amp;&amp;
             ~/Documents/root/deploy.sh
         </string>
     </array>
