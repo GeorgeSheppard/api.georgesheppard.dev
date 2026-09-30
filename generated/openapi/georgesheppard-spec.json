@@ -3227,6 +3227,26 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "airline": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "ICAO airline code, e.g. \"BAW\""
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Airline name, null when it could not be looked up"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "name"
+                      ],
+                      "description": "Operating airline, from the matched route or the callsign prefix; null for non-airline callsigns"
+                    },
                     "position": {
                       "type": "object",
                       "nullable": true,
@@ -3277,7 +3297,7 @@
                         "operator": {
                           "type": "string",
                           "nullable": true,
-                          "description": "Operating airline"
+                          "description": "ICAO code of the operating airline"
                         },
                         "aircraftType": {
                           "type": "string",
@@ -3382,6 +3402,7 @@
                   "required": [
                     "icao24",
                     "callsign",
+                    "airline",
                     "position",
                     "route"
                   ]

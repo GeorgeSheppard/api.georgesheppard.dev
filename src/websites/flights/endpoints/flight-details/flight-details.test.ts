@@ -7,9 +7,14 @@ import type { FlightAwareFlight } from '../../utils/flightaware-api.js';
 
 vi.mock('../../utils/opensky-api.js');
 vi.mock('../../utils/flightaware-api.js');
+vi.mock('../../utils/airline-names.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../utils/airline-names.js')>()),
+  getAirlineName: vi.fn(),
+}));
 
 import { getStateByIcao24 } from '../../utils/opensky-api.js';
 import { searchFlightsByIdent } from '../../utils/flightaware-api.js';
+import { getAirlineName } from '../../utils/airline-names.js';
 
 function mockContext({ configured = true }: { configured?: boolean } = {}) {
   return createMockContext<Context>({
@@ -35,7 +40,7 @@ const state: OpenSkyState = {
 const inProgressFlight: FlightAwareFlight = {
   faFlightId: 'BAW123-1700000000-airline-0001',
   ident: 'BAW123',
-  operator: 'British Airways',
+  operator: 'BAW',
   aircraftType: 'A320',
   registration: 'G-EUUA',
   origin: { code: 'EGLL', name: 'London Heathrow', city: 'London' },
@@ -59,6 +64,7 @@ const landedFlight: FlightAwareFlight = {
 describe('flightDetails handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getAirlineName).mockResolvedValue('British Airways');
   });
 
   it('should merge live position with the in-progress flight route', async () => {
@@ -70,6 +76,7 @@ describe('flightDetails handler', () => {
     expect(result).toEqual({
       icao24: '4ca7b3',
       callsign: 'BAW123',
+      airline: { code: 'BAW', name: 'British Airways' },
       position: {
         latitude: 51.5,
         longitude: 0.1,
@@ -81,7 +88,7 @@ describe('flightDetails handler', () => {
       },
       route: {
         faFlightId: 'BAW123-1700000000-airline-0001',
-        operator: 'British Airways',
+        operator: 'BAW',
         aircraftType: 'A320',
         registration: 'G-EUUA',
         origin: { code: 'EGLL', name: 'London Heathrow', city: 'London' },
@@ -150,5 +157,56 @@ describe('flightDetails handler', () => {
     expect(searchFlightsByIdent).not.toHaveBeenCalled();
     expect(result.position).not.toBeNull();
     expect(result.route).toBeNull();
+  });
+
+  it('should use the matched flight operator as the airline code', async () => {
+    vi.mocked(getStateByIcao24).mockResolvedValue(state);
+    vi.mocked(searchFlightsByIdent).mockResolvedValue([{ ...inProgressFlight, operator: 'SHT' }]);
+
+    const result = await flightDetails(mockContext(), { icao24: '4ca7b3' });
+
+    expect(getAirlineName).toHaveBeenCalledWith(expect.anything(), 'SHT');
+    expect(result.airline?.code).toBe('SHT');
+  });
+
+  it('should derive the airline from the callsign when no flight is matched', async () => {
+    vi.mocked(getStateByIcao24).mockResolvedValue(state);
+    vi.mocked(searchFlightsByIdent).mockResolvedValue([]);
+
+    const result = await flightDetails(mockContext(), { icao24: '4ca7b3' });
+
+    expect(result.airline).toEqual({ code: 'BAW', name: 'British Airways' });
+  });
+
+  it('should still return the position and airline when the FlightAware flight lookup fails', async () => {
+    vi.mocked(getStateByIcao24).mockResolvedValue(state);
+    vi.mocked(searchFlightsByIdent).mockRejectedValue(
+      new Error('Request failed with status code 400')
+    );
+
+    const result = await flightDetails(mockContext(), { icao24: '4ca7b3' });
+
+    expect(result.position).not.toBeNull();
+    expect(result.route).toBeNull();
+    expect(result.airline).toEqual({ code: 'BAW', name: 'British Airways' });
+  });
+
+  it('should return the airline code without a name when FlightAware is not configured', async () => {
+    vi.mocked(getStateByIcao24).mockResolvedValue(state);
+
+    const result = await flightDetails(mockContext({ configured: false }), { icao24: '4ca7b3' });
+
+    expect(getAirlineName).not.toHaveBeenCalled();
+    expect(result.airline).toEqual({ code: 'BAW', name: null });
+  });
+
+  it('should return a null airline for non-airline callsigns', async () => {
+    vi.mocked(getStateByIcao24).mockResolvedValue({ ...state, callsign: 'GABCD' });
+    vi.mocked(searchFlightsByIdent).mockResolvedValue([]);
+
+    const result = await flightDetails(mockContext(), { icao24: '4ca7b3' });
+
+    expect(getAirlineName).not.toHaveBeenCalled();
+    expect(result.airline).toBeNull();
   });
 });
