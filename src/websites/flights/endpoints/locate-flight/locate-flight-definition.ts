@@ -1,13 +1,14 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { LocateFlightQuerySchema, LocateFlightResponseSchema } from './locate-flight.js';
+import { NotImplementedResponseSchema } from '../search-flight/search-flight.js';
 
 export const locateFlightRoute = createRoute({
   method: 'get',
   path: '/flights/locate',
   tags: ['flights'],
   description:
-    'Find the live aircraft flying a callsign, e.g. to show a flight search result on the map',
+    'Find the live aircraft operating a searched flight. Before departure this is the aircraft flying in to operate it, if FlightAware knows which one that is',
   request: {
     query: LocateFlightQuerySchema,
   },
@@ -18,7 +19,7 @@ export const locateFlightRoute = createRoute({
           schema: LocateFlightResponseSchema,
         },
       },
-      description: 'The aircraft flying this callsign, or null when it is not being tracked',
+      description: 'The aircraft operating this flight, or null when it cannot be found',
     },
     500: {
       content: {
@@ -29,6 +30,14 @@ export const locateFlightRoute = createRoute({
         },
       },
       description: 'Internal server error',
+    },
+    501: {
+      content: {
+        'application/json': {
+          schema: NotImplementedResponseSchema,
+        },
+      },
+      description: 'FlightAware is not configured yet',
     },
   },
 });

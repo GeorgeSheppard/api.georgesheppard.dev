@@ -3554,23 +3554,23 @@
         "tags": [
           "flights"
         ],
-        "description": "Find the live aircraft flying a callsign, e.g. to show a flight search result on the map",
+        "description": "Find the live aircraft operating a searched flight. Before departure this is the aircraft flying in to operate it, if FlightAware knows which one that is",
         "parameters": [
           {
             "schema": {
               "type": "string",
               "minLength": 1,
-              "description": "Callsign as broadcast by the aircraft, e.g. \"BAW123\" (a flight search result ident)"
+              "description": "Flight identifier from a flight search result"
             },
             "required": true,
-            "description": "Callsign as broadcast by the aircraft, e.g. \"BAW123\" (a flight search result ident)",
-            "name": "callsign",
+            "description": "Flight identifier from a flight search result",
+            "name": "faFlightId",
             "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "The aircraft flying this callsign, or null when it is not being tracked",
+            "description": "The aircraft operating this flight, or null when it cannot be found",
             "content": {
               "application/json": {
                 "schema": {
@@ -3628,11 +3628,142 @@
                         "headingDegrees",
                         "verticalRateMetersPerSecond"
                       ],
-                      "description": "The aircraft currently broadcasting this callsign, null when it is not being tracked"
+                      "description": "The aircraft operating this flight, null when it is not being tracked or not yet known"
+                    },
+                    "inboundFlight": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "faFlightId": {
+                          "type": "string",
+                          "description": "Opaque identifier to pass to the flight details endpoint"
+                        },
+                        "ident": {
+                          "type": "string"
+                        },
+                        "operator": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Operating airline"
+                        },
+                        "aircraftType": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "registration": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "origin": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "ICAO airport code, e.g. \"EGLL\""
+                            },
+                            "iataCode": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "IATA airport code as shown to passengers, e.g. \"LHR\"; null for many small airfields"
+                            },
+                            "name": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "city": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "iataCode",
+                            "name",
+                            "city"
+                          ]
+                        },
+                        "destination": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "ICAO airport code, e.g. \"EGLL\""
+                            },
+                            "iataCode": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "IATA airport code as shown to passengers, e.g. \"LHR\"; null for many small airfields"
+                            },
+                            "name": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "city": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "iataCode",
+                            "name",
+                            "city"
+                          ]
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "scheduledOut": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "estimatedOut": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "actualOut": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "scheduledIn": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "estimatedIn": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "actualIn": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "faFlightId",
+                        "ident",
+                        "operator",
+                        "aircraftType",
+                        "registration",
+                        "origin",
+                        "destination",
+                        "status",
+                        "scheduledOut",
+                        "estimatedOut",
+                        "actualOut",
+                        "scheduledIn",
+                        "estimatedIn",
+                        "actualIn"
+                      ],
+                      "description": "Set when the flight has not departed yet and its aircraft was found flying in to operate it"
                     }
                   },
                   "required": [
-                    "aircraft"
+                    "aircraft",
+                    "inboundFlight"
                   ]
                 }
               }
@@ -3648,6 +3779,24 @@
                     "error": {
                       "type": "string",
                       "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "FlightAware is not configured yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
                     }
                   },
                   "required": [

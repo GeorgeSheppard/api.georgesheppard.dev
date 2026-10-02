@@ -43,6 +43,11 @@ export function registerRoutes(app: OpenAPIHono) {
   app.openapi(locateFlightRoute, async (c) => {
     const query = c.req.valid('query');
     const result = await locateFlight(c, query);
-    return c.json(result, 200);
+    switch (result.status) {
+      case 200:
+        return c.json(result.body, 200);
+      case 501:
+        return c.json(result.body, 501);
+    }
   });
 }
