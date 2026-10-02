@@ -3548,6 +3548,117 @@
           }
         }
       }
+    },
+    "/flights/locate": {
+      "get": {
+        "tags": [
+          "flights"
+        ],
+        "description": "Find the live aircraft flying a callsign, e.g. to show a flight search result on the map",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Callsign as broadcast by the aircraft, e.g. \"BAW123\" (a flight search result ident)"
+            },
+            "required": true,
+            "description": "Callsign as broadcast by the aircraft, e.g. \"BAW123\" (a flight search result ident)",
+            "name": "callsign",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The aircraft flying this callsign, or null when it is not being tracked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "aircraft": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "icao24": {
+                          "type": "string",
+                          "description": "24-bit ICAO transponder address, e.g. \"4ca7b3\""
+                        },
+                        "callsign": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Callsign currently broadcast by the aircraft"
+                        },
+                        "latitude": {
+                          "type": "number"
+                        },
+                        "longitude": {
+                          "type": "number"
+                        },
+                        "onGround": {
+                          "type": "boolean"
+                        },
+                        "altitudeMeters": {
+                          "type": "number",
+                          "nullable": true,
+                          "description": "Barometric altitude in meters"
+                        },
+                        "velocityMetersPerSecond": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "headingDegrees": {
+                          "type": "number",
+                          "nullable": true,
+                          "description": "True track in degrees, 0 is north"
+                        },
+                        "verticalRateMetersPerSecond": {
+                          "type": "number",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "icao24",
+                        "callsign",
+                        "latitude",
+                        "longitude",
+                        "onGround",
+                        "altitudeMeters",
+                        "velocityMetersPerSecond",
+                        "headingDegrees",
+                        "verticalRateMetersPerSecond"
+                      ],
+                      "description": "The aircraft currently broadcasting this callsign, null when it is not being tracked"
+                    }
+                  },
+                  "required": [
+                    "aircraft"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

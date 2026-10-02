@@ -89,3 +89,10 @@ export async function getStateByIcao24(
   const [state] = data.states ?? [];
   return state ? toOpenSkyState(state) : null;
 }
+
+// OpenSky can't filter by callsign, so this fetches every tracked aircraft worldwide. That costs
+// several times the API credits of an area query, so only use it for one-off lookups.
+export async function getAllStates(client: AxiosInstance): Promise<OpenSkyState[]> {
+  const { data } = await client.get<OpenSkyStatesResponse>('/states/all');
+  return (data.states ?? []).map(toOpenSkyState);
+}
