@@ -34,6 +34,8 @@ interface FlightAwareRawAirport {
 interface FlightAwareRawFlight {
   fa_flight_id: string;
   ident: string;
+  atc_ident?: string | null;
+  inbound_fa_flight_id?: string | null;
   operator: string | null;
   aircraft_type: string | null;
   registration: string | null;
@@ -94,6 +96,69 @@ export async function searchFlightsByIdent(
     `/flights/${encodeURIComponent(ident)}`
   );
   return (data.flights ?? []).map(toFlight);
+}
+
+export interface FlightAwareFlightWithLinks {
+  flight: FlightAwareFlight;
+  // The callsign broadcast by the aircraft, when the airline uses one other than the flight number.
+  atcIdent: string | null;
+  // The aircraft's previous flight, i.e. the one bringing it here to operate this one.
+  inboundFaFlightId: string | null;
+}
+
+export async function getFlightById(
+  client: AxiosInstance,
+  faFlightId: string
+): Promise<FlightAwareFlightWithLinks | null> {
+  const { data } = await client.get<FlightAwareFlightsResponse>(
+    `/flights/${encodeURIComponent(faFlightId)}`
+  );
+  const [flight] = data.flights ?? [];
+  return flight
+    ? {
+        flight: toFlight(flight),
+        atcIdent: flight.atc_ident ?? null,
+        inboundFaFlightId: flight.inbound_fa_flight_id ?? null,
+      }
+    : null;
+}
+
+export interface FlightAwarePosition {
+  latitude: number;
+  longitude: number;
+  headingDegrees: number | null;
+  timestamp: string;
+}
+
+interface FlightAwareRawPosition {
+  latitude: number;
+  longitude: number;
+  heading: number | null;
+  timestamp: string;
+}
+
+interface FlightAwareFlightPositionResponse {
+  last_position?: FlightAwareRawPosition | null;
+}
+
+// The last position FlightAware received for a flight, which outlives the aircraft's transponder
+// going quiet (e.g. once it's parked at the gate).
+export async function getLastPosition(
+  client: AxiosInstance,
+  faFlightId: string
+): Promise<FlightAwarePosition | null> {
+  const { data } = await client.get<FlightAwareFlightPositionResponse>(
+    `/flights/${encodeURIComponent(faFlightId)}/position`
+  );
+  const position = data.last_position;
+  return position
+    ? {
+        latitude: position.latitude,
+        longitude: position.longitude,
+        headingDegrees: position.heading ?? null,
+        timestamp: position.timestamp,
+      }
+    : null;
 }
 
 interface FlightAwareRawOperator {

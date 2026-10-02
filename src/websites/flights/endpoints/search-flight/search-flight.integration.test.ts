@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTestApp } from '@test/utils/app.js';
 import { createMockFlightAwareClient } from '@test/mocks/flightaware-client.js';
+import { RateLimitedError } from '@core/utils/rate-limited-error.js';
 
 describe('GET /flights/search', () => {
   it('returns flights matching the given flight number', async () => {
@@ -60,6 +61,20 @@ describe('GET /flights/search', () => {
           actualIn: null,
         },
       ],
+    });
+  });
+
+  it('returns 429 with a retry time when the FlightAware rate limit is reached', async () => {
+    const { flightAwareClient, get } = createMockFlightAwareClient();
+    get.mockRejectedValue(new RateLimitedError('FlightAware rate limit reached', 42));
+    const app = await createTestApp({ flightAwareClient });
+
+    const response = await app.request('http://localhost/flights/search?flightNumber=BA123');
+
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({
+      error: 'FlightAware rate limit reached',
+      retryAfterSeconds: 42,
     });
   });
 
