@@ -1,5 +1,6 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
+import { RateLimitedResponseSchema } from '@core/utils/rate-limited-error.js';
 import { FlightDetailsQuerySchema, FlightDetailsResponseSchema } from './flight-details.js';
 
 export const flightDetailsRoute = createRoute({
@@ -29,6 +30,14 @@ export const flightDetailsRoute = createRoute({
         },
       },
       description: 'Internal server error',
+    },
+    429: {
+      content: {
+        'application/json': {
+          schema: RateLimitedResponseSchema,
+        },
+      },
+      description: 'An upstream provider rate limit was reached; retry after retryAfterSeconds',
     },
   },
 });

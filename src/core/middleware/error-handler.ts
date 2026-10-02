@@ -1,6 +1,7 @@
 import { ErrorHandler } from 'hono';
 import z, { ZodError } from 'zod';
 import { logger } from '@core/telemetry/logger.js';
+import { RateLimitedError } from '@core/utils/rate-limited-error.js';
 
 export const errorHandler: ErrorHandler = (error, c) => {
   logger.error('Error occurred:', {
@@ -19,6 +20,11 @@ export const errorHandler: ErrorHandler = (error, c) => {
       },
       400
     );
+  }
+
+  if (error instanceof RateLimitedError) {
+    c.header('Retry-After', String(error.retryAfterSeconds));
+    return c.json({ error: error.message, retryAfterSeconds: error.retryAfterSeconds }, 429);
   }
 
   // Handle errors with statusCode property (includes Hono validation errors)

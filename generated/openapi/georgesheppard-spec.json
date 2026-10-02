@@ -2969,6 +2969,29 @@
               }
             }
           },
+          "429": {
+            "description": "An upstream provider rate limit was reached; retry after retryAfterSeconds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "type": "number",
+                      "description": "How long to wait before trying again"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "retryAfterSeconds"
+                  ]
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -3152,6 +3175,29 @@
                   },
                   "required": [
                     "flights"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "An upstream provider rate limit was reached; retry after retryAfterSeconds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "type": "number",
+                      "description": "How long to wait before trying again"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "retryAfterSeconds"
                   ]
                 }
               }
@@ -3433,6 +3479,29 @@
                     "airline",
                     "position",
                     "route"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "An upstream provider rate limit was reached; retry after retryAfterSeconds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "type": "number",
+                      "description": "How long to wait before trying again"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "retryAfterSeconds"
                   ]
                 }
               }
@@ -3758,12 +3827,71 @@
                         "estimatedIn",
                         "actualIn"
                       ],
-                      "description": "Set when the flight has not departed yet and its aircraft was found flying in to operate it"
+                      "description": "The aircraft's previous flight, when the flight hasn't departed and that's where it was looked for"
+                    },
+                    "lastKnownPosition": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "latitude": {
+                          "type": "number"
+                        },
+                        "longitude": {
+                          "type": "number"
+                        },
+                        "headingDegrees": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "seenAt": {
+                          "type": "string",
+                          "description": "When FlightAware last received a position"
+                        }
+                      },
+                      "required": [
+                        "latitude",
+                        "longitude",
+                        "headingDegrees",
+                        "seenAt"
+                      ],
+                      "description": "Where FlightAware last saw the aircraft, when it is not live (e.g. its transponder is off)"
+                    },
+                    "watchCallsigns": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Callsigns the aircraft may broadcast once its transponder is back on; empty when found"
                     }
                   },
                   "required": [
                     "aircraft",
-                    "inboundFlight"
+                    "inboundFlight",
+                    "lastKnownPosition",
+                    "watchCallsigns"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "An upstream provider rate limit was reached; retry after retryAfterSeconds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "type": "number",
+                      "description": "How long to wait before trying again"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "retryAfterSeconds"
                   ]
                 }
               }

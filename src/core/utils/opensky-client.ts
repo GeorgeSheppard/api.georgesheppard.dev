@@ -1,5 +1,6 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { config } from '@config/index.js';
+import { RateLimitedError } from './rate-limited-error.js';
 
 const OPENSKY_BASE_URL = 'https://opensky-network.org/api';
 const OPENSKY_TOKEN_URL =
@@ -26,6 +27,15 @@ export class OpenSkyClientWrapper {
       const token = await this.getAccessToken();
       requestConfig.headers.set('Authorization', `Bearer ${token}`);
       return requestConfig;
+    });
+
+    // Out of daily credits: OpenSky says how long until they're topped up.
+    this.client.interceptors.response.use(undefined, (error) => {
+      if (isAxiosError(error) && error.response?.status === 429) {
+        const retryAfter = Number(error.response.headers['x-rate-limit-retry-after-seconds']);
+        throw new RateLimitedError('OpenSky rate limit reached', retryAfter || 60);
+      }
+      throw error;
     });
   }
 

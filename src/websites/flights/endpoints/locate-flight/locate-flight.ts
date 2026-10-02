@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { Context } from 'hono';
 import { getAllStates, OpenSkyState } from '../../utils/opensky-api.js';
-import { FlightAwareFlightWithLinks, getFlightById } from '../../utils/flightaware-api.js';
+import {
+  FlightAwareFlightWithLinks,
+  getFlightById,
+  getLastPosition,
+} from '../../utils/flightaware-api.js';
+import { logger } from '@core/telemetry/logger.js';
 import { AircraftSchema } from '../search-area/search-area.js';
 import {
   FlightResultSchema,
@@ -19,8 +24,24 @@ export const LocateFlightResponseSchema = z.object({
     'The aircraft operating this flight, null when it is not being tracked or not yet known'
   ),
   inboundFlight: FlightResultSchema.nullable().describe(
-    'Set when the flight has not departed yet and its aircraft was found flying in to operate it'
+    "The aircraft's previous flight, when the flight hasn't departed and that's where it was looked for"
   ),
+  lastKnownPosition: z
+    .object({
+      latitude: z.number(),
+      longitude: z.number(),
+      headingDegrees: z.number().nullable(),
+      seenAt: z.string().describe('When FlightAware last received a position'),
+    })
+    .nullable()
+    .describe(
+      'Where FlightAware last saw the aircraft, when it is not live (e.g. its transponder is off)'
+    ),
+  watchCallsigns: z
+    .array(z.string())
+    .describe(
+      'Callsigns the aircraft may broadcast once its transponder is back on; empty when found'
+    ),
 });
 
 export type LocateFlightResponse = z.infer<typeof LocateFlightResponseSchema>;
@@ -62,7 +83,10 @@ const toAircraft = (state: PositionedState) => ({
   verticalRateMetersPerSecond: state.verticalRateMetersPerSecond,
 });
 
-const notFound: LocateFlightResult = { status: 200, body: { aircraft: null, inboundFlight: null } };
+const notFound: LocateFlightResult = {
+  status: 200,
+  body: { aircraft: null, inboundFlight: null, lastKnownPosition: null, watchCallsigns: [] },
+};
 
 export async function locateFlight(
   c: Context,
@@ -94,15 +118,43 @@ export async function locateFlight(
     return notFound;
   }
 
-  const states = await getAllStates(c.get('openSkyClient').getClient());
   const leg = inbound ?? target;
+  const inboundFlight = inbound ? inbound.flight : null;
+  const states = await getAllStates(c.get('openSkyClient').getClient());
   const state = findByCallsign(states, callsignOf(leg));
-  if (!state) {
-    return notFound;
+  if (state) {
+    return {
+      status: 200,
+      body: {
+        aircraft: toAircraft(state),
+        inboundFlight,
+        lastKnownPosition: null,
+        watchCallsigns: [],
+      },
+    };
   }
+
+  // Not live, e.g. parked with its transponder off, so fall back to where FlightAware last saw
+  // it. A missing position just means the client has nowhere to point at.
+  const position = await getLastPosition(client, leg.flight.faFlightId).catch((error) => {
+    logger.warn(`FlightAware position lookup failed for ${leg.flight.faFlightId}`, error);
+    return null;
+  });
 
   return {
     status: 200,
-    body: { aircraft: toAircraft(state), inboundFlight: inbound ? inbound.flight : null },
+    body: {
+      aircraft: null,
+      inboundFlight,
+      lastKnownPosition: position && {
+        latitude: position.latitude,
+        longitude: position.longitude,
+        headingDegrees: position.headingDegrees,
+        seenAt: position.timestamp,
+      },
+      // When it wakes up it'll broadcast either the leg it was last on or, once it's being
+      // readied for it, the flight that was searched for.
+      watchCallsigns: [...new Set([callsignOf(leg), callsignOf(target)])],
+    },
   };
 }

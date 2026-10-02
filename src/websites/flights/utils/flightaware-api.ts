@@ -123,6 +123,44 @@ export async function getFlightById(
     : null;
 }
 
+export interface FlightAwarePosition {
+  latitude: number;
+  longitude: number;
+  headingDegrees: number | null;
+  timestamp: string;
+}
+
+interface FlightAwareRawPosition {
+  latitude: number;
+  longitude: number;
+  heading: number | null;
+  timestamp: string;
+}
+
+interface FlightAwareFlightPositionResponse {
+  last_position?: FlightAwareRawPosition | null;
+}
+
+// The last position FlightAware received for a flight, which outlives the aircraft's transponder
+// going quiet (e.g. once it's parked at the gate).
+export async function getLastPosition(
+  client: AxiosInstance,
+  faFlightId: string
+): Promise<FlightAwarePosition | null> {
+  const { data } = await client.get<FlightAwareFlightPositionResponse>(
+    `/flights/${encodeURIComponent(faFlightId)}/position`
+  );
+  const position = data.last_position;
+  return position
+    ? {
+        latitude: position.latitude,
+        longitude: position.longitude,
+        headingDegrees: position.heading ?? null,
+        timestamp: position.timestamp,
+      }
+    : null;
+}
+
 interface FlightAwareRawOperator {
   name: string | null;
   shortname: string | null;

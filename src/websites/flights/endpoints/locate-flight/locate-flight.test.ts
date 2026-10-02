@@ -9,7 +9,7 @@ vi.mock('../../utils/opensky-api.js');
 vi.mock('../../utils/flightaware-api.js');
 
 import { getAllStates } from '../../utils/opensky-api.js';
-import { getFlightById } from '../../utils/flightaware-api.js';
+import { getFlightById, getLastPosition } from '../../utils/flightaware-api.js';
 
 function mockContext({ configured = true }: { configured?: boolean } = {}) {
   return createMockContext<Context>({
@@ -66,6 +66,20 @@ const state = (icao24: string, callsign: string, onGround = false): OpenSkyState
   geoAltitudeMeters: 10100,
 });
 
+const notFound = {
+  aircraft: null,
+  inboundFlight: null,
+  lastKnownPosition: null,
+  watchCallsigns: [],
+};
+
+const found = (icao24: string, callsign: string, inbound: FlightAwareFlight | null = null) => ({
+  aircraft: aircraft(icao24, callsign),
+  inboundFlight: inbound,
+  lastKnownPosition: null,
+  watchCallsigns: [],
+});
+
 const aircraft = (icao24: string, callsign: string) => ({
   icao24,
   callsign,
@@ -95,10 +109,7 @@ describe('locateFlight handler', () => {
 
     const result = await locateFlight(mockContext(), { faFlightId: baseFlight.faFlightId });
 
-    expect(result).toEqual({
-      status: 200,
-      body: { aircraft: aircraft('39e68b', 'AFR1681'), inboundFlight: null },
-    });
+    expect(result).toEqual({ status: 200, body: found('39e68b', 'AFR1681') });
   });
 
   it('should match the ATC callsign when it differs from the flight number', async () => {
@@ -109,7 +120,7 @@ describe('locateFlight handler', () => {
 
     const result = await locateFlight(mockContext(), { faFlightId: baseFlight.faFlightId });
 
-    expect(result.body).toEqual({ aircraft: aircraft('39e68b', 'AFR22KP'), inboundFlight: null });
+    expect(result.body).toEqual(found('39e68b', 'AFR22KP'));
   });
 
   it('should prefer an airborne aircraft over one on the ground', async () => {
@@ -136,10 +147,7 @@ describe('locateFlight handler', () => {
 
     const result = await locateFlight(mockContext(), { faFlightId: baseFlight.faFlightId });
 
-    expect(result).toEqual({
-      status: 200,
-      body: { aircraft: aircraft('39e68b', 'AFR1680'), inboundFlight },
-    });
+    expect(result).toEqual({ status: 200, body: found('39e68b', 'AFR1680', inboundFlight) });
   });
 
   it('should not match its own callsign before departure, since that may be an earlier flight', async () => {
@@ -148,20 +156,47 @@ describe('locateFlight handler', () => {
 
     const result = await locateFlight(mockContext(), { faFlightId: baseFlight.faFlightId });
 
-    expect(result.body).toEqual({ aircraft: null, inboundFlight: null });
+    expect(result.body).toEqual(notFound);
     expect(getAllStates).not.toHaveBeenCalled();
   });
 
-  it('should return no aircraft when the inbound aircraft is not being tracked', async () => {
+  it('should return where the inbound aircraft was last seen when it is not live', async () => {
     mockFlights(
       withLinks(baseFlight, { inboundFaFlightId: inboundFlight.faFlightId }),
-      withLinks(inboundFlight)
+      withLinks({ ...inboundFlight, actualIn: '2026-10-02T06:46:00Z' })
     );
     vi.mocked(getAllStates).mockResolvedValue([state('400abc', 'EZY45')]);
+    vi.mocked(getLastPosition).mockResolvedValue({
+      latitude: 51.47,
+      longitude: -0.45,
+      headingDegrees: 270,
+      timestamp: '2026-10-02T06:50:00Z',
+    });
 
     const result = await locateFlight(mockContext(), { faFlightId: baseFlight.faFlightId });
 
-    expect(result.body).toEqual({ aircraft: null, inboundFlight: null });
+    expect(getLastPosition).toHaveBeenCalledWith(expect.anything(), inboundFlight.faFlightId);
+    expect(result.body).toEqual({
+      aircraft: null,
+      inboundFlight: { ...inboundFlight, actualIn: '2026-10-02T06:46:00Z' },
+      lastKnownPosition: {
+        latitude: 51.47,
+        longitude: -0.45,
+        headingDegrees: 270,
+        seenAt: '2026-10-02T06:50:00Z',
+      },
+      watchCallsigns: ['AFR1680', 'AFR1681'],
+    });
+  });
+
+  it('should still say what to watch for when the last position cannot be looked up', async () => {
+    mockFlights(withLinks({ ...baseFlight, actualOut: '2026-10-02T07:58:00Z' }));
+    vi.mocked(getAllStates).mockResolvedValue([]);
+    vi.mocked(getLastPosition).mockRejectedValue(new Error('timeout'));
+
+    const result = await locateFlight(mockContext(), { faFlightId: baseFlight.faFlightId });
+
+    expect(result.body).toEqual({ ...notFound, watchCallsigns: ['AFR1681'] });
   });
 
   it('should return no aircraft when the flight is unknown', async () => {
@@ -169,7 +204,7 @@ describe('locateFlight handler', () => {
 
     const result = await locateFlight(mockContext(), { faFlightId: 'unknown' });
 
-    expect(result.body).toEqual({ aircraft: null, inboundFlight: null });
+    expect(result.body).toEqual(notFound);
   });
 
   it('should return 501 when FlightAware is not configured', async () => {
