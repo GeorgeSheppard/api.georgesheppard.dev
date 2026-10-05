@@ -266,6 +266,28 @@
           "componentId",
           "servings"
         ]
+      },
+      "AdminMiseUserSummary": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Cognito user ID (sub)"
+          },
+          "recipeCount": {
+            "type": "number",
+            "description": "Number of recipes owned by the user"
+          },
+          "hasMealPlan": {
+            "type": "boolean",
+            "description": "Whether the user has a saved meal plan"
+          }
+        },
+        "required": [
+          "userId",
+          "recipeCount",
+          "hasMealPlan"
+        ]
       }
     },
     "parameters": {}
@@ -3925,6 +3947,366 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/mise/users": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "description": "List every Mise user with a summary of the data they own",
+        "responses": {
+          "200": {
+            "description": "Users retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "users": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminMiseUserSummary"
+                      }
+                    }
+                  },
+                  "required": [
+                    "users"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Cloudflare Access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated email is not an allowed admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin portal is not configured, or the resource was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/mise/users/{userId}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "description": "Get every recipe and the meal plan owned by a Mise user",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Cognito user ID (sub)"
+            },
+            "required": true,
+            "description": "Cognito user ID (sub)",
+            "name": "userId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "description": "Cognito user ID (sub)"
+                    },
+                    "recipes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Recipe"
+                      },
+                      "description": "Recipes owned by the user, sorted by name"
+                    },
+                    "mealPlan": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/MealPlan"
+                        },
+                        {
+                          "description": "Stored meal plan, exactly as saved"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "recipes",
+                    "mealPlan"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Cloudflare Access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated email is not an allowed admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin portal is not configured, or the resource was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/mise/transfer": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "description": "Copy recipes, their images and optionally the meal plan from one user to another",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fromUserId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Cognito user ID to copy data from"
+                  },
+                  "toUserId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Cognito user ID to copy data to"
+                  },
+                  "recipeUuids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "description": "Recipes to copy; omit to copy every recipe"
+                  },
+                  "includeMealPlan": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Replace the target's meal plan with the source's (limited to copied recipes)"
+                  }
+                },
+                "required": [
+                  "fromUserId",
+                  "toUserId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Data copied successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipesCopied": {
+                      "type": "number",
+                      "description": "Number of recipes written to the target user"
+                    },
+                    "imagesCopied": {
+                      "type": "number",
+                      "description": "Number of S3 images copied to the target user"
+                    },
+                    "mealPlanCopied": {
+                      "type": "boolean",
+                      "description": "Whether the target's meal plan was replaced"
+                    }
+                  },
+                  "required": [
+                    "recipesCopied",
+                    "imagesCopied",
+                    "mealPlanCopied"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid transfer request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Cloudflare Access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated email is not an allowed admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin portal is not configured, or the resource was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
                     }
                   },
                   "required": [

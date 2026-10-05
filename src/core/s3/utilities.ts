@@ -2,6 +2,7 @@
  * S3 utility functions for file operations
  */
 import {
+  CopyObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   DeleteObjectCommand,
@@ -90,6 +91,34 @@ export async function deleteS3Object(client: S3Client, key: string): Promise<voi
     await client.send(command);
   } catch (error) {
     logger.error('Failed to delete S3 object:', error);
+    throw error;
+  }
+}
+
+/**
+ * Copy an object within the configured bucket
+ *
+ * @param client - S3 client
+ * @param sourceKey - Key of the object to copy
+ * @param destinationKey - Key to copy it to
+ * @returns Promise<void>
+ */
+export async function copyS3Object(
+  client: S3Client,
+  sourceKey: string,
+  destinationKey: string
+): Promise<void> {
+  try {
+    const encodedSourceKey = sourceKey.split('/').map(encodeURIComponent).join('/');
+    const command = new CopyObjectCommand({
+      Bucket: config.S3_BUCKET_NAME,
+      CopySource: `${config.S3_BUCKET_NAME}/${encodedSourceKey}`,
+      Key: destinationKey,
+    });
+
+    await client.send(command);
+  } catch (error) {
+    logger.error('Failed to copy S3 object:', error);
     throw error;
   }
 }

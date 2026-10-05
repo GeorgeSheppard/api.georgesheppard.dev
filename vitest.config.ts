@@ -32,6 +32,15 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: 'integration:admin',
+          include: ['src/websites/admin/**/*.integration.test.ts'],
+          testTimeout: 60000,
+          hookTimeout: 120000,
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: 'integration:shelfie',
           include: ['src/websites/shelfie/**/*.integration.test.ts'],
           setupFiles: ['./test/setup-shelfie.ts'],

@@ -14,6 +14,7 @@ import { registerShelfieRoutes } from '@websites/shelfie/index.js';
 import { registerRoutes as registerMiseRoutes, tools as miseTools } from '@websites/mise/index.js';
 import { registerRoutes as registerTflRoutes } from '@websites/tfl/index.js';
 import { registerRoutes as registerFlightsRoutes } from '@websites/flights/index.js';
+import { registerRoutes as registerAdminRoutes } from '@websites/admin/index.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
 import { isAllowedOrigin } from '@core/auth/redirect.js';
@@ -113,6 +114,7 @@ export async function createApp(dependencies: AppDependencies) {
   registerMiseRoutes(app);
   registerTflRoutes(app);
   registerFlightsRoutes(app);
+  registerAdminRoutes(app);
 
   // Register MCP with all tools from all websites
   const allMcpTools = [...miseTools];
