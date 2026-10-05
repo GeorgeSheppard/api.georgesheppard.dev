@@ -9,58 +9,82 @@ Create a `.env.server` from the `.env.server.example` file (Paths should be rela
 Start the text extraction service from the `ml` root with:
 `uv run --env-file=.env.server fastapi run app/main.py`
 
-Copy the `Infra` folder and make a folder outside of the Shelfie repository (once the docker images start we will
+Copy the `Infra` folder and make a folder outside of the Shelfie repository (once the containers start we will
 have volumes so best to keep those outside the repo).
+
+### Installing / updating the setup (`install.sh`)
+
+Everything on the box is set up by `infra/install.sh`. It's idempotent, so whenever anything in `infra/` changes
+(or you're not sure the box is in the right state) pull the repo on the mac mini and re-run it:
+
+```
+infra/install.sh
+```
+
+It:
+
+1. Installs Homebrew, [OrbStack](https://orbstack.dev) and the [Infisical CLI](https://infisical.com/docs/cli/overview)
+   if missing, starts OrbStack, points the `docker` CLI at it and turns on OrbStack's **Start at login**.
+2. Sets power settings so the box never sleeps and powers back on after a power cut (`pmset`, asks for your password).
+   It warns if automatic login is off, as without it nothing starts after a reboot until someone logs in.
+3. Prompts for the Infisical Machine Identity credentials the first time and stores them in
+   `~/.config/infisical/mac-mini.env` (`chmod 600`). Delete that file and re-run to change them.
+4. Copies `deploy.sh` into the compose directory (`~/Documents/root`, override with `COMPOSE_DIR=...`) and copies any
+   missing `cronjobs` (existing ones are left alone as their secrets are filled in by hand).
+5. Writes `~/Library/LaunchAgents/com.docker.compose.update.plist` and (re)loads it, which kicks off a deploy
+   immediately.
+
+Before the first run, create a Machine Identity in Infisical (Universal Auth) scoped to read access on the production
+environment.
+
+OrbStack ships the standard `docker` and `docker compose` CLIs, so every `docker ...` command in this README works
+as-is.
 
 ### Deployment polling + secrets via Infisical
 
-There's no inbound deploy webhook and no self-hosted runner. A `launchd` job (`com.docker.compose.update`) on the
-mac mini runs every 5 minutes from the compose directory (e.g. `~/Documents/root`) and runs `deploy.sh`, which
-overwrites the local `compose.yaml` with the latest `infra/compose.yaml` from `master`, regenerates `.env` from
-Infisical, and then does `docker compose pull && docker compose up -d --remove-orphans`. `docker compose up -d`
-only recreates containers whose image or config actually changed, so this is safe to run unconditionally every
-5 minutes — no manual diffing needed. Secrets are no longer kept in a hand-edited `.env` on the box — updating a
-credential in Infisical takes effect on the next run, no SSH session needed.
+There's no inbound deploy webhook and no self-hosted runner. The `launchd` job (`com.docker.compose.update`) runs
+`deploy.sh` at login and then every 5 minutes. It overwrites the local `compose.yaml` with the latest
+`infra/compose.yaml` from `master`, regenerates `.env` from Infisical, starts OrbStack if it isn't running, and then
+does `docker compose pull && docker compose up -d --remove-orphans`. `docker compose up -d` only recreates containers
+whose image or config actually changed, so this is safe to run unconditionally every 5 minutes — no manual diffing
+needed. Secrets are not kept in a hand-edited `.env` on the box — updating a credential in Infisical takes effect on
+the next run, no SSH session needed.
+
+Every service has `restart: always`, so containers are restarted if they crash and come back when OrbStack starts.
+Together with OrbStack starting at login, automatic login and `autorestart` after power loss, the stack recovers from a
+reboot or power cut without intervention.
 
 `deploy.sh` pings a [healthchecks.io](https://healthchecks.io) check at the start and end of every run (and its
 `/fail` variant if any step errors, via a `trap`). That check has a grace period longer than 5 minutes, so if this
-job stops succeeding — an expired Infisical credential, the `launchd` agent itself no longer running, Docker being
+job stops succeeding — an expired Infisical credential, the `launchd` agent itself no longer running, OrbStack being
 down, anything — healthchecks.io emails an alert instead of the outage going unnoticed. The ping URL is a plain
 constant near the top of `deploy.sh`; update it there if the check is ever recreated.
 
-One-time setup on the mac mini:
+The deploy flow is: push to `master` → GitHub Actions builds and pushes the image → within 5 minutes the mac mini
+pulls the new image, refreshes secrets from Infisical, and restarts anything that changed. Logs are in
+`~/docker-launchd.log`.
 
-1. Create a Machine Identity in Infisical (Universal Auth) scoped to read access on the production environment.
-2. Install the [Infisical CLI](https://infisical.com/docs/cli/overview) and Docker.
-3. Copy `deploy.sh` into the compose directory (alongside `compose.yaml`) and make it executable:
-   ```
-   chmod +x ~/Documents/root/deploy.sh
-   ```
-4. Store the Machine Identity credentials somewhere only readable by you, e.g.
-   `~/.config/infisical/mac-mini.env` (`chmod 600`):
-   ```
-   export INFISICAL_CLIENT_ID="..."
-   export INFISICAL_CLIENT_SECRET="..."
-   export INFISICAL_PROJECT_ID="..."
-   ```
-5. Replace `~/Library/LaunchAgents/com.docker.compose.update.plist` with the copy checked in here at
-   `com.docker.compose.update.plist`, which sources that file and calls `deploy.sh` instead of running
-   `docker compose pull && up` directly:
-   ```
-   cp infra/com.docker.compose.update.plist ~/Library/LaunchAgents/com.docker.compose.update.plist
-   ```
-6. Reload the job: `launchctl unload ~/Library/LaunchAgents/com.docker.compose.update.plist && launchctl load ~/Library/LaunchAgents/com.docker.compose.update.plist`
+### Migrating from Docker Desktop
 
-The deploy flow becomes: push to `master` → GitHub Actions builds and pushes the image → within 5 minutes the mac
-mini pulls the new image, refreshes secrets from Infisical, and restarts anything that changed.
+Postgres and RabbitMQ data live in bind mounts (`./pgdata`, `./rabbitmq`) in the compose directory, not in Docker
+Desktop's VM, so nothing needs copying across — images are re-pulled by `deploy.sh`.
 
-You should now be good to test.
+1. Stop the stack while Docker Desktop is still running (no `-v`!):
+   ```
+   cd ~/Documents/root && docker compose down
+   ```
+2. Quit Docker Desktop and turn off its "Start Docker Desktop when you sign in" setting.
+3. Run `infra/install.sh`. It reuses the existing credentials file and replaces the old launchd job.
+4. Check everything came up with `docker compose ps` and `tail ~/docker-launchd.log`.
+5. Once happy, uninstall Docker Desktop. Optionally, `orb migrate docker` can import any leftover images/volumes
+   from Docker Desktop first, but the stack itself doesn't need it.
 
 ## Manual updates
 
 ### Update to latest images
 
-Run `~/Documents/root/deploy.sh` directly to force an immediate check rather than waiting for the launchd job.
+Run `launchctl kickstart gui/$(id -u)/com.docker.compose.update` to force an immediate deploy rather than waiting for
+the launchd job.
 Check `deployment.yml` in the main repo for how images get built and pushed.
 
 ### Manually building
@@ -71,9 +95,9 @@ See individual readme's for information on building.
 
 The database is persisted to a volume in `pg_data`. This means whatever you do do not delete that volume. E.g. DO NOT RUN `docker compose down -v` as this deletes volumes.
 
-The database isn't exposed outside of the docker network, so to access it you need to exec into it.
+The database isn't exposed outside of the compose network, so to access it you need to exec into it.
 
-To do this, first list the docker containers with:  
+To do this, first list the containers with:  
 `docker ps`
 
 Then exec into the postgres container with:  

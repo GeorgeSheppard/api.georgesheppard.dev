@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Run by com.docker.compose.update launchd job every 5 minutes from the compose directory
+# Installed by install.sh and run by its com.docker.compose.update launchd job every 5 minutes from the compose directory
 # on the mac mini (e.g. ~/Documents/root). Refreshes compose.yaml from the repo, regenerates
 # .env from Infisical (Machine Identity / Universal Auth, no login needed), then pulls and
 # (re)starts the stack. `docker compose up -d` only recreates containers whose config actually
@@ -11,7 +11,7 @@ set -Eeuo pipefail
 # Optional: INFISICAL_ENV (defaults to "prod")
 #
 # Pings healthchecks.io on every run so a silently-broken deploy (expired credentials, a
-# launchd job that stopped firing, Docker itself being down, ...) gets noticed within
+# launchd job that stopped firing, OrbStack itself being down, ...) gets noticed within
 # minutes instead of discovered by accident weeks later. If this box's check hasn't pinged
 # within its grace period, healthchecks.io emails/alerts. Losing network access to
 # hc-ping.com must never fail the deploy itself, so every ping is best-effort.
@@ -42,7 +42,7 @@ log "Starting deploy"
 ping_healthcheck "$HEALTHCHECK_URL/start"
 
 log "Refreshing compose.yaml from master"
-curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o ~/Documents/root/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o compose.yaml
 
 log "Authenticating with Infisical"
 INFISICAL_TOKEN="$(infisical login --method=universal-auth \
@@ -56,6 +56,12 @@ infisical export \
   --projectId="$INFISICAL_PROJECT_ID" \
   --env="$INFISICAL_ENV" \
   --format=dotenv-export > .env
+
+# OrbStack should already be running (Start at login), but start it if e.g. it was quit
+if ! docker info >/dev/null 2>&1; then
+  log "Starting OrbStack"
+  orb start
+fi
 
 log "Pulling images"
 docker compose pull

@@ -156,17 +156,27 @@ Between tests, the database and queues are fresh. The test containers are epheme
 - ✅ Full stack testing (PostgreSQL + RabbitMQ + API)
 - ✅ Automatic schema creation with migrations
 - ✅ Real queue operations during tests
-- ✅ No manual setup needed (Docker-based testcontainers)
+- ✅ No manual setup needed (testcontainers running on OrbStack)
 - ✅ Compatible with existing Drizzle ORM and amqplib setup
 
 ## Troubleshooting
 
-### Docker not running
+### OrbStack not running
 
-If you see connection errors, ensure Docker is running:
+Testcontainers talks to the Docker API, which is provided locally by [OrbStack](https://orbstack.dev)
+(`brew install orbstack`). If you see connection errors, ensure OrbStack is running and the `docker` CLI is using it:
 
 ```bash
+orb start
+docker context use orbstack
 docker ps
+```
+
+OrbStack links its socket to `/var/run/docker.sock`, so testcontainers finds it without any extra config. If that
+link is disabled in OrbStack's settings, point testcontainers at it directly:
+
+```bash
+export DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock
 ```
 
 ### Timeout errors
@@ -184,9 +194,9 @@ test: {
 
 The testcontainers are ephemeral (PostgreSQL data in tmpfs, RabbitMQ queues temporary). If you see connection errors:
 
-1. Ensure Docker is running
+1. Ensure OrbStack is running
 2. Check available disk space (tmpfs needs space)
-3. Restart Docker if containers don't start
+3. Restart OrbStack if containers don't start (`orb restart`)
 
 ### RabbitMQ queue issues
 
