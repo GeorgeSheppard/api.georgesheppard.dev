@@ -17,6 +17,9 @@ const fromUserId = '11111111-1111-4111-8111-111111111111';
 const toUserId = '22222222-2222-4222-8222-222222222222';
 const recipeA = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const recipeB = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const recipeC = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const componentA = 'aaaaaaaa-0000-4000-8000-000000000001';
+const componentC = 'cccccccc-0000-4000-8000-000000000001';
 
 function recipe(uuid: string, images: IRecipe['images'] = []): IRecipe {
   return { uuid, name: uuid, description: '', images, components: [] };
@@ -33,12 +36,19 @@ function mockContext() {
 }
 
 describe('transferMiseData handler', () => {
+  let sourceRecipes: IRecipe[];
+  let targetRecipes: IRecipe[];
+
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.mocked(getAllRecipesForUser).mockResolvedValue([
+    sourceRecipes = [
       recipe(recipeA, [{ key: `${fromUserId}/photo.jpg`, timestamp: 5 }]),
       recipe(recipeB),
-    ]);
+    ];
+    targetRecipes = [];
+    vi.mocked(getAllRecipesForUser).mockImplementation(async (_client, userId) =>
+      userId === fromUserId ? sourceRecipes : targetRecipes
+    );
     vi.mocked(getMealPlanForUser).mockResolvedValue([]);
   });
 
@@ -62,7 +72,7 @@ describe('transferMiseData handler', () => {
 
     expect(result).toEqual({
       status: 200,
-      body: { recipesCopied: 2, imagesCopied: 1, mealPlanCopied: false },
+      body: { recipesCopied: 2, imagesCopied: 1, mealPlanCopied: false, skippedRecipes: [] },
     });
     expect(copyS3Object).toHaveBeenCalledWith(
       s3.client,
@@ -87,7 +97,7 @@ describe('transferMiseData handler', () => {
 
     expect(result).toEqual({
       status: 200,
-      body: { recipesCopied: 1, imagesCopied: 0, mealPlanCopied: false },
+      body: { recipesCopied: 1, imagesCopied: 0, mealPlanCopied: false, skippedRecipes: [] },
     });
     expect(updateRecipe).toHaveBeenCalledTimes(1);
     expect(copyS3Object).not.toHaveBeenCalled();
@@ -141,10 +151,77 @@ describe('transferMiseData handler', () => {
       includeMealPlan: true,
     });
 
-    expect(result.body).toEqual({ recipesCopied: 1, imagesCopied: 1, mealPlanCopied: true });
+    expect(result.body).toEqual({
+      recipesCopied: 1,
+      imagesCopied: 1,
+      mealPlanCopied: true,
+      skippedRecipes: [],
+    });
     expect(getMealPlanForUser).toHaveBeenCalledWith(dynamo.client, fromUserId);
     expect(putMealPlanForUser).toHaveBeenCalledWith(dynamo.client, toUserId, [
       { date: 1, plan: [{ recipeId: recipeA, components: [] }] },
+    ]);
+  });
+  it('skips recipes the target already has by name, ignoring case and spacing', async () => {
+    sourceRecipes = [{ ...recipe(recipeA), name: ' Chicken  Curry ' }, recipe(recipeB)];
+    targetRecipes = [{ ...recipe(recipeC), name: 'chicken curry' }];
+
+    const result = await transferMiseData(mockContext(), {
+      fromUserId,
+      toUserId,
+      includeMealPlan: false,
+    });
+
+    expect(result).toEqual({
+      status: 200,
+      body: {
+        recipesCopied: 1,
+        imagesCopied: 0,
+        mealPlanCopied: false,
+        skippedRecipes: ['chicken curry'],
+      },
+    });
+    expect(updateRecipe).toHaveBeenCalledTimes(1);
+    expect(updateRecipe).toHaveBeenCalledWith(dynamo.client, toUserId, recipe(recipeB));
+  });
+
+  it('copies only one of several same-named source recipes', async () => {
+    sourceRecipes = [recipe(recipeA), { ...recipe(recipeB), name: recipeA }];
+
+    const result = await transferMiseData(mockContext(), {
+      fromUserId,
+      toUserId,
+      includeMealPlan: false,
+    });
+
+    expect(result.body).toMatchObject({ recipesCopied: 1, skippedRecipes: [recipeA] });
+    expect(updateRecipe).toHaveBeenCalledTimes(1);
+  });
+
+  it("points meal plan entries for skipped recipes at the target's recipe", async () => {
+    const component = (uuid: string) => ({
+      uuid,
+      name: 'Sauce',
+      ingredients: [],
+      instructions: [],
+    });
+    sourceRecipes = [{ ...recipe(recipeA), name: 'Curry', components: [component(componentA)] }];
+    targetRecipes = [{ ...recipe(recipeC), name: 'curry', components: [component(componentC)] }];
+    vi.mocked(getMealPlanForUser).mockResolvedValue([
+      {
+        date: 1,
+        plan: [{ recipeId: recipeA, components: [{ componentId: componentA, servings: 2 }] }],
+      },
+    ]);
+
+    await transferMiseData(mockContext(), { fromUserId, toUserId, includeMealPlan: true });
+
+    expect(updateRecipe).not.toHaveBeenCalled();
+    expect(putMealPlanForUser).toHaveBeenCalledWith(dynamo.client, toUserId, [
+      {
+        date: 1,
+        plan: [{ recipeId: recipeC, components: [{ componentId: componentC, servings: 2 }] }],
+      },
     ]);
   });
 });

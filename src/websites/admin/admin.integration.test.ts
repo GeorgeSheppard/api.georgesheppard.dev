@@ -82,11 +82,37 @@ describe('POST /admin/mise/transfer', () => {
       recipesCopied: 1,
       imagesCopied: 0,
       mealPlanCopied: true,
+      skippedRecipes: [],
     });
     for (const userId of [fromUserId, toUserId]) {
       expect(await getAllRecipesForUser(dynamoClient.client, userId)).toEqual([pasta]);
       expect(await getMealPlanForUser(dynamoClient.client, userId)).toEqual(mealPlan);
     }
+  });
+
+  test('does not duplicate recipes the target already has by name', async ({ dynamoClient }) => {
+    const app = await createTestApp({ dynamoClient });
+    const fromUserId = randomUUID();
+    const toUserId = randomUUID();
+    const pasta = recipe('Pasta');
+    const pizza = recipe('Pizza');
+    const existingPasta = recipe('pasta');
+    await seedRecipe(dynamoClient, fromUserId, pasta);
+    await seedRecipe(dynamoClient, fromUserId, pizza);
+    await seedRecipe(dynamoClient, toUserId, existingPasta);
+
+    for (let run = 0; run < 2; run++) {
+      const response = await app.request('http://localhost/admin/mise/transfer', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ fromUserId, toUserId }),
+      });
+      expect(response.status).toBe(200);
+    }
+
+    const targetRecipes = await getAllRecipesForUser(dynamoClient.client, toUserId);
+    expect(targetRecipes).toHaveLength(2);
+    expect(targetRecipes).toEqual(expect.arrayContaining([existingPasta, pizza]));
   });
 
   test('rejects transferring a user to themselves', async ({ dynamoClient }) => {

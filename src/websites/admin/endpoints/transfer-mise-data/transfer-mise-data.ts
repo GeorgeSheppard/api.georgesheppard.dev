@@ -8,6 +8,7 @@ import {
 } from '@core/dynamodb/utilities.js';
 import { copyS3Object } from '@core/s3/utilities.js';
 import { IRecipe } from '@core/types/recipes.js';
+import { IMealPlanRecipe } from '@core/types/meal-plan.js';
 import { logger } from '@core/telemetry/logger.js';
 
 export const TransferMiseDataRequestSchema = z.object({
@@ -29,6 +30,9 @@ export const TransferMiseDataResponseSchema = z.object({
   recipesCopied: z.number().describe('Number of recipes written to the target user'),
   imagesCopied: z.number().describe('Number of S3 images copied to the target user'),
   mealPlanCopied: z.boolean().describe("Whether the target's meal plan was replaced"),
+  skippedRecipes: z
+    .array(z.string())
+    .describe('Names of recipes not copied because the target already has a recipe with that name'),
 });
 
 export type TransferMiseDataResponse = z.infer<typeof TransferMiseDataResponseSchema>;
@@ -44,9 +48,33 @@ export function rewriteImageKey(key: string, fromUserId: string, toUserId: strin
   return `${toUserId}/${fileName}`;
 }
 
+export function normaliseName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+// Points a meal plan entry at the target's own copy of a recipe, matching components by name
+function remapMealPlanEntry(
+  entry: IMealPlanRecipe,
+  source: IRecipe,
+  target: IRecipe
+): IMealPlanRecipe {
+  const targetComponentsByName = new Map(
+    target.components.map((component) => [normaliseName(component.name), component.uuid])
+  );
+  return {
+    recipeId: target.uuid,
+    components: entry.components.flatMap((planned) => {
+      const sourceComponent = source.components.find((c) => c.uuid === planned.componentId);
+      const componentId =
+        sourceComponent && targetComponentsByName.get(normaliseName(sourceComponent.name));
+      return componentId ? [{ ...planned, componentId }] : [];
+    }),
+  };
+}
+
 /**
- * Copies recipes (and their images) from one user to another, keeping recipe UUIDs so that
- * re-running a transfer overwrites the earlier copies rather than duplicating them.
+ * Copies recipes (and their images) from one user to another, skipping any recipe the target
+ * already has a recipe with the same name for, so re-running a transfer never duplicates recipes.
  * The source user's data is never modified.
  */
 export async function transferMiseData(
@@ -76,8 +104,24 @@ export async function transferMiseData(
     }
   }
 
-  let imagesCopied = 0;
+  // Recipes were originally duplicated between accounts by hand, so a matching name means the
+  // target already has the recipe even though its UUID differs
+  const targetRecipes = await getAllRecipesForUser(dynamoClient.client, toUserId);
+  const targetByName = new Map(targetRecipes.map((recipe) => [normaliseName(recipe.name), recipe]));
+  const matchedRecipes = new Map<string, IRecipe>();
+  const recipesToCopy: IRecipe[] = [];
   for (const recipe of recipes) {
+    const existing = targetByName.get(normaliseName(recipe.name));
+    if (existing) {
+      matchedRecipes.set(recipe.uuid, existing);
+    } else {
+      recipesToCopy.push(recipe);
+      targetByName.set(normaliseName(recipe.name), recipe);
+    }
+  }
+
+  let imagesCopied = 0;
+  for (const recipe of recipesToCopy) {
     // Copy images before writing the recipe so the target never references a missing object
     const images = await Promise.all(
       (recipe.images ?? []).map(async ({ presignedUrl: _presignedUrl, ...image }) => {
@@ -91,24 +135,34 @@ export async function transferMiseData(
   }
 
   if (includeMealPlan) {
-    const copiedUuids = new Set(recipes.map((recipe) => recipe.uuid));
+    const sourceByUuid = new Map(recipes.map((recipe) => [recipe.uuid, recipe]));
     const mealPlan = await getMealPlanForUser(dynamoClient.client, fromUserId);
     await putMealPlanForUser(
       dynamoClient.client,
       toUserId,
       mealPlan.map((day) => ({
         ...day,
-        plan: day.plan.filter((entry) => copiedUuids.has(entry.recipeId)),
+        plan: day.plan.flatMap((entry) => {
+          const source = sourceByUuid.get(entry.recipeId);
+          if (!source) return [];
+          const match = matchedRecipes.get(entry.recipeId);
+          return match ? [remapMealPlanEntry(entry, source, match)] : [entry];
+        }),
       }))
     );
   }
 
   logger.info(
-    `Admin copied ${recipes.length} recipes and ${imagesCopied} images from ${fromUserId} to ${toUserId}${includeMealPlan ? ' (with meal plan)' : ''}`
+    `Admin copied ${recipesToCopy.length} recipes (skipped ${matchedRecipes.size} already present) and ${imagesCopied} images from ${fromUserId} to ${toUserId}${includeMealPlan ? ' (with meal plan)' : ''}`
   );
 
   return {
     status: 200,
-    body: { recipesCopied: recipes.length, imagesCopied, mealPlanCopied: includeMealPlan },
+    body: {
+      recipesCopied: recipesToCopy.length,
+      imagesCopied,
+      mealPlanCopied: includeMealPlan,
+      skippedRecipes: Array.from(matchedRecipes.values(), (recipe) => recipe.name),
+    },
   };
 }

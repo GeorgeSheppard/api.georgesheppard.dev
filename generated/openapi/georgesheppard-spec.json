@@ -4018,12 +4018,20 @@
                     "mealPlanCopied": {
                       "type": "boolean",
                       "description": "Whether the target's meal plan was replaced"
+                    },
+                    "skippedRecipes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Names of recipes not copied because the target already has a recipe with that name"
                     }
                   },
                   "required": [
                     "recipesCopied",
                     "imagesCopied",
-                    "mealPlanCopied"
+                    "mealPlanCopied",
+                    "skippedRecipes"
                   ]
                 }
               }
