@@ -28,11 +28,15 @@ const route = createRoute({
   },
 });
 
+// The callback is reached via a redirect from Cognito's domain. After a username/password
+// form POST on the hosted UI, browsers withhold Lax cookies on that redirect, so the state
+// check would fail on first sign-in. State/nonce still bind the flow to this browser.
 function oauthCookieOptions() {
+  const isProduction = config.NODE_ENV === 'production';
   return {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: 'Lax' as const,
+    secure: isProduction,
+    sameSite: isProduction ? ('None' as const) : ('Lax' as const),
     maxAge: OAUTH_COOKIE_MAX_AGE,
     path: '/',
   };
