@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext } from '@test/utils/mock-context.js';
-import type { AdminContext } from '@core/types/context.js';
 import type { IRecipe } from '@core/types/recipes.js';
 import { getMiseUser } from './get-mise-user.js';
 
@@ -16,7 +15,7 @@ function recipe(uuid: string, name: string, images: IRecipe['images'] = []): IRe
 }
 
 function mockContext() {
-  return createMockContext<AdminContext>({
+  return createMockContext({
     dynamoClient: { client: {} },
     s3Client: { client: {} },
   });

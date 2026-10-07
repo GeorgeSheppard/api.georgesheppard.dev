@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi';
-import { AdminContext } from '@core/types/context.js';
+import { Context } from 'hono';
 import { getAllRecipesForUser, getMealPlanForUser } from '@core/dynamodb/utilities.js';
 import { getSignedGetUrl } from '@core/s3/utilities.js';
 import { logger } from '@core/telemetry/logger.js';
@@ -13,7 +13,7 @@ export const GetMiseUserResponseSchema = z.object({
 
 export type GetMiseUserResponse = z.infer<typeof GetMiseUserResponseSchema>;
 
-export async function getMiseUser(c: AdminContext, userId: string): Promise<GetMiseUserResponse> {
+export async function getMiseUser(c: Context, userId: string): Promise<GetMiseUserResponse> {
   const dynamoClient = c.get('dynamoClient');
   const s3Client = c.get('s3Client');
 

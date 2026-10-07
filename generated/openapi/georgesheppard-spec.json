@@ -3964,7 +3964,24 @@
         "tags": [
           "admin"
         ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
         "description": "List every Mise user with a summary of the data they own",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Users retrieved successfully",
@@ -3988,45 +4005,7 @@
             }
           },
           "401": {
-            "description": "Missing or invalid Cloudflare Access token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Authenticated email is not an allowed admin",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Admin portal is not configured, or the resource was not found",
+            "description": "Invalid or missing API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -4052,6 +4031,11 @@
         "tags": [
           "admin"
         ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
         "description": "Get every recipe and the meal plan owned by a Mise user",
         "parameters": [
           {
@@ -4064,6 +4048,16 @@
             "description": "Cognito user ID (sub)",
             "name": "userId",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -4106,45 +4100,7 @@
             }
           },
           "401": {
-            "description": "Missing or invalid Cloudflare Access token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Authenticated email is not an allowed admin",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Admin portal is not configured, or the resource was not found",
+            "description": "Invalid or missing API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -4170,7 +4126,24 @@
         "tags": [
           "admin"
         ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
         "description": "Copy recipes, their images and optionally the meal plan from one user to another",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4260,26 +4233,7 @@
             }
           },
           "401": {
-            "description": "Missing or invalid Cloudflare Access token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Authenticated email is not an allowed admin",
+            "description": "Invalid or missing API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -4298,7 +4252,7 @@
             }
           },
           "404": {
-            "description": "Admin portal is not configured, or the resource was not found",
+            "description": "Selected recipes not found for the source user",
             "content": {
               "application/json": {
                 "schema": {

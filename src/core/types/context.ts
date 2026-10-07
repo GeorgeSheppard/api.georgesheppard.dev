@@ -14,14 +14,3 @@ export type ProtectedEnv = {
  * Context type for handlers that are protected by jwtAuthMiddleware
  */
 export type ContextWithUserId = Context<ProtectedEnv>;
-
-/**
- * Env type for admin routes protected by adminAuthMiddleware
- */
-export type AdminEnv = {
-  Variables: {
-    adminEmail: string;
-  };
-};
-
-export type AdminContext = Context<AdminEnv>;

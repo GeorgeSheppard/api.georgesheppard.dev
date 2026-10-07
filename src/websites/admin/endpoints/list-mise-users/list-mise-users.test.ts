@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext } from '@test/utils/mock-context.js';
-import type { AdminContext } from '@core/types/context.js';
 import { listMiseUsers } from './list-mise-users.js';
 
 vi.mock('@core/dynamodb/utilities.js');
 import { scanAllItemKeys } from '@core/dynamodb/utilities.js';
 
 function mockContext() {
-  return createMockContext<AdminContext>({ dynamoClient: { client: {} } });
+  return createMockContext({ dynamoClient: { client: {} } });
 }
 
 describe('listMiseUsers handler', () => {

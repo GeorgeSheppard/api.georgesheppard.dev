@@ -1,7 +1,7 @@
 /**
- * Integration tests for the /admin/mise routes, using real Access-style JWTs signed by a test key
+ * Integration tests for the /admin/mise routes
  */
-import { describe, expect, vi } from 'vitest';
+import { describe, expect } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { test } from '@test/fixtures.js';
@@ -9,36 +9,8 @@ import { config } from '@config/index.js';
 import { createTestApp } from '@test/utils/app.js';
 import { IRecipe } from '@core/types/recipes.js';
 import { DynamoDBClientWrapper } from '@core/dynamodb/client.js';
-import { ADMIN_ACCESS_JWT_HEADER } from '@core/middleware/admin-auth.js';
 
-const testKeys = vi.hoisted(async () => {
-  const { createLocalJWKSet, exportJWK, generateKeyPair } = await import('jose');
-  const { privateKey, publicKey } = await generateKeyPair('RS256');
-  const jwk = { ...(await exportJWK(publicKey)), kid: 'test-key', alg: 'RS256' };
-  return { privateKey, getKey: createLocalJWKSet({ keys: [jwk] }) };
-});
-
-vi.mock('@core/utils/cloudflare-access.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@core/utils/cloudflare-access.js')>();
-  const { getKey } = await testKeys;
-  return {
-    ...actual,
-    verifyAccessJwt: (token: string, accessConfig: Parameters<typeof actual.verifyAccessJwt>[1]) =>
-      actual.verifyAccessJwt(token, accessConfig, getKey),
-  };
-});
-
-async function accessToken(email = 'admin@example.com') {
-  const { SignJWT } = await import('jose');
-  const { privateKey } = await testKeys;
-  return new SignJWT({ type: 'app', email })
-    .setProtectedHeader({ alg: 'RS256', kid: 'test-key' })
-    .setIssuer(config.CF_ACCESS_TEAM_DOMAIN!)
-    .setAudience(config.CF_ACCESS_ADMIN_AUD!)
-    .setIssuedAt()
-    .setExpirationTime('5m')
-    .sign(privateKey);
-}
+const apiKeyHeader = { 'x-api-key': config.API_KEY };
 
 function recipe(name: string): IRecipe {
   return {
@@ -60,7 +32,7 @@ async function seedRecipe(dynamoClient: DynamoDBClientWrapper, userId: string, i
 }
 
 describe('/admin/mise', () => {
-  test('rejects requests without an Access token', async ({ dynamoClient }) => {
+  test('rejects requests without the API key', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request('http://localhost/admin/mise/users');
@@ -68,14 +40,14 @@ describe('/admin/mise', () => {
     expect(response.status).toBe(401);
   });
 
-  test('rejects tokens for emails that are not admins', async ({ dynamoClient }) => {
+  test('rejects requests with the wrong API key', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
 
     const response = await app.request('http://localhost/admin/mise/users', {
-      headers: { [ADMIN_ACCESS_JWT_HEADER]: await accessToken('someone@example.com') },
+      headers: { 'x-api-key': 'wrong-key' },
     });
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
   });
 
   test('lists users with a summary of their data', async ({ dynamoClient }) => {
@@ -85,7 +57,7 @@ describe('/admin/mise', () => {
     await seedRecipe(dynamoClient, userId, recipe('Pizza'));
 
     const response = await app.request('http://localhost/admin/mise/users', {
-      headers: { [ADMIN_ACCESS_JWT_HEADER]: await accessToken() },
+      headers: apiKeyHeader,
     });
 
     expect(response.status).toBe(200);
@@ -100,7 +72,7 @@ describe('/admin/mise', () => {
     await seedRecipe(dynamoClient, userId, pasta);
 
     const response = await app.request(`http://localhost/admin/mise/users/${userId}`, {
-      headers: { [ADMIN_ACCESS_JWT_HEADER]: await accessToken() },
+      headers: apiKeyHeader,
     });
 
     expect(response.status).toBe(200);
@@ -121,7 +93,7 @@ describe('/admin/mise', () => {
       })
     );
     const headers = {
-      [ADMIN_ACCESS_JWT_HEADER]: await accessToken(),
+      ...apiKeyHeader,
       'Content-Type': 'application/json',
     };
 
@@ -153,7 +125,7 @@ describe('/admin/mise', () => {
     const response = await app.request('http://localhost/admin/mise/transfer', {
       method: 'POST',
       headers: {
-        [ADMIN_ACCESS_JWT_HEADER]: await accessToken(),
+        ...apiKeyHeader,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ fromUserId: userId, toUserId: userId }),

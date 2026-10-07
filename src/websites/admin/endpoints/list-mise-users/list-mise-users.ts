@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi';
-import { AdminContext } from '@core/types/context.js';
+import { Context } from 'hono';
 import { scanAllItemKeys } from '@core/dynamodb/utilities.js';
 
 export const MiseUserSummarySchema = z
@@ -16,7 +16,7 @@ export const ListMiseUsersResponseSchema = z.object({
 
 export type ListMiseUsersResponse = z.infer<typeof ListMiseUsersResponseSchema>;
 
-export async function listMiseUsers(c: AdminContext): Promise<ListMiseUsersResponse> {
+export async function listMiseUsers(c: Context): Promise<ListMiseUsersResponse> {
   const dynamoClient = c.get('dynamoClient');
   const keys = await scanAllItemKeys(dynamoClient.client);
 

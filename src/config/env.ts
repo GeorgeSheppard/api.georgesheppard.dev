@@ -70,15 +70,6 @@ const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string(),
   S3_ENDPOINT: z.string().url().optional(),
 
-  // Admin portal behind Cloudflare Access (optional — /admin routes respond 404 while any are unset)
-  CF_ACCESS_TEAM_DOMAIN: z
-    .string()
-    .url()
-    .optional()
-    .describe('Cloudflare Access team domain, e.g. https://<team>.cloudflareaccess.com'),
-  CF_ACCESS_ADMIN_AUD: z.string().optional().describe('AUD tag of the admin Access application'),
-  ADMIN_EMAILS: z.string().optional().describe('Comma-separated emails allowed to use /admin'),
-
   // Cron monitoring (optional — ping disabled when unset)
   RECOMMENDATIONS_CRON_HEALTHCHECK_URL: z.string().url().optional(),
 

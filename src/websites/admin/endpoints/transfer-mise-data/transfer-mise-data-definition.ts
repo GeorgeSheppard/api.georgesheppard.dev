@@ -1,6 +1,10 @@
 import { createRoute } from '@hono/zod-openapi';
-import { adminAuthMiddleware } from '@core/middleware/admin-auth.js';
-import { AdminErrorSchema, adminErrorResponses } from '../../schemas.js';
+import {
+  AdminErrorSchema,
+  adminHeadersSchema,
+  adminRouteConfig,
+  unauthorizedResponse,
+} from '../../schemas.js';
 import {
   TransferMiseDataRequestSchema,
   TransferMiseDataResponseSchema,
@@ -9,10 +13,10 @@ import {
 export const transferMiseDataRoute = createRoute({
   method: 'post',
   path: '/admin/mise/transfer',
-  tags: ['admin'],
+  ...adminRouteConfig,
   description: 'Copy recipes, their images and optionally the meal plan from one user to another',
-  middleware: [adminAuthMiddleware],
   request: {
+    headers: adminHeadersSchema,
     body: {
       content: { 'application/json': { schema: TransferMiseDataRequestSchema } },
       required: true,
@@ -27,6 +31,10 @@ export const transferMiseDataRoute = createRoute({
       content: { 'application/json': { schema: AdminErrorSchema } },
       description: 'Invalid transfer request',
     },
-    ...adminErrorResponses,
+    404: {
+      content: { 'application/json': { schema: AdminErrorSchema } },
+      description: 'Selected recipes not found for the source user',
+    },
+    ...unauthorizedResponse,
   },
 });

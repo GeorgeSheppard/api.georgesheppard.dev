@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext } from '@test/utils/mock-context.js';
-import type { AdminContext } from '@core/types/context.js';
 import type { IRecipe } from '@core/types/recipes.js';
 import { rewriteImageKey, transferMiseData } from './transfer-mise-data.js';
 
@@ -27,10 +26,9 @@ const dynamo = { client: { name: 'dynamo' } };
 const s3 = { client: { name: 's3' } };
 
 function mockContext() {
-  return createMockContext<AdminContext>({
+  return createMockContext({
     dynamoClient: dynamo,
     s3Client: s3,
-    adminEmail: 'admin@example.com',
   });
 }
 

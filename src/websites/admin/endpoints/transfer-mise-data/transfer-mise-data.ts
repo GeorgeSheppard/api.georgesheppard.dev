@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi';
-import { AdminContext } from '@core/types/context.js';
+import { Context } from 'hono';
 import {
   getAllRecipesForUser,
   getMealPlanForUser,
@@ -50,7 +50,7 @@ export function rewriteImageKey(key: string, fromUserId: string, toUserId: strin
  * The source user's data is never modified.
  */
 export async function transferMiseData(
-  c: AdminContext,
+  c: Context,
   request: TransferMiseDataRequest
 ): Promise<TransferMiseDataResult> {
   const { fromUserId, toUserId, recipeUuids, includeMealPlan } = request;
@@ -104,7 +104,7 @@ export async function transferMiseData(
   }
 
   logger.info(
-    `Admin ${c.get('adminEmail')} copied ${recipes.length} recipes and ${imagesCopied} images from ${fromUserId} to ${toUserId}${includeMealPlan ? ' (with meal plan)' : ''}`
+    `Admin copied ${recipes.length} recipes and ${imagesCopied} images from ${fromUserId} to ${toUserId}${includeMealPlan ? ' (with meal plan)' : ''}`
   );
 
   return {
