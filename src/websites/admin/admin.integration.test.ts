@@ -1,5 +1,5 @@
 /**
- * Integration tests for the /admin/mise routes
+ * Integration tests for POST /admin/mise/transfer
  */
 import { describe, expect } from 'vitest';
 import { randomUUID } from 'node:crypto';
@@ -9,8 +9,9 @@ import { config } from '@config/index.js';
 import { createTestApp } from '@test/utils/app.js';
 import { IRecipe } from '@core/types/recipes.js';
 import { DynamoDBClientWrapper } from '@core/dynamodb/client.js';
+import { getAllRecipesForUser, getMealPlanForUser } from '@core/dynamodb/utilities.js';
 
-const apiKeyHeader = { 'x-api-key': config.API_KEY };
+const headers = { 'x-api-key': config.API_KEY, 'Content-Type': 'application/json' };
 
 function recipe(name: string): IRecipe {
   return {
@@ -31,11 +32,15 @@ async function seedRecipe(dynamoClient: DynamoDBClientWrapper, userId: string, i
   );
 }
 
-describe('/admin/mise', () => {
+describe('POST /admin/mise/transfer', () => {
   test('rejects requests without the API key', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
 
-    const response = await app.request('http://localhost/admin/mise/users');
+    const response = await app.request('http://localhost/admin/mise/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fromUserId: randomUUID(), toUserId: randomUUID() }),
+    });
 
     expect(response.status).toBe(401);
   });
@@ -43,40 +48,13 @@ describe('/admin/mise', () => {
   test('rejects requests with the wrong API key', async ({ dynamoClient }) => {
     const app = await createTestApp({ dynamoClient });
 
-    const response = await app.request('http://localhost/admin/mise/users', {
-      headers: { 'x-api-key': 'wrong-key' },
+    const response = await app.request('http://localhost/admin/mise/transfer', {
+      method: 'POST',
+      headers: { ...headers, 'x-api-key': 'wrong-key' },
+      body: JSON.stringify({ fromUserId: randomUUID(), toUserId: randomUUID() }),
     });
 
     expect(response.status).toBe(401);
-  });
-
-  test('lists users with a summary of their data', async ({ dynamoClient }) => {
-    const app = await createTestApp({ dynamoClient });
-    const userId = randomUUID();
-    await seedRecipe(dynamoClient, userId, recipe('Pasta'));
-    await seedRecipe(dynamoClient, userId, recipe('Pizza'));
-
-    const response = await app.request('http://localhost/admin/mise/users', {
-      headers: apiKeyHeader,
-    });
-
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as { users: unknown[] };
-    expect(body.users).toContainEqual({ userId, recipeCount: 2, hasMealPlan: false });
-  });
-
-  test("returns a user's recipes and meal plan", async ({ dynamoClient }) => {
-    const app = await createTestApp({ dynamoClient });
-    const userId = randomUUID();
-    const pasta = recipe('Pasta');
-    await seedRecipe(dynamoClient, userId, pasta);
-
-    const response = await app.request(`http://localhost/admin/mise/users/${userId}`, {
-      headers: apiKeyHeader,
-    });
-
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ userId, recipes: [pasta], mealPlan: [] });
   });
 
   test('copies recipes and the meal plan to another user', async ({ dynamoClient }) => {
@@ -92,10 +70,6 @@ describe('/admin/mise', () => {
         Item: { UserId: fromUserId, Item: 'MP', data: mealPlan },
       })
     );
-    const headers = {
-      ...apiKeyHeader,
-      'Content-Type': 'application/json',
-    };
 
     const response = await app.request('http://localhost/admin/mise/transfer', {
       method: 'POST',
@@ -109,12 +83,9 @@ describe('/admin/mise', () => {
       imagesCopied: 0,
       mealPlanCopied: true,
     });
-
     for (const userId of [fromUserId, toUserId]) {
-      const userResponse = await app.request(`http://localhost/admin/mise/users/${userId}`, {
-        headers,
-      });
-      expect(await userResponse.json()).toEqual({ userId, recipes: [pasta], mealPlan });
+      expect(await getAllRecipesForUser(dynamoClient.client, userId)).toEqual([pasta]);
+      expect(await getMealPlanForUser(dynamoClient.client, userId)).toEqual(mealPlan);
     }
   });
 
@@ -124,10 +95,7 @@ describe('/admin/mise', () => {
 
     const response = await app.request('http://localhost/admin/mise/transfer', {
       method: 'POST',
-      headers: {
-        ...apiKeyHeader,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ fromUserId: userId, toUserId: userId }),
     });
 

@@ -1,12 +1,7 @@
 /**
  * DynamoDB utility functions for recipe operations
  */
-import {
-  DynamoDBDocument,
-  QueryCommandInput,
-  QueryCommandOutput,
-  ScanCommandInput,
-} from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocument, QueryCommandInput, QueryCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { IRecipe, RecipeUuid } from '@core/types/recipes.js';
 import { IMealPlan } from '@core/types/meal-plan.js';
 import { config } from '@config/index.js';
@@ -206,40 +201,6 @@ export async function putMealPlanForUser(
     });
   } catch (error) {
     logger.error('Failed to put meal plan in DynamoDB:', error);
-    throw error;
-  }
-}
-
-export interface ItemKey {
-  userId: string;
-  item: string;
-}
-
-/**
- * List the keys of every item in the table. Used by the admin portal to enumerate users;
- * a full scan is acceptable at the table's current size.
- */
-export async function scanAllItemKeys(client: DynamoDBDocument): Promise<ItemKey[]> {
-  try {
-    const params: ScanCommandInput = {
-      TableName: config.DYNAMODB_TABLE_NAME,
-      ProjectionExpression: 'UserId, #item',
-      ExpressionAttributeNames: { '#item': 'Item' },
-    };
-
-    const keys: ItemKey[] = [];
-    let exclusiveStartKey: Record<string, unknown> | undefined;
-    do {
-      const result = await client.scan({ ...params, ExclusiveStartKey: exclusiveStartKey });
-      for (const item of result.Items ?? []) {
-        keys.push({ userId: String(item.UserId), item: String(item.Item) });
-      }
-      exclusiveStartKey = result.LastEvaluatedKey;
-    } while (exclusiveStartKey);
-
-    return keys;
-  } catch (error) {
-    logger.error('Failed to scan item keys from DynamoDB:', error);
     throw error;
   }
 }
