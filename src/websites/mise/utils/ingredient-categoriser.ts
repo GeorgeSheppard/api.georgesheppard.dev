@@ -1,6 +1,4 @@
-import { config } from '@config/index.js';
-
-const JEV_URL = 'https://api.typesafe.ai/v1/systemone';
+import { askJev, JevQuestion } from '@core/utils/jev-client.js';
 
 const CATEGORIES = [
   'Fresh Fruit & Vegetables',
@@ -28,7 +26,7 @@ export async function categoriseIngredients(ingredients: string[]): Promise<Cate
   if (ingredients.length === 0) return {};
 
   const criteria = Object.fromEntries([...CATEGORIES, 'Other'].map((category) => [category, null]));
-  const questions = Object.fromEntries(
+  const questions: Record<string, JevQuestion> = Object.fromEntries(
     ingredients.map((ingredient, index) => [
       `q${index}`,
       {
@@ -39,22 +37,7 @@ export async function categoriseIngredients(ingredients: string[]): Promise<Cate
     ])
   );
 
-  const response = await fetch(JEV_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${config.TYPESAFE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ model: 'jev-latest', state: 'Grocery shopping list', questions }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Jev categorisation failed: ${response.status}`);
-  }
-
-  const { answers } = (await response.json()) as {
-    answers: Record<string, { choice?: string }>;
-  };
+  const answers = await askJev('Grocery shopping list', questions);
 
   const result: CategoryMap = {};
   ingredients.forEach((ingredient, index) => {

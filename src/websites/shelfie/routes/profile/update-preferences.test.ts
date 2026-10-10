@@ -16,7 +16,6 @@ const mockSendToQueue = vi.fn();
 function mockContext() {
   return createMockContext({
     databaseClient: { db: {} },
-    openaiClient: { getClient: () => ({}) },
     queueClient: {
       channel: { sendToQueue: mockSendToQueue },
       recommendationQueue: 'recommendations',
@@ -40,10 +39,7 @@ describe('updateProfilePreferences handler', () => {
       '  More sci-fi and less romance please  '
     );
 
-    expect(moderateCustomPreferences).toHaveBeenCalledWith(
-      {},
-      'More sci-fi and less romance please'
-    );
+    expect(moderateCustomPreferences).toHaveBeenCalledWith('More sci-fi and less romance please');
     expect(updateCustomPreferences).toHaveBeenCalledWith(
       {},
       'request-id',
