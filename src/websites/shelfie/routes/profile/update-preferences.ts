@@ -71,8 +71,7 @@ export async function updateProfilePreferences(
     // preference (off-topic, abusive, or an attempt to instruct/inject). This is defense in
     // depth, not a replacement for the untrusted-data framing still applied when the (now
     // vetted) text is later placed into the main recommendation prompt.
-    const openaiClient = c.get('openaiClient');
-    const moderation = await moderateCustomPreferences(openaiClient.getClient(), sanitized);
+    const moderation = await moderateCustomPreferences(sanitized);
     if (!moderation.allowed) {
       return {
         status: 400,

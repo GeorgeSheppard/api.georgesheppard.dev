@@ -73,9 +73,7 @@ describe('categoriseIngredients', () => {
   it('should throw when Jev returns an error status', async () => {
     mockFetch.mockResolvedValue(jevResponse({}, false, 429));
 
-    await expect(categoriseIngredients(['Chicken'])).rejects.toThrow(
-      'Jev categorisation failed: 429'
-    );
+    await expect(categoriseIngredients(['Chicken'])).rejects.toThrow('Jev request failed: 429');
   });
 
   it('should send one choice question per ingredient with the API key', async () => {
