@@ -1,5 +1,6 @@
-import OpenAI from 'openai';
 import { config } from '@config/index.js';
+
+const JEV_URL = 'https://api.typesafe.ai/v1/systemone';
 
 const CATEGORIES = [
   'Fresh Fruit & Vegetables',
@@ -26,39 +27,40 @@ export type CategoryMap = Record<string, IngredientCategory>;
 export async function categoriseIngredients(ingredients: string[]): Promise<CategoryMap> {
   if (ingredients.length === 0) return {};
 
-  const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
+  const criteria = Object.fromEntries([...CATEGORIES, 'Other'].map((category) => [category, null]));
+  const questions = Object.fromEntries(
+    ingredients.map((ingredient, index) => [
+      `q${index}`,
+      {
+        type: 'choice',
+        instructions: `Which British supermarket section would you find the ingredient "${ingredient}" in? Use "Other" only if none fit.`,
+        criteria,
+      },
+    ])
+  );
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
-    messages: [
-      {
-        role: 'system',
-        content: `You categorise grocery ingredients into British supermarket sections. Return a JSON object mapping each ingredient to exactly one of these categories: ${CATEGORIES.join(', ')}, Other. Use "Other" only if none fit.`,
-      },
-      {
-        role: 'user',
-        content: JSON.stringify(ingredients),
-      },
-    ],
-    response_format: { type: 'json_object' },
-    temperature: 0,
+  const response = await fetch(JEV_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.TYPESAFE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ model: 'jev-latest', state: 'Grocery shopping list', questions }),
   });
 
-  const content = completion.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error('No response from OpenAI');
+  if (!response.ok) {
+    throw new Error(`Jev categorisation failed: ${response.status}`);
   }
 
-  const parsed = JSON.parse(content) as Record<string, string>;
+  const { answers } = (await response.json()) as {
+    answers: Record<string, { choice?: string }>;
+  };
+
   const result: CategoryMap = {};
-  for (const ingredient of ingredients) {
-    const category = parsed[ingredient];
-    if (category && isValidCategory(category)) {
-      result[ingredient] = category;
-    } else {
-      result[ingredient] = 'Other';
-    }
-  }
+  ingredients.forEach((ingredient, index) => {
+    const category = answers[`q${index}`]?.choice;
+    result[ingredient] = category && isValidCategory(category) ? category : 'Other';
+  });
   return result;
 }
 
