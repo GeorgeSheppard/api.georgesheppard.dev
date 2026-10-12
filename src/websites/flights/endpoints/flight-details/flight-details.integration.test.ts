@@ -1,10 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestApp } from '@test/utils/app.js';
 import { createMockOpenSkyClient } from '@test/mocks/opensky-client.js';
 import { createMockFlightAwareClient } from '@test/mocks/flightaware-client.js';
 import type { FlightDetailsResponse } from './flight-details.js';
+import { clearAirlineNameCache } from '../../utils/airline-names.js';
 
 describe('GET /flights/details', () => {
+  beforeEach(() => {
+    clearAirlineNameCache();
+  });
+
   it('returns merged position and route details for the aircraft', async () => {
     const { openSkyClient } = createMockOpenSkyClient({
       '/states/all': {
@@ -38,11 +43,16 @@ describe('GET /flights/details', () => {
           {
             fa_flight_id: 'BAW123-1700000000-airline-0001',
             ident: 'BAW123',
-            operator: 'British Airways',
+            operator: 'BAW',
             aircraft_type: 'A320',
             registration: 'G-EUUA',
-            origin: { code: 'EGLL', name: 'London Heathrow', city: 'London' },
-            destination: { code: 'LFPG', name: 'Paris Charles de Gaulle', city: 'Paris' },
+            origin: { code: 'EGLL', code_iata: 'LHR', name: 'London Heathrow', city: 'London' },
+            destination: {
+              code: 'LFPG',
+              code_iata: 'CDG',
+              name: 'Paris Charles de Gaulle',
+              city: 'Paris',
+            },
             status: 'En Route',
             scheduled_out: '2026-09-26T09:00:00Z',
             estimated_out: '2026-09-26T09:05:00Z',
@@ -53,6 +63,7 @@ describe('GET /flights/details', () => {
           },
         ],
       },
+      '/operators/BAW': { name: 'British Airways', shortname: 'British Airways' },
     });
     const app = await createTestApp({ openSkyClient, flightAwareClient });
 
@@ -62,6 +73,7 @@ describe('GET /flights/details', () => {
     expect(await response.json()).toEqual({
       icao24: '4ca7b3',
       callsign: 'BAW123',
+      airline: { code: 'BAW', name: 'British Airways' },
       position: {
         latitude: 51.5,
         longitude: 0.1,
@@ -73,11 +85,16 @@ describe('GET /flights/details', () => {
       },
       route: {
         faFlightId: 'BAW123-1700000000-airline-0001',
-        operator: 'British Airways',
+        operator: 'BAW',
         aircraftType: 'A320',
         registration: 'G-EUUA',
-        origin: { code: 'EGLL', name: 'London Heathrow', city: 'London' },
-        destination: { code: 'LFPG', name: 'Paris Charles de Gaulle', city: 'Paris' },
+        origin: { code: 'EGLL', iataCode: 'LHR', name: 'London Heathrow', city: 'London' },
+        destination: {
+          code: 'LFPG',
+          iataCode: 'CDG',
+          name: 'Paris Charles de Gaulle',
+          city: 'Paris',
+        },
         status: 'En Route',
         scheduledOut: '2026-09-26T09:00:00Z',
         estimatedOut: '2026-09-26T09:05:00Z',
@@ -112,6 +129,7 @@ describe('GET /flights/details', () => {
     expect(await response.json()).toEqual({
       icao24: '4ca7b3',
       callsign: null,
+      airline: null,
       position: null,
       route: null,
     });

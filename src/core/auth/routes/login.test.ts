@@ -2,12 +2,49 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { OpenAPIHono } from '@hono/zod-openapi';
 
 vi.mock('@core/utils/cognito-oauth.js');
+vi.mock('@config/index.js', () => ({
+  config: { NODE_ENV: 'test', BACKEND_URL: 'https://api.example.com' },
+}));
+import { config } from '@config/index.js';
 import { buildAuthorizeUrl } from '@core/utils/cognito-oauth.js';
 import { registerLoginRoute } from './login.js';
 
 describe('login route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.assign(config, { NODE_ENV: 'test' });
+  });
+
+  it('sets oauth cookies with SameSite=None; Secure in production', async () => {
+    Object.assign(config, { NODE_ENV: 'production' });
+    vi.mocked(buildAuthorizeUrl).mockReturnValue('https://cognito.example.com/oauth2/authorize');
+
+    const app = new OpenAPIHono();
+    registerLoginRoute(app);
+
+    const res = await app.request('/auth/login');
+
+    const oauthCookies = res.headers.getSetCookie().filter((c) => c.startsWith('oauth_'));
+    expect(oauthCookies).toHaveLength(3);
+    for (const cookie of oauthCookies) {
+      expect(cookie).toContain('SameSite=None');
+      expect(cookie).toContain('Secure');
+    }
+  });
+
+  it('sets oauth cookies with SameSite=Lax outside production', async () => {
+    vi.mocked(buildAuthorizeUrl).mockReturnValue('https://cognito.example.com/oauth2/authorize');
+
+    const app = new OpenAPIHono();
+    registerLoginRoute(app);
+
+    const res = await app.request('/auth/login');
+
+    const oauthCookies = res.headers.getSetCookie().filter((c) => c.startsWith('oauth_'));
+    expect(oauthCookies).toHaveLength(3);
+    for (const cookie of oauthCookies) {
+      expect(cookie).toContain('SameSite=Lax');
+    }
   });
 
   it('redirects to the cognito authorize url and sets oauth cookies', async () => {

@@ -24,6 +24,7 @@ const envSchema = z.object({
   MAILGUN_API_KEY: z.string(),
   OPENAI_API_KEY: z.string(),
   TFL_API_KEY: z.string(),
+  TYPESAFE_API_KEY: z.string(),
 
   // OpenSky Network (OAuth2 client credentials)
   OPENSKY_CLIENT_ID: z.string(),

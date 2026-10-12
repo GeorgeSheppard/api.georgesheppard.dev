@@ -44,7 +44,7 @@ describe('getShoppingList handler', () => {
     expect(categoriseIngredients).not.toHaveBeenCalled();
   });
 
-  it('should categorise ingredients via OpenAI', async () => {
+  it('should categorise ingredients', async () => {
     const recipeId = 'recipe-1';
     const componentId = 'comp-1';
     const recipe: IRecipe = {

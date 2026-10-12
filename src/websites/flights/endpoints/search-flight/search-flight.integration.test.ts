@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTestApp } from '@test/utils/app.js';
 import { createMockFlightAwareClient } from '@test/mocks/flightaware-client.js';
+import { RateLimitedError } from '@core/utils/rate-limited-error.js';
 
 describe('GET /flights/search', () => {
   it('returns flights matching the given flight number', async () => {
@@ -13,8 +14,13 @@ describe('GET /flights/search', () => {
             operator: 'British Airways',
             aircraft_type: 'A320',
             registration: 'G-EUUA',
-            origin: { code: 'EGLL', name: 'London Heathrow', city: 'London' },
-            destination: { code: 'LFPG', name: 'Paris Charles de Gaulle', city: 'Paris' },
+            origin: { code: 'EGLL', code_iata: 'LHR', name: 'London Heathrow', city: 'London' },
+            destination: {
+              code: 'LFPG',
+              code_iata: 'CDG',
+              name: 'Paris Charles de Gaulle',
+              city: 'Paris',
+            },
             status: 'En Route',
             scheduled_out: '2026-09-26T09:00:00Z',
             estimated_out: '2026-09-26T09:05:00Z',
@@ -39,8 +45,13 @@ describe('GET /flights/search', () => {
           operator: 'British Airways',
           aircraftType: 'A320',
           registration: 'G-EUUA',
-          origin: { code: 'EGLL', name: 'London Heathrow', city: 'London' },
-          destination: { code: 'LFPG', name: 'Paris Charles de Gaulle', city: 'Paris' },
+          origin: { code: 'EGLL', iataCode: 'LHR', name: 'London Heathrow', city: 'London' },
+          destination: {
+            code: 'LFPG',
+            iataCode: 'CDG',
+            name: 'Paris Charles de Gaulle',
+            city: 'Paris',
+          },
           status: 'En Route',
           scheduledOut: '2026-09-26T09:00:00Z',
           estimatedOut: '2026-09-26T09:05:00Z',
@@ -50,6 +61,20 @@ describe('GET /flights/search', () => {
           actualIn: null,
         },
       ],
+    });
+  });
+
+  it('returns 429 with a retry time when the FlightAware rate limit is reached', async () => {
+    const { flightAwareClient, get } = createMockFlightAwareClient();
+    get.mockRejectedValue(new RateLimitedError('FlightAware rate limit reached', 42));
+    const app = await createTestApp({ flightAwareClient });
+
+    const response = await app.request('http://localhost/flights/search?flightNumber=BA123');
+
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({
+      error: 'FlightAware rate limit reached',
+      retryAfterSeconds: 42,
     });
   });
 

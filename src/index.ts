@@ -12,6 +12,7 @@ import { CountryIsIpLocator } from '@core/utils/ip-locator.js';
 import { TflClientWrapper } from '@core/utils/tfl-client.js';
 import { OpenSkyClientWrapper } from '@core/utils/opensky-client.js';
 import { FlightAwareClientWrapper } from '@core/utils/flightaware-client.js';
+import { PlanespottersClientWrapper } from '@core/utils/planespotters-client.js';
 import { logger } from '@core/telemetry/logger.js';
 
 async function main() {
@@ -37,6 +38,7 @@ async function main() {
   const tflClient = new TflClientWrapper();
   const openSkyClient = new OpenSkyClientWrapper();
   const flightAwareClient = new FlightAwareClientWrapper();
+  const planespottersClient = new PlanespottersClientWrapper();
   const app = await createApp({
     databaseClient,
     queueClient,
@@ -48,6 +50,7 @@ async function main() {
     tflClient,
     openSkyClient,
     flightAwareClient,
+    planespottersClient,
   });
 
   const server = serve({
