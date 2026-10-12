@@ -62,12 +62,22 @@ if ! defaults read /Library/Preferences/com.apple.loginwindow autoLoginUser >/de
     "Turn it on in System Settings > Users & Groups (requires FileVault to be off)."
 fi
 
-if [[ ! -f "$CREDENTIALS_FILE" ]]; then
+# These are only the Machine Identity credentials deploy.sh uses to log in to Infisical, every app secret
+# is fetched fresh from Infisical on each deploy. To rotate them, re-run with the new values exported:
+#   INFISICAL_CLIENT_ID=... INFISICAL_CLIENT_SECRET=... INFISICAL_PROJECT_ID=... infra/install.sh
+if [[ -n "${INFISICAL_CLIENT_ID:-}" && -n "${INFISICAL_CLIENT_SECRET:-}" && -n "${INFISICAL_PROJECT_ID:-}" ]]; then
+  client_id="$INFISICAL_CLIENT_ID"
+  client_secret="$INFISICAL_CLIENT_SECRET"
+  project_id="$INFISICAL_PROJECT_ID"
+elif [[ ! -f "$CREDENTIALS_FILE" ]]; then
   log "Infisical Machine Identity credentials not found, enter them now"
   read -rp "INFISICAL_CLIENT_ID: " client_id
   read -rsp "INFISICAL_CLIENT_SECRET: " client_secret
   echo
   read -rp "INFISICAL_PROJECT_ID: " project_id
+fi
+if [[ -n "${client_id:-}" ]]; then
+  log "Writing Infisical credentials to $CREDENTIALS_FILE"
   mkdir -p "$(dirname "$CREDENTIALS_FILE")"
   (
     umask 077
@@ -77,17 +87,12 @@ if [[ ! -f "$CREDENTIALS_FILE" ]]; then
 fi
 chmod 600 "$CREDENTIALS_FILE"
 
-log "Syncing deploy files into $COMPOSE_DIR"
-mkdir -p "$COMPOSE_DIR/cronjobs"
+log "Syncing deploy.sh into $COMPOSE_DIR"
+mkdir -p "$COMPOSE_DIR"
 install -m 755 "$SRC_DIR/deploy.sh" "$COMPOSE_DIR/deploy.sh"
-# Cronjobs have secrets filled in by hand on the box, so never overwrite an existing one
-for cronjob in "$SRC_DIR"/cronjobs/*; do
-  dest="$COMPOSE_DIR/cronjobs/$(basename "$cronjob")"
-  [[ -e "$dest" ]] || cp "$cronjob" "$dest"
-  if grep -q "<fill in" "$dest"; then
-    warn "$dest still has placeholder values, fill them in."
-  fi
-done
+if [[ -d "$COMPOSE_DIR/cronjobs" ]]; then
+  warn "$COMPOSE_DIR/cronjobs is no longer used (the scheduler generates its cronjobs), delete it once you're happy."
+fi
 
 log "Writing launchd job $PLIST"
 mkdir -p "$(dirname "$PLIST")"

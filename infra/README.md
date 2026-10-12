@@ -27,10 +27,11 @@ It:
    if missing, starts OrbStack, points the `docker` CLI at it and turns on OrbStack's **Start at login**.
 2. Sets power settings so the box never sleeps and powers back on after a power cut (`pmset`, asks for your password).
    It warns if automatic login is off, as without it nothing starts after a reboot until someone logs in.
-3. Prompts for the Infisical Machine Identity credentials the first time and stores them in
-   `~/.config/infisical/mac-mini.env` (`chmod 600`). Delete that file and re-run to change them.
-4. Copies `deploy.sh` into the compose directory (`~/Documents/root`, override with `COMPOSE_DIR=...`) and copies any
-   missing `cronjobs` (existing ones are left alone as their secrets are filled in by hand).
+3. Stores the Infisical Machine Identity credentials in `~/.config/infisical/mac-mini.env` (`chmod 600`), prompting
+   for them the first time. These are the only secrets kept on the box, everything else comes from Infisical (see
+   below). To rotate them, re-run with the new values set:
+   `INFISICAL_CLIENT_ID=... INFISICAL_CLIENT_SECRET=... INFISICAL_PROJECT_ID=... infra/install.sh`
+4. Copies `deploy.sh` into the compose directory (`~/Documents/root`, override with `COMPOSE_DIR=...`).
 5. Writes `~/Library/LaunchAgents/com.docker.compose.update.plist` and (re)loads it, which kicks off a deploy
    immediately.
 
@@ -47,8 +48,13 @@ There's no inbound deploy webhook and no self-hosted runner. The `launchd` job (
 `infra/compose.yaml` from `master`, regenerates `.env` from Infisical, starts OrbStack if it isn't running, and then
 does `docker compose pull && docker compose up -d --remove-orphans`. `docker compose up -d` only recreates containers
 whose image or config actually changed, so this is safe to run unconditionally every 5 minutes — no manual diffing
-needed. Secrets are not kept in a hand-edited `.env` on the box — updating a credential in Infisical takes effect on
-the next run, no SSH session needed.
+needed.
+
+Secrets are not kept in a hand-edited `.env` on the box — updating a secret in Infisical takes effect within 5
+minutes, no SSH session or re-running `install.sh` needed. Compose doesn't notice changes inside an `env_file` by
+itself, so `deploy.sh` compares the freshly exported `.env` with the previous one and runs `up` with
+`--force-recreate` when anything changed. Note that Postgres only reads `DATABASE_PASSWORD` when it first creates the
+database, so rotating that one also needs an `ALTER USER ... PASSWORD` in `psql`.
 
 Every service has `restart: always`, so containers are restarted if they crash and come back when OrbStack starts.
 Together with OrbStack starting at login, automatic login and `autorestart` after power loss, the stack recovers from a
@@ -161,4 +167,6 @@ Both local and prod composes expose a management port (15672) that allows you to
 
 ## Cronjob
 
-Fill in the environment variable required for the cronjob. This will be loaded in by the scheduler.
+The `scheduler` service writes its cronjobs on start, using `API_KEY` from the Infisical-generated `.env`. Rotating
+the key in Infisical changes the service's environment, so the next deploy recreates it with the new key. To add or
+change a cronjob, edit the `scheduler` command in `compose.yaml`.

@@ -71,6 +71,15 @@ services:
     restart: always
     depends_on:
       - api
-    volumes:
-      - ./cronjobs:/etc/cron.d
-    command: /bin/bash -c "apt-get update && apt-get install -y curl cron && cron -f"
+    # Interpolated from the Infisical-generated .env, so a rotated key recreates this container on the next deploy
+    environment:
+      API_KEY: '${API_KEY}'
+    command:
+      - /bin/bash
+      - -c
+      - |
+        apt-get update && apt-get install -y curl cron
+        cat > /etc/cron.d/recommendations <<EOF
+        0 17 * * * root curl -H "x-api-key: $${API_KEY}" http://api:5240/api/queue-due-recommendations >> /var/log/cron.log 2>&1
+        EOF
+        exec cron -f
