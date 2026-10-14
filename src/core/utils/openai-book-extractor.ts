@@ -37,7 +37,8 @@ export async function extractBooksFromImages(
   ];
 
   const completion = await openaiClient.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-6-luna',
+    reasoning_effort: 'none',
     messages: [
       {
         role: 'system',
