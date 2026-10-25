@@ -32,6 +32,8 @@ on_error() {
 trap on_error ERR
 
 cd "$(dirname "$0")"
+# .env and .env.deployed hold every production secret
+umask 077
 
 : "${INFISICAL_CLIENT_ID:?INFISICAL_CLIENT_ID is not set}"
 : "${INFISICAL_CLIENT_SECRET:?INFISICAL_CLIENT_SECRET is not set}"
@@ -42,7 +44,8 @@ log "Starting deploy"
 ping_healthcheck "$HEALTHCHECK_URL/start"
 
 log "Refreshing compose.yaml from master"
-curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o compose.yaml
+curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o compose.yaml.new
+mv compose.yaml.new compose.yaml
 
 log "Authenticating with Infisical"
 INFISICAL_TOKEN="$(infisical login --method=universal-auth \
@@ -57,13 +60,6 @@ infisical export \
   --env="$INFISICAL_ENV" \
   --format=dotenv-export > .env.new
 
-# Compose only notices changes to ${VAR}s interpolated into compose.yaml, not to the contents of an env_file, so
-# force a recreate when any secret changed or services using env_file (api) would keep running with stale values
-up_args=(--remove-orphans)
-if ! cmp -s .env.new .env; then
-  log "Secrets changed in Infisical, all containers will be recreated"
-  up_args+=(--force-recreate)
-fi
 mv .env.new .env
 
 # OrbStack should already be running (Start at login), but start it if e.g. it was quit
@@ -75,8 +71,17 @@ fi
 log "Pulling images"
 docker compose pull
 
-log "Restarting any containers with a changed image, config or secrets"
-docker compose up -d "${up_args[@]}"
+log "Restarting any containers with a changed image or config"
+docker compose up -d --remove-orphans
+
+# Compose notices changed ${VAR}s interpolated into compose.yaml, but not changes inside an env_file, so api (the
+# only env_file service) would keep running with stale secrets. Compare against what was last deployed (sorted, so
+# key order doesn't matter) rather than the previous .env, so a failed run is retried instead of forgotten.
+if [[ -f .env.deployed ]] && ! cmp -s <(sort .env) <(sort .env.deployed); then
+  log "Secrets changed in Infisical, recreating api"
+  docker compose up -d --no-deps --force-recreate api
+fi
+cp .env .env.deployed
 
 log "Deploy succeeded"
 ping_healthcheck "$HEALTHCHECK_URL"

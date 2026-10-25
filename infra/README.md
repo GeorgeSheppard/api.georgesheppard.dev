@@ -23,17 +23,23 @@ infra/install.sh
 
 It:
 
-1. Installs Homebrew, [OrbStack](https://orbstack.dev) and the [Infisical CLI](https://infisical.com/docs/cli/overview)
-   if missing, starts OrbStack, points the `docker` CLI at it and turns on OrbStack's **Start at login**.
-2. Sets power settings so the box never sleeps and powers back on after a power cut (`pmset`, asks for your password).
+1. Pauses the deploy launchd job, so nothing deploys while it runs.
+2. Installs Homebrew, [OrbStack](https://orbstack.dev) and the [Infisical CLI](https://infisical.com/docs/cli/overview)
+   if missing, starts OrbStack and turns on its **Start at login**.
+3. Sets power settings so the box never sleeps and powers back on after a power cut (`pmset`, asks for your password).
    It warns if automatic login is off, as without it nothing starts after a reboot until someone logs in.
-3. Stores the Infisical Machine Identity credentials in `~/.config/infisical/mac-mini.env` (`chmod 600`), prompting
+4. Stores the Infisical Machine Identity credentials in `~/.config/infisical/mac-mini.env` (`chmod 600`), prompting
    for them the first time. These are the only secrets kept on the box, everything else comes from Infisical (see
    below). To rotate them, re-run with the new values set:
    `INFISICAL_CLIENT_ID=... INFISICAL_CLIENT_SECRET=... INFISICAL_PROJECT_ID=... infra/install.sh`
-4. Copies `deploy.sh` into the compose directory (`~/Documents/root`, override with `COMPOSE_DIR=...`).
-5. Writes `~/Library/LaunchAgents/com.docker.compose.update.plist` and (re)loads it, which kicks off a deploy
-   immediately.
+5. Switches `~/.docker/config.json` off Docker Desktop's credential helper and pre-pulls every image into OrbStack,
+   running `docker login` if the private api image can't be pulled.
+6. Copies `deploy.sh` into the compose directory (`~/Documents/root`, override with `COMPOSE_DIR=...`).
+7. Stops here if Docker Desktop is running (see the migration below). Otherwise points the `docker` CLI at OrbStack,
+   writes `~/Library/LaunchAgents/com.docker.compose.update.plist` and loads it, which kicks off a deploy immediately.
+
+Steps 1-6 never touch running containers, so re-running it on a live box only causes a deploy, which is a no-op if
+nothing changed.
 
 Before the first run, create a Machine Identity in Infisical (Universal Auth) scoped to read access on the production
 environment.
@@ -52,8 +58,8 @@ needed.
 
 Secrets are not kept in a hand-edited `.env` on the box — updating a secret in Infisical takes effect within 5
 minutes, no SSH session or re-running `install.sh` needed. Compose doesn't notice changes inside an `env_file` by
-itself, so `deploy.sh` compares the freshly exported `.env` with the previous one and runs `up` with
-`--force-recreate` when anything changed. Note that Postgres only reads `DATABASE_PASSWORD` when it first creates the
+itself, so `deploy.sh` compares the freshly exported `.env` with the last successfully deployed one
+(`.env.deployed`) and force-recreates `api` when anything changed. Note that Postgres only reads `DATABASE_PASSWORD` when it first creates the
 database, so rotating that one also needs an `ALTER USER ... PASSWORD` in `psql`.
 
 Every service has `restart: always`, so containers are restarted if they crash and come back when OrbStack starts.
@@ -72,18 +78,45 @@ pulls the new image, refreshes secrets from Infisical, and restarts anything tha
 
 ### Migrating from Docker Desktop
 
-Postgres and RabbitMQ data live in bind mounts (`./pgdata`, `./rabbitmq`) in the compose directory, not in Docker
-Desktop's VM, so nothing needs copying across — images are re-pulled by `deploy.sh`.
+The data lives in bind mounts (`./pgdata`, `./rabbitmq`) in the compose directory, not in Docker Desktop's VM, so
+nothing needs copying. Everything slow (installing, logging in, pulling images) happens while Docker Desktop is still
+serving traffic, so the downtime is just stopping the old stack and starting the new one, typically 1-2 minutes. The
+two runtimes must never both run the stack, as two Postgres servers on one `./pgdata` can corrupt it, which is why
+`install.sh` won't cut over while Docker Desktop is running.
 
-1. Stop the stack while Docker Desktop is still running (no `-v`!):
+**Prep (no downtime)**
+
+1. On the mac mini, check out this branch (or `master` once merged) and run `infra/install.sh`. It prepares
+   everything, then stops with a warning that Docker Desktop is still running. From now on automatic deploys are
+   paused (healthchecks.io will start alerting, which is expected) and the old stack keeps serving.
+2. Merge the PR if you haven't. Nothing on the box picks it up while deploys are paused.
+
+**Cutover (downtime starts at step 5)**
+
+3. Back up the database:
    ```
-   cd ~/Documents/root && docker compose down
+   cd ~/Documents/root
+   docker --context desktop-linux compose exec -T db sh -c 'pg_dumpall -U "$POSTGRES_USER"' > ~/pg-backup-$(date +%F).sql
    ```
-2. Quit Docker Desktop and turn off its "Start Docker Desktop when you sign in" setting.
-3. Run `infra/install.sh`. It reuses the existing credentials file and replaces the old launchd job.
-4. Check everything came up with `docker compose ps` and `tail ~/docker-launchd.log`.
-5. Once happy, uninstall Docker Desktop. Optionally, `orb migrate docker` can import any leftover images/volumes
-   from Docker Desktop first, but the stack itself doesn't need it.
+4. Check RabbitMQ has no messages waiting (the management UI on port 15672, or
+   `docker --context desktop-linux exec rabbitmq rabbitmqctl list_queues`). The queues are re-created when the app
+   starts, but RabbitMQ now gets a fixed hostname, which gives it a fresh data directory, so messages still queued
+   would be left behind.
+5. Stop the old stack (no `-v`!): `docker --context desktop-linux compose down`
+6. Quit Docker Desktop and turn off its "Start Docker Desktop when you sign in" setting.
+7. `git pull` and re-run `infra/install.sh`. It cuts over and starts the stack on OrbStack.
+8. Check `tail -f ~/docker-launchd.log` shows "Deploy succeeded", then that `docker compose ps` shows everything
+   running and healthy, and that the api responds through the tunnel. If Postgres won't start, check
+   `docker compose logs db` first.
+
+**Rollback** (if the stack won't come up on OrbStack)
+
+1. `launchctl bootout gui/$(id -u)/com.docker.compose.update` then `docker compose down` and quit OrbStack.
+2. Open Docker Desktop, `docker context use desktop-linux`, `cd ~/Documents/root && docker compose up -d`.
+3. Automatic deploys stay off until you fix the problem and re-run `install.sh`.
+
+Once you're happy, uninstall Docker Desktop and delete `~/Documents/root/cronjobs` (no longer used). Optionally,
+`orb migrate docker` can import leftover images/volumes first, but the stack doesn't need it.
 
 ## Manual updates
 

@@ -6,6 +6,11 @@ set -Eeuo pipefail
 # stops the machine sleeping and powers it back on after a power cut, syncs deploy.sh into the
 # compose directory, and (re)loads the launchd job that runs deploy.sh at load and every 5 minutes.
 #
+# Everything up to the cutover (installing, logging in, pre-pulling images) is safe to run while another
+# Docker runtime is still serving the stack. The cutover (pointing deploys at OrbStack and loading the
+# launchd job, which starts the stack) refuses to run until Docker Desktop has been quit, so two runtimes
+# never run Postgres against the same ./pgdata.
+#
 # Usage (on the mac mini, from a checkout of this repo): infra/install.sh
 # Optional env: COMPOSE_DIR (defaults to ~/Documents/root)
 
@@ -21,6 +26,14 @@ log() { echo "==> $*"; }
 warn() { echo "WARNING: $*" >&2; }
 
 [[ "$(uname)" == "Darwin" ]] || { echo "install.sh only supports macOS" >&2; exit 1; }
+
+# Pause automatic deploys first: the old job could otherwise fire mid-install against whichever runtime the
+# docker CLI currently points at. It's loaded again at the end.
+log "Pausing the deploy launchd job"
+launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+
+# Every docker command in this script targets OrbStack, without touching the global context until cutover
+export DOCKER_CONTEXT=orbstack
 
 if ! command -v brew >/dev/null 2>&1; then
   log "Installing Homebrew"
@@ -38,10 +51,6 @@ if ! command -v infisical >/dev/null 2>&1; then
   brew install infisical/get-cli/infisical
 fi
 
-if pgrep -xq "Docker Desktop"; then
-  warn "Docker Desktop is running. Quit it and turn off 'Start Docker Desktop when you sign in' (see infra/README.md)."
-fi
-
 log "Starting OrbStack"
 # The app installs the orb/docker CLIs into ~/.orbstack/bin on first launch
 open -ga OrbStack
@@ -51,7 +60,6 @@ for _ in {1..60}; do
   sleep 2
 done
 docker info >/dev/null 2>&1 || { echo "OrbStack did not start, open it manually to finish its setup" >&2; exit 1; }
-docker context use orbstack >/dev/null
 orb config set app.start_at_login true >/dev/null || warn "Couldn't enable OrbStack 'Start at login', turn it on in OrbStack's settings."
 
 log "Configuring power settings (never sleep, restart after power failure), may ask for your password"
@@ -87,12 +95,43 @@ if [[ -n "${client_id:-}" ]]; then
 fi
 chmod 600 "$CREDENTIALS_FILE"
 
+# Docker Desktop points ~/.docker/config.json at its own credential helper, which lives inside Docker.app and isn't
+# on the launchd PATH (and disappears when Docker Desktop is uninstalled), so pulls of the private image would fail
+if grep -q '"credsStore": *"desktop"' "$HOME/.docker/config.json" 2>/dev/null; then
+  log "Switching docker credential store from Docker Desktop's to the macOS keychain"
+  cp "$HOME/.docker/config.json" "$HOME/.docker/config.json.bak"
+  sed -i '' 's/"credsStore": *"desktop"/"credsStore": "osxkeychain"/' "$HOME/.docker/config.json"
+fi
+
+# Pulling now means the cutover only has to start containers, not download images
+log "Pre-pulling images into OrbStack"
+pull_images() {
+  sed -n 's/^ *image: *//p' "$SRC_DIR/compose.yaml" | while read -r image; do
+    docker pull -q "$image" >/dev/null || return 1
+  done
+}
+if ! pull_images; then
+  log "Pull failed, log in to Docker Hub (needed for the private api image)"
+  docker login
+  pull_images
+fi
+
 log "Syncing deploy.sh into $COMPOSE_DIR"
 mkdir -p "$COMPOSE_DIR"
 install -m 755 "$SRC_DIR/deploy.sh" "$COMPOSE_DIR/deploy.sh"
 if [[ -d "$COMPOSE_DIR/cronjobs" ]]; then
   warn "$COMPOSE_DIR/cronjobs is no longer used (the scheduler generates its cronjobs), delete it once you're happy."
 fi
+
+if pgrep -qf "/Applications/Docker.app/"; then
+  warn "Prep done, but Docker Desktop is still running so the stack was NOT moved to OrbStack, and automatic" \
+    "deploys are paused. To cut over: stop the old stack, quit Docker Desktop, then re-run this script" \
+    "(see 'Migrating from Docker Desktop' in infra/README.md)."
+  exit 1
+fi
+
+log "Pointing the docker CLI at OrbStack"
+docker context use orbstack >/dev/null
 
 log "Writing launchd job $PLIST"
 mkdir -p "$(dirname "$PLIST")"
@@ -109,6 +148,8 @@ cat >"$PLIST" <<EOF
     <dict>
         <key>PATH</key>
         <string>$HOME/.orbstack/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>DOCKER_CONTEXT</key>
+        <string>orbstack</string>
     </dict>
 
     <key>ProgramArguments</key>
@@ -137,8 +178,7 @@ cat >"$PLIST" <<EOF
 EOF
 plutil -lint "$PLIST" >/dev/null
 
-log "(Re)loading launchd job, which kicks off a deploy straight away"
-launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+log "Loading launchd job, which kicks off a deploy straight away"
 launchctl enable "$DOMAIN/$LABEL"
 # bootout is asynchronous, so bootstrap can briefly fail while the old job is still unloading
 for attempt in {1..5}; do

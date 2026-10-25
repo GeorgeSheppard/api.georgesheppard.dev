@@ -47,10 +47,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+      # Check every 2s while starting, so api isn't held back for a full 30s interval after every restart
+      start_interval: 2s
 
   queues:
     image: rabbitmq:4.0.5-management
     container_name: rabbitmq
+    # RabbitMQ keys its data directory by hostname, which otherwise is the container ID and changes on every recreate
+    hostname: rabbitmq
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: '${RABBITMQ_USER}'
@@ -64,6 +68,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+      start_interval: 2s
 
   scheduler:
     image: ubuntu:22.04
