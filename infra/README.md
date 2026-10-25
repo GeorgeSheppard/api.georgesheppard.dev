@@ -138,3 +138,33 @@ Both local and prod composes expose a management port (15672) that allows you to
 ## Cronjob
 
 Fill in the environment variable required for the cronjob. This will be loaded in by the scheduler.
+
+## Observability
+
+### Metrics (OTel Collector)
+
+The app already exports OpenTelemetry traces/logs/metrics (`src/core/telemetry`) to whatever OTLP backend
+`OTEL_EXPORTER_OTLP_ENDPOINT` points at (Grafana). The `otel-collector` service adds metrics for things the app
+itself can't see: host resources, Postgres stats, and full RabbitMQ stats (the app only tracks queue depth via
+`src/core/queue/client.ts`; the collector's `rabbitmqreceiver` adds consumer counts, unacked messages, node/connection
+stats, etc). It uses the same OTLP endpoint, plus one extra secret:
+
+- `OTEL_COLLECTOR_AUTHORIZATION_HEADER` — the full `Authorization` header value your Grafana OTLP endpoint expects
+  (e.g. `Basic <base64>` or `Bearer <token>`). Add it to Infisical alongside the other secrets; it's picked up via
+  `env_file: .env` like everything else.
+
+Its config lives in `infra/otel-collector-config.yaml` and is refreshed from `master` on every `deploy.sh` run, the
+same way `compose.yaml` is — edit it in the repo, not on the box.
+
+### RabbitMQ management UI and on-demand SQL (Adminer)
+
+Both `queues` (port 15672) and `adminer` are only reachable inside the docker network (`http://queues:15672`,
+`http://adminer:8080`) — they are not published to the host or the internet directly. To reach them:
+
+1. In the Cloudflare Zero Trust dashboard, add a public hostname to the existing tunnel for each
+   (e.g. `rabbitmq.georgesheppard.dev` → `http://queues:15672`, `sql.georgesheppard.dev` → `http://adminer:8080`).
+2. Put each hostname behind a Cloudflare Access application/policy (e.g. allow only your email) so they're never
+   reachable without auth — Adminer in particular is a raw SQL console against the production DB.
+
+When prompted by Adminer, connect with system `postgres`, server `db`, and the `DATABASE_USER`/`DATABASE_PASSWORD`/
+`DATABASE_DB` values from Infisical.
