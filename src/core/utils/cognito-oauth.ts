@@ -12,14 +12,15 @@ function tokenEndpoint(): string {
   return `${config.COGNITO_DOMAIN}/oauth2/token`;
 }
 
-export function buildAuthorizeUrl(params: {
+export function buildAuthorizeUrlForClient(params: {
+  clientId: string;
   state: string;
   nonce: string;
   redirectUri: string;
 }): string {
   const url = new URL(`${config.COGNITO_DOMAIN}/oauth2/authorize`);
   url.searchParams.set('response_type', 'code');
-  url.searchParams.set('client_id', config.COGNITO_CLIENT_ID);
+  url.searchParams.set('client_id', params.clientId);
   url.searchParams.set('redirect_uri', params.redirectUri);
   url.searchParams.set('state', params.state);
   url.searchParams.set('nonce', params.nonce);
@@ -27,17 +28,29 @@ export function buildAuthorizeUrl(params: {
   return url.toString();
 }
 
-export async function exchangeCodeForTokens(
-  code: string,
-  redirectUri: string
-): Promise<CognitoTokens> {
+export function buildAuthorizeUrl(params: {
+  state: string;
+  nonce: string;
+  redirectUri: string;
+}): string {
+  return buildAuthorizeUrlForClient({ ...params, clientId: config.COGNITO_CLIENT_ID });
+}
+
+export async function exchangeCodeForTokensForClient(params: {
+  clientId: string;
+  clientSecret?: string;
+  code: string;
+  redirectUri: string;
+}): Promise<CognitoTokens> {
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
-    client_id: config.COGNITO_CLIENT_ID,
-    client_secret: config.COGNITO_CLIENT_SECRET,
-    code,
-    redirect_uri: redirectUri,
+    client_id: params.clientId,
+    code: params.code,
+    redirect_uri: params.redirectUri,
   });
+  if (params.clientSecret) {
+    body.set('client_secret', params.clientSecret);
+  }
 
   const response = await fetch(tokenEndpoint(), {
     method: 'POST',
@@ -50,6 +63,18 @@ export async function exchangeCodeForTokens(
   }
 
   return (await response.json()) as CognitoTokens;
+}
+
+export async function exchangeCodeForTokens(
+  code: string,
+  redirectUri: string
+): Promise<CognitoTokens> {
+  return exchangeCodeForTokensForClient({
+    clientId: config.COGNITO_CLIENT_ID,
+    clientSecret: config.COGNITO_CLIENT_SECRET,
+    code,
+    redirectUri,
+  });
 }
 
 export async function refreshTokens(refreshToken: string): Promise<CognitoTokens> {
