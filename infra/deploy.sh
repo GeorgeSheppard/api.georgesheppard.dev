@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Run by com.docker.compose.update launchd job every 5 minutes from the compose directory
+# Installed by install.sh and run by its com.docker.compose.update launchd job every 5 minutes from the compose directory
 # on the mac mini (e.g. ~/Documents/root). Refreshes compose.yaml from the repo, regenerates
 # .env from Infisical (Machine Identity / Universal Auth, no login needed), then pulls and
 # (re)starts the stack. `docker compose up -d` only recreates containers whose config actually
@@ -11,7 +11,7 @@ set -Eeuo pipefail
 # Optional: INFISICAL_ENV (defaults to "prod")
 #
 # Pings healthchecks.io on every run so a silently-broken deploy (expired credentials, a
-# launchd job that stopped firing, Docker itself being down, ...) gets noticed within
+# launchd job that stopped firing, OrbStack itself being down, ...) gets noticed within
 # minutes instead of discovered by accident weeks later. If this box's check hasn't pinged
 # within its grace period, healthchecks.io emails/alerts. Losing network access to
 # hc-ping.com must never fail the deploy itself, so every ping is best-effort.
@@ -32,6 +32,8 @@ on_error() {
 trap on_error ERR
 
 cd "$(dirname "$0")"
+# .env and .env.deployed hold every production secret
+umask 077
 
 : "${INFISICAL_CLIENT_ID:?INFISICAL_CLIENT_ID is not set}"
 : "${INFISICAL_CLIENT_SECRET:?INFISICAL_CLIENT_SECRET is not set}"
@@ -42,7 +44,8 @@ log "Starting deploy"
 ping_healthcheck "$HEALTHCHECK_URL/start"
 
 log "Refreshing compose.yaml from master"
-curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o ~/Documents/root/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/infra/compose.yaml -o compose.yaml.new
+mv compose.yaml.new compose.yaml
 
 log "Authenticating with Infisical"
 INFISICAL_TOKEN="$(infisical login --method=universal-auth \
@@ -55,13 +58,30 @@ infisical export \
   --token="$INFISICAL_TOKEN" \
   --projectId="$INFISICAL_PROJECT_ID" \
   --env="$INFISICAL_ENV" \
-  --format=dotenv-export > .env
+  --format=dotenv-export > .env.new
+
+mv .env.new .env
+
+# OrbStack should already be running (Start at login), but start it if e.g. it was quit
+if ! docker info >/dev/null 2>&1; then
+  log "Starting OrbStack"
+  orb start
+fi
 
 log "Pulling images"
 docker compose pull
 
 log "Restarting any containers with a changed image or config"
 docker compose up -d --remove-orphans
+
+# Compose notices changed ${VAR}s interpolated into compose.yaml, but not changes inside an env_file, so api (the
+# only env_file service) would keep running with stale secrets. Compare against what was last deployed (sorted, so
+# key order doesn't matter) rather than the previous .env, so a failed run is retried instead of forgotten.
+if [[ -f .env.deployed ]] && ! cmp -s <(sort .env) <(sort .env.deployed); then
+  log "Secrets changed in Infisical, recreating api"
+  docker compose up -d --no-deps --force-recreate api
+fi
+cp .env .env.deployed
 
 log "Deploy succeeded"
 ping_healthcheck "$HEALTHCHECK_URL"
