@@ -3942,7 +3942,7 @@
         "tags": [
           "engine"
         ],
-        "description": "Start generating a Minecraft plugin from a description",
+        "description": "Generate a Minecraft plugin from a description, or change an existing project",
         "requestBody": {
           "required": true,
           "content": {
@@ -3955,6 +3955,11 @@
                     "minLength": 1,
                     "maxLength": 4000,
                     "description": "Plain-language description of the plugin"
+                  },
+                  "projectId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Existing project to change; omit to start a new plugin"
                   }
                 },
                 "required": [
@@ -3976,10 +3981,16 @@
                       "type": "string",
                       "format": "uuid",
                       "description": "Job ID to poll"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Project ID, pass it back to keep iterating"
                     }
                   },
                   "required": [
-                    "jobId"
+                    "jobId",
+                    "projectId"
                   ]
                 }
               }
@@ -4004,8 +4015,46 @@
               }
             }
           },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The project is still being built",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
           "429": {
-            "description": "Too many jobs in progress",
+            "description": "Too many jobs or servers in use",
             "content": {
               "application/json": {
                 "schema": {
@@ -4056,6 +4105,14 @@
                     "id": {
                       "type": "string",
                       "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Pass back as projectId to keep iterating"
+                    },
+                    "version": {
+                      "type": "integer"
                     },
                     "status": {
                       "type": "string",
@@ -4134,6 +4191,8 @@
                   },
                   "required": [
                     "id",
+                    "projectId",
+                    "version",
                     "status",
                     "error",
                     "result",
@@ -4211,6 +4270,13 @@
                             "type": "string",
                             "format": "uuid"
                           },
+                          "projectId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "version": {
+                            "type": "integer"
+                          },
                           "name": {
                             "type": "string"
                           },
@@ -4245,6 +4311,8 @@
                         "required": [
                           "id",
                           "jobId",
+                          "projectId",
+                          "version",
                           "name",
                           "status",
                           "ip",

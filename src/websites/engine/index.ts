@@ -1,6 +1,6 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { config } from '@config/index.js';
-import { createEngineJob, QueueFullError } from './endpoints/create-job/create-job.js';
+import { createEngineJob, CreateJobError } from './endpoints/create-job/create-job.js';
 import { createJobRoute } from './endpoints/create-job/create-job-definition.js';
 import { getEngineJob } from './endpoints/get-job/get-job.js';
 import { getJobRoute } from './endpoints/get-job/get-job-definition.js';
@@ -24,7 +24,7 @@ export function registerRoutes(app: OpenAPIHono) {
       );
       return c.json(result, 202);
     } catch (e) {
-      if (e instanceof QueueFullError) return c.json({ error: e.message }, 429);
+      if (e instanceof CreateJobError) return c.json({ error: e.message }, e.status);
       throw e;
     }
   });

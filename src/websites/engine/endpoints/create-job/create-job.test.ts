@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { DatabaseClient } from '@core/database/client.js';
 import type { QueueClient } from '@core/queue/client.js';
-import { createEngineJob, QueueFullError, CreateJobRequestSchema } from './create-job.js';
+import { createEngineJob, CreateJobError, CreateJobRequestSchema } from './create-job.js';
 
 vi.mock('../../repository.js');
 import { countActiveServers, createJob } from '../../repository.js';
@@ -11,30 +11,51 @@ const queueClient = {
   channel: { sendToQueue: vi.fn() },
 } as unknown as QueueClient;
 const databaseClient = {} as DatabaseClient;
+const limits = { maxQueued: 5, maxServers: 3 };
+const projectId = '660e8400-e29b-41d4-a716-446655440000';
+const job = { id: 'abc', projectId, version: 1, status: 'queued', s3Prefix: null, error: null };
 
 describe('createEngineJob', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(countActiveServers).mockResolvedValue(0);
   });
-  const limits = { maxQueued: 5, maxServers: 3 };
 
-  it('creates a job and enqueues it', async () => {
-    vi.mocked(createJob).mockResolvedValue({ id: 'abc' } as Awaited<ReturnType<typeof createJob>>);
+  it('creates a new project job and enqueues it', async () => {
+    vi.mocked(createJob).mockResolvedValue({ ok: true, job });
     const res = await createEngineJob(databaseClient, queueClient, { prompt: 'a sword' }, limits);
-    expect(res).toEqual({ jobId: 'abc' });
+    expect(res).toEqual({ jobId: 'abc', projectId });
+    expect(createJob).toHaveBeenCalledWith(databaseClient, 5, undefined);
     expect(queueClient.channel.sendToQueue).toHaveBeenCalledWith(
       'engine-jobs',
-      Buffer.from(JSON.stringify({ jobId: 'abc', prompt: 'a sword' })),
+      Buffer.from(JSON.stringify({ jobId: 'abc', prompt: 'a sword', projectId, version: 1 })),
       { persistent: true }
     );
   });
 
-  it('rejects when too many jobs are in progress', async () => {
-    vi.mocked(createJob).mockResolvedValue(undefined);
-    await expect(
-      createEngineJob(databaseClient, queueClient, { prompt: 'x' }, limits)
-    ).rejects.toBeInstanceOf(QueueFullError);
+  it('passes the previous version to the worker when iterating', async () => {
+    vi.mocked(createJob).mockResolvedValue({
+      ok: true,
+      job: { ...job, version: 2 },
+      baseKey: `engine/${projectId}/v1/`,
+    });
+    await createEngineJob(databaseClient, queueClient, { prompt: 'faster', projectId }, limits);
+    expect(countActiveServers).toHaveBeenCalledWith(databaseClient, projectId);
+    const sent = JSON.parse(vi.mocked(queueClient.channel.sendToQueue).mock.calls[0][1].toString());
+    expect(sent).toMatchObject({ version: 2, baseKey: `engine/${projectId}/v1/` });
+  });
+
+  it.each([
+    ['full', 429],
+    ['busy', 409],
+    ['unknown_project', 404],
+  ] as const)('maps %s to HTTP %i', async (reason, status) => {
+    vi.mocked(createJob).mockResolvedValue({ ok: false, reason });
+    const err = await createEngineJob(databaseClient, queueClient, { prompt: 'x' }, limits).catch(
+      (e: unknown) => e
+    );
+    expect(err).toBeInstanceOf(CreateJobError);
+    expect((err as CreateJobError).status).toBe(status);
     expect(queueClient.channel.sendToQueue).not.toHaveBeenCalled();
   });
 
@@ -42,12 +63,15 @@ describe('createEngineJob', () => {
     vi.mocked(countActiveServers).mockResolvedValue(3);
     await expect(
       createEngineJob(databaseClient, queueClient, { prompt: 'x' }, limits)
-    ).rejects.toBeInstanceOf(QueueFullError);
+    ).rejects.toMatchObject({ status: 429 });
     expect(createJob).not.toHaveBeenCalled();
   });
 
-  it('validates the prompt', () => {
+  it('validates the request', () => {
     expect(CreateJobRequestSchema.safeParse({ prompt: '  ' }).success).toBe(false);
     expect(CreateJobRequestSchema.safeParse({ prompt: 'x'.repeat(4001) }).success).toBe(false);
+    expect(CreateJobRequestSchema.safeParse({ prompt: 'x', projectId: 'nope' }).success).toBe(
+      false
+    );
   });
 });

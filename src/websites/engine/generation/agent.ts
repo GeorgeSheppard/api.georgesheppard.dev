@@ -80,6 +80,7 @@ export interface AgentOptions {
   log?: Log;
   model?: string;
   maxTurns?: number;
+  base?: { meta: PluginMeta; files: Files };
 }
 export interface AgentOutput {
   meta: PluginMeta;
@@ -98,10 +99,18 @@ export async function runAgent(o: AgentOptions): Promise<AgentOutput> {
   let meta: PluginMeta | undefined;
   let jar: Buffer | undefined;
   let dirty = true;
+  if (o.base) {
+    meta = o.base.meta;
+    Object.assign(files, o.base.files);
+  }
   const messages: ConversationMessage[] = [
-    { role: 'user', content: `Make this plugin: ${o.description}` },
+    {
+      role: 'user',
+      content: o.base
+        ? `This plugin already exists and is already set up, so do not call init_plugin: "${o.base.meta.name}" (plugin_id ${o.base.meta.pluginId}). Its files: ${Object.keys(o.base.files).join(', ')}. Use read_file to look at what is there, then change it as follows, keeping everything that already works: ${o.description}`
+        : `Make this plugin: ${o.description}`,
+    },
   ];
-
   const exec = async (name: string, input: Record<string, unknown>): Promise<string> => {
     const filePath = str(input.path);
     switch (name) {

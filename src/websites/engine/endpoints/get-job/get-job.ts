@@ -8,6 +8,8 @@ export const GetJobParamsSchema = z.object({ id: z.string().uuid().describe('Job
 
 export const GetJobResponseSchema = z.object({
   id: z.string().uuid(),
+  projectId: z.string().uuid().describe('Pass back as projectId to keep iterating'),
+  version: z.number().int(),
   status: z.enum(['queued', 'running', 'succeeded', 'failed']),
   error: z.string().nullable(),
   result: z
@@ -42,6 +44,8 @@ export async function getEngineJob(
   const meta = row.s3Prefix ? await readJobMeta(s3Client, row.s3Prefix) : undefined;
   return {
     id: row.id,
+    projectId: row.projectId,
+    version: row.version,
     status: GetJobResponseSchema.shape.status.parse(row.status),
     error: row.error,
     result: row.s3Prefix && meta ? { ...meta, s3Prefix: row.s3Prefix } : null,

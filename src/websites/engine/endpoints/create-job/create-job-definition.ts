@@ -8,7 +8,7 @@ export const createJobRoute = createRoute({
   method: 'post',
   path: '/engine/jobs',
   tags: ['engine'],
-  description: 'Start generating a Minecraft plugin from a description',
+  description: 'Generate a Minecraft plugin from a description, or change an existing project',
   request: {
     body: { content: { 'application/json': { schema: CreateJobRequestSchema } }, required: true },
   },
@@ -21,9 +21,17 @@ export const createJobRoute = createRoute({
       content: { 'application/json': { schema: ErrorSchema } },
       description: 'Origin not allowed',
     },
+    404: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Project not found',
+    },
+    409: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'The project is still being built',
+    },
     429: {
       content: { 'application/json': { schema: ErrorSchema } },
-      description: 'Too many jobs in progress',
+      description: 'Too many jobs or servers in use',
     },
   },
 });

@@ -7,6 +7,9 @@ export interface EngineJobMeta {
   mcVersion: string;
   loader: string;
   artifacts: string[];
+  projectId: string;
+  version: number;
+  prompts: string[];
 }
 
 export type EngineServerStatus = 'provisioning' | 'running' | 'deleted' | 'failed';

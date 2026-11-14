@@ -1,5 +1,5 @@
 {
-  "id": "b96d7eae-498b-4fc8-a020-48e372652d01",
+  "id": "2cd9a774-acb6-4254-b114-a7d2d08fcf1a",
   "prevId": "e981d9e7-5626-4bf6-a463-8049b4982593",
   "version": "7",
   "dialect": "postgresql",
@@ -14,6 +14,18 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
         },
         "status": {
           "name": "status",
@@ -38,7 +50,13 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "engine_jobs_project_version": {
+          "name": "engine_jobs_project_version",
+          "nullsNotDistinct": false,
+          "columns": ["project_id", "version"]
+        }
+      }
     },
     "public.engine_servers": {
       "name": "engine_servers",

@@ -15,6 +15,9 @@ export interface RecommendationJob {
 export interface EngineJob {
   jobId: string;
   prompt: string;
+  projectId: string;
+  version: number;
+  baseKey?: string;
 }
 
 export interface QueueClient {

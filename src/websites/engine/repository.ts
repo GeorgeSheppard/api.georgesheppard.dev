@@ -1,21 +1,43 @@
-import { desc, eq, inArray, sql } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
+import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { DatabaseClient } from '@core/database/client.js';
 import { engineJobs, engineServers } from '@core/database/schema/index.js';
 import type { EngineJobStatus, EngineServerStatus } from './types.js';
 
 export type EngineJobRow = typeof engineJobs.$inferSelect;
 
+export type CreateJobOutcome =
+  | { ok: true; job: EngineJobRow; baseKey?: string }
+  | { ok: false; reason: 'full' | 'busy' | 'unknown_project' };
+
 export async function createJob(
   { db }: DatabaseClient,
-  maxQueued: number
-): Promise<EngineJobRow | undefined> {
+  maxQueued: number,
+  projectId?: string
+): Promise<CreateJobOutcome> {
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(engineJobs)
     .where(inArray(engineJobs.status, ['queued', 'running']));
-  if (count >= maxQueued) return undefined;
-  const [row] = await db.insert(engineJobs).values({}).returning();
-  return row;
+  if (count >= maxQueued) return { ok: false, reason: 'full' };
+
+  if (!projectId) {
+    const id = randomUUID();
+    const [job] = await db.insert(engineJobs).values({ id, projectId: id, version: 1 }).returning();
+    return { ok: true, job };
+  }
+
+  const history = await db.select().from(engineJobs).where(eq(engineJobs.projectId, projectId));
+  if (history.some((j) => j.status === 'queued' || j.status === 'running')) {
+    return { ok: false, reason: 'busy' };
+  }
+  const latest = history
+    .filter((j) => j.status === 'succeeded' && j.s3Prefix)
+    .sort((x, y) => y.version - x.version)[0];
+  if (!latest?.s3Prefix) return { ok: false, reason: 'unknown_project' };
+  const version = Math.max(...history.map((j) => j.version)) + 1;
+  const [job] = await db.insert(engineJobs).values({ projectId, version }).returning();
+  return { ok: true, job, baseKey: latest.s3Prefix };
 }
 
 export async function getJob(
@@ -66,12 +88,48 @@ export async function getServer(
   return row;
 }
 
-export async function countActiveServers({ db }: DatabaseClient): Promise<number> {
+export async function countActiveServers(
+  { db }: DatabaseClient,
+  excludeProjectId?: string
+): Promise<number> {
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(engineServers)
-    .where(inArray(engineServers.status, ACTIVE_SERVER_STATUSES));
+    .innerJoin(engineJobs, eq(engineJobs.id, engineServers.jobId))
+    .where(
+      and(
+        inArray(engineServers.status, ACTIVE_SERVER_STATUSES),
+        excludeProjectId ? ne(engineJobs.projectId, excludeProjectId) : undefined
+      )
+    );
   return count;
+}
+
+export async function getActiveServersForProject(
+  { db }: DatabaseClient,
+  projectId: string
+): Promise<EngineServerRow[]> {
+  const rows = await db
+    .select({ server: engineServers })
+    .from(engineServers)
+    .innerJoin(engineJobs, eq(engineJobs.id, engineServers.jobId))
+    .where(
+      and(
+        eq(engineJobs.projectId, projectId),
+        inArray(engineServers.status, ACTIVE_SERVER_STATUSES)
+      )
+    );
+  return rows.map((r) => r.server);
+}
+
+export async function listServersWithProject({ db }: DatabaseClient) {
+  const rows = await db
+    .select({ server: engineServers, projectId: engineJobs.projectId, version: engineJobs.version })
+    .from(engineServers)
+    .innerJoin(engineJobs, eq(engineJobs.id, engineServers.jobId))
+    .orderBy(desc(engineServers.createdUtc))
+    .limit(100);
+  return rows.map((r) => ({ ...r.server, projectId: r.projectId, version: r.version }));
 }
 
 export async function insertServer(

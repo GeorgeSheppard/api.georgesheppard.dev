@@ -1,8 +1,11 @@
 CREATE TABLE IF NOT EXISTS "engine_jobs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"project_id" uuid NOT NULL,
+	"version" integer NOT NULL,
 	"status" varchar(16) DEFAULT 'queued' NOT NULL,
 	"s3_prefix" text,
-	"error" text
+	"error" text,
+	CONSTRAINT "engine_jobs_project_version" UNIQUE("project_id","version")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "engine_servers" (

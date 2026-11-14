@@ -11,7 +11,16 @@ import { readJobMeta } from '../../generation/job-meta.js';
 const db = {} as DatabaseClient;
 const s3 = {} as S3Client;
 const id = '550e8400-e29b-41d4-a716-446655440000';
-const row = (over: object) => ({ id, status: 'queued', s3Prefix: null, error: null, ...over });
+const projectId = '660e8400-e29b-41d4-a716-446655440000';
+const row = (over: object) => ({
+  id,
+  projectId,
+  version: 1,
+  status: 'queued',
+  s3Prefix: null,
+  error: null,
+  ...over,
+});
 
 describe('getEngineJob', () => {
   beforeEach(() => {
@@ -28,6 +37,8 @@ describe('getEngineJob', () => {
     vi.mocked(getJob).mockResolvedValue(row({ status: 'running' }));
     expect(await getEngineJob(db, s3, id)).toEqual({
       id,
+      projectId,
+      version: 1,
       status: 'running',
       error: null,
       result: null,
@@ -45,6 +56,9 @@ describe('getEngineJob', () => {
       mcVersion: '1.21.1',
       loader: 'paper',
       artifacts: ['Dockerfile'],
+      projectId,
+      version: 1,
+      prompts: ['boots'],
     });
     const res = await getEngineJob(db, s3, id);
     expect(res?.result).toMatchObject({ name: 'Boots', s3Prefix: `engine/${id}/` });

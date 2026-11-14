@@ -1,13 +1,15 @@
 import { z } from 'zod';
 import type { DatabaseClient } from '@core/database/client.js';
 import { serverName } from '../../hosting/provision.js';
-import { listServers } from '../../repository.js';
+import { listServersWithProject } from '../../repository.js';
 
 export const MINECRAFT_PORT = 25565;
 
 export const ServerSchema = z.object({
   id: z.string().uuid(),
   jobId: z.string().uuid(),
+  projectId: z.string().uuid(),
+  version: z.number().int(),
   name: z.string(),
   status: z.enum(['provisioning', 'running', 'deleted', 'failed']),
   ip: z.string().nullable().describe('Public IPv4 address'),
@@ -22,11 +24,13 @@ export type ListServersResponse = z.infer<typeof ListServersResponseSchema>;
 export async function listEngineServers(
   databaseClient: DatabaseClient
 ): Promise<ListServersResponse> {
-  const rows = await listServers(databaseClient);
+  const rows = await listServersWithProject(databaseClient);
   return {
     servers: rows.map((r) => ({
       id: r.id,
       jobId: r.jobId,
+      projectId: r.projectId,
+      version: r.version,
       name: serverName(r.jobId),
       status: ServerSchema.shape.status.parse(r.status),
       ip: r.ip,

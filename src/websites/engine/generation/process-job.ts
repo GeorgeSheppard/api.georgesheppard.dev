@@ -7,6 +7,7 @@ import { getJob, updateJob } from '../repository.js';
 import { runAgent } from './agent.js';
 import { buildArtifacts } from './artifacts.js';
 import * as C from './config.js';
+import { loadBaseProject } from './base.js';
 import { writeJobMeta } from './job-meta.js';
 import type { Builder, ModelClient } from './types.js';
 import { provisionServer, type ProvisionDeps } from '../hosting/provision.js';
@@ -21,10 +22,10 @@ export interface ProcessJobDeps {
   hosting: Pick<ProvisionDeps, 'provider' | 'maxServers'>;
 }
 
-export const jobPrefix = (jobId: string) => `engine/${jobId}/`;
+export const jobPrefix = (projectId: string, version: number) => `engine/${projectId}/v${version}/`;
 
 export async function processEngineJob(
-  { jobId, prompt }: EngineJob,
+  { jobId, prompt, projectId, version, baseKey }: EngineJob,
   deps: ProcessJobDeps
 ): Promise<void> {
   const { databaseClient, s3Client } = deps;
@@ -35,14 +36,16 @@ export async function processEngineJob(
   await updateJob(databaseClient, jobId, { status: 'running' });
   jobLogger.info('Engine job started');
   try {
+    const base = baseKey ? await loadBaseProject(s3Client, baseKey) : undefined;
     const out = await runAgent({
       client: deps.modelClient,
       builder: deps.builder,
       description: prompt,
       model: deps.model,
+      base,
       log: (message) => jobLogger.info(message),
     });
-    const prefix = jobPrefix(jobId);
+    const prefix = jobPrefix(projectId, version);
     jobLogger.info('Uploading to storage');
     const artifacts = await buildArtifacts(prefix, out.files, out.jar, out.meta.name);
     for (const a of artifacts) {
@@ -62,11 +65,18 @@ export async function processEngineJob(
       mcVersion: C.MC_VERSION,
       loader: C.LOADER,
       artifacts: artifacts.map((a) => a.key.slice(prefix.length)),
+      projectId,
+      version,
+      prompts: [...(base?.meta.prompts ?? []), prompt],
     };
     await writeJobMeta(s3Client, prefix, meta);
     await updateJob(databaseClient, jobId, { s3Prefix: prefix });
     jobLogger.info('Starting server');
-    await provisionServer(jobId, prefix, meta, { databaseClient, s3Client, ...deps.hosting });
+    await provisionServer(jobId, projectId, prefix, meta, {
+      databaseClient,
+      s3Client,
+      ...deps.hosting,
+    });
     await updateJob(databaseClient, jobId, { status: 'succeeded' });
     jobLogger.info('Engine job succeeded');
   } catch (e) {

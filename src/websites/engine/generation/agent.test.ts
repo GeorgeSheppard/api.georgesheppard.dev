@@ -66,3 +66,31 @@ describe('isWritable', () => {
     expect(isWritable('/etc/passwd')).toBe(false);
   });
 });
+
+describe('runAgent with an existing project', () => {
+  it('starts from the previous files and does not need init_plugin', async () => {
+    const seen: string[] = [];
+    const client: ModelClient = {
+      createMessage: async ({ messages }) => {
+        seen.push(JSON.stringify(messages[0].content));
+        return seen.length === 1
+          ? { stop_reason: 'tool_use', content: [toolUse('1', 'build', {})] }
+          : { stop_reason: 'end_turn', content: [{ type: 'text', text: 'Faster boots!' }] };
+      },
+    };
+    const base = {
+      meta: { pluginId: 'jump_boots', name: 'Jump Boots' },
+      files: { 'src/main/java/com/engine/jumpboots/Plugin.java': 'class Plugin {}' },
+    };
+    const out = await runAgent({
+      client,
+      builder: okBuilder,
+      description: 'make them faster',
+      base,
+    });
+    expect(seen[0]).toContain('already exists');
+    expect(seen[0]).toContain('make them faster');
+    expect(Object.keys(out.files)).toEqual(['src/main/java/com/engine/jumpboots/Plugin.java']);
+    expect(out.summary).toBe('Faster boots!');
+  });
+});
