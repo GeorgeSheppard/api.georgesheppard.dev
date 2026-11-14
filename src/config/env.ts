@@ -75,6 +75,13 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string(),
   ENGINE_MODEL: z.string().optional(),
   ENGINE_MAX_QUEUED_JOBS: z.coerce.number().default(5),
+  HETZNER_API_TOKEN: z.string(),
+  HETZNER_FIREWALL_ID: z.coerce.number().optional(),
+  ENGINE_SERVER_TYPE: z.string().default('cpx21'),
+  ENGINE_LOCATION: z.string().default('nbg1'),
+  ENGINE_MAX_SERVERS: z.coerce.number().default(3),
+  ENGINE_IDLE_MINUTES: z.coerce.number().default(30),
+  ENGINE_MAX_HOURS: z.coerce.number().default(6),
 
   // Cron monitoring (optional — ping disabled when unset)
   RECOMMENDATIONS_CRON_HEALTHCHECK_URL: z.string().url().optional(),

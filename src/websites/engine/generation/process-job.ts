@@ -9,6 +9,8 @@ import { buildArtifacts } from './artifacts.js';
 import * as C from './config.js';
 import { writeJobMeta } from './job-meta.js';
 import type { Builder, ModelClient } from './types.js';
+import { provisionServer, type ProvisionDeps } from '../hosting/provision.js';
+import type { EngineJobMeta } from '../types.js';
 
 export interface ProcessJobDeps {
   databaseClient: DatabaseClient;
@@ -16,6 +18,7 @@ export interface ProcessJobDeps {
   modelClient: ModelClient;
   builder: Builder;
   model?: string;
+  hosting: Pick<ProvisionDeps, 'provider' | 'maxServers'>;
 }
 
 export const jobPrefix = (jobId: string) => `engine/${jobId}/`;
@@ -52,15 +55,19 @@ export async function processEngineJob(
         })
       );
     }
-    await writeJobMeta(s3Client, prefix, {
+    const meta: EngineJobMeta = {
       pluginId: out.meta.pluginId,
       name: out.meta.name,
       summary: out.summary,
       mcVersion: C.MC_VERSION,
       loader: C.LOADER,
       artifacts: artifacts.map((a) => a.key.slice(prefix.length)),
-    });
-    await updateJob(databaseClient, jobId, { status: 'succeeded', s3Prefix: prefix });
+    };
+    await writeJobMeta(s3Client, prefix, meta);
+    await updateJob(databaseClient, jobId, { s3Prefix: prefix });
+    jobLogger.info('Starting server');
+    await provisionServer(jobId, prefix, meta, { databaseClient, s3Client, ...deps.hosting });
+    await updateJob(databaseClient, jobId, { status: 'succeeded' });
     jobLogger.info('Engine job succeeded');
   } catch (e) {
     jobLogger.error('Engine job failed', e);

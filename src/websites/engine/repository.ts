@@ -1,7 +1,7 @@
-import { eq, inArray, sql } from 'drizzle-orm';
+import { desc, eq, inArray, sql } from 'drizzle-orm';
 import type { DatabaseClient } from '@core/database/client.js';
-import { engineJobs } from '@core/database/schema/index.js';
-import type { EngineJobStatus } from './types.js';
+import { engineJobs, engineServers } from '@core/database/schema/index.js';
+import type { EngineJobStatus, EngineServerStatus } from './types.js';
 
 export type EngineJobRow = typeof engineJobs.$inferSelect;
 
@@ -32,4 +32,60 @@ export async function updateJob(
   patch: { status?: EngineJobStatus; s3Prefix?: string; error?: string }
 ): Promise<void> {
   await db.update(engineJobs).set(patch).where(eq(engineJobs.id, id));
+}
+
+export type EngineServerRow = typeof engineServers.$inferSelect;
+
+const ACTIVE_SERVER_STATUSES: EngineServerStatus[] = ['provisioning', 'running'];
+
+export async function listServers(
+  { db }: DatabaseClient,
+  options: { activeOnly?: boolean } = {}
+): Promise<EngineServerRow[]> {
+  const query = db.select().from(engineServers);
+  return (
+    options.activeOnly ? query.where(inArray(engineServers.status, ACTIVE_SERVER_STATUSES)) : query
+  )
+    .orderBy(desc(engineServers.createdUtc))
+    .limit(100);
+}
+
+export async function getServerByJob(
+  { db }: DatabaseClient,
+  jobId: string
+): Promise<EngineServerRow | undefined> {
+  const [row] = await db.select().from(engineServers).where(eq(engineServers.jobId, jobId));
+  return row;
+}
+
+export async function getServer(
+  { db }: DatabaseClient,
+  id: string
+): Promise<EngineServerRow | undefined> {
+  const [row] = await db.select().from(engineServers).where(eq(engineServers.id, id));
+  return row;
+}
+
+export async function countActiveServers({ db }: DatabaseClient): Promise<number> {
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(engineServers)
+    .where(inArray(engineServers.status, ACTIVE_SERVER_STATUSES));
+  return count;
+}
+
+export async function insertServer(
+  { db }: DatabaseClient,
+  values: { jobId: string }
+): Promise<EngineServerRow> {
+  const [row] = await db.insert(engineServers).values(values).returning();
+  return row;
+}
+
+export async function updateServer(
+  { db }: DatabaseClient,
+  id: string,
+  patch: Partial<Omit<EngineServerRow, 'id' | 'jobId' | 'createdUtc'>>
+): Promise<void> {
+  await db.update(engineServers).set(patch).where(eq(engineServers.id, id));
 }

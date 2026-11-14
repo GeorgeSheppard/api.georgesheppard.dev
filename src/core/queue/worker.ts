@@ -10,6 +10,8 @@ import { processEngineJob } from '@websites/engine/generation/process-job.js';
 import { MavenBuilder } from '@websites/engine/generation/builder.js';
 import { createAnthropicModelClient } from '@websites/engine/generation/anthropic-model-client.js';
 import { createS3ClientWrapper } from '@core/s3/client.js';
+import { createHostingProvider, createSweepDeps } from '@websites/engine/hosting/provider.js';
+import { sweepServers } from '@websites/engine/hosting/sweeper.js';
 import { logger } from '@core/telemetry/logger.js';
 
 const MAX_RETRIES = 2;
@@ -47,6 +49,7 @@ async function main() {
   );
   const modelClient = createAnthropicModelClient(config.ANTHROPIC_API_KEY);
   const builder = new MavenBuilder();
+  const hostingProvider = createHostingProvider();
 
   // Set prefetch to 1 to ensure fair distribution
   await channel.prefetch(1);
@@ -79,17 +82,36 @@ async function main() {
         modelClient,
         builder,
         model: config.ENGINE_MODEL,
+        hosting: { provider: hostingProvider, maxServers: config.ENGINE_MAX_SERVERS },
       });
     } catch (err) {
       logger.error('Engine job failed:', err);
     }
   });
 
+  // Hetzner bills idle servers: delete servers with no players or past their max age
+  const sweepDeps = createSweepDeps(databaseClient);
+  let sweeping = false;
+  const sweep = async () => {
+    if (sweeping) return;
+    sweeping = true;
+    try {
+      await sweepServers(sweepDeps);
+    } catch (err) {
+      logger.error('Engine sweep failed:', err);
+    } finally {
+      sweeping = false;
+    }
+  };
+  const sweepTimer = setInterval(sweep, 60_000);
+  void sweep();
+
   logger.info('Recommendation worker started');
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received. Shutting down workers...`);
+    clearInterval(sweepTimer);
 
     try {
       await Promise.all([queueClient.close(), databaseClient.close(), s3Client.close()]);

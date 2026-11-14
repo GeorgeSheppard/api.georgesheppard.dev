@@ -5,7 +5,7 @@ import { getEngineJob } from './get-job.js';
 
 vi.mock('../../repository.js');
 vi.mock('../../generation/job-meta.js');
-import { getJob } from '../../repository.js';
+import { getJob, getServerByJob } from '../../repository.js';
 import { readJobMeta } from '../../generation/job-meta.js';
 
 const db = {} as DatabaseClient;
@@ -14,7 +14,10 @@ const id = '550e8400-e29b-41d4-a716-446655440000';
 const row = (over: object) => ({ id, status: 'queued', s3Prefix: null, error: null, ...over });
 
 describe('getEngineJob', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getServerByJob).mockResolvedValue(undefined);
+  });
 
   it('returns undefined for an unknown job', async () => {
     vi.mocked(getJob).mockResolvedValue(undefined);
@@ -28,6 +31,7 @@ describe('getEngineJob', () => {
       status: 'running',
       error: null,
       result: null,
+      server: null,
     });
     expect(readJobMeta).not.toHaveBeenCalled();
   });

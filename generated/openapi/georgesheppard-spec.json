@@ -4101,13 +4101,43 @@
                         "loader",
                         "s3Prefix"
                       ]
+                    },
+                    "server": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "provisioning",
+                            "running",
+                            "deleted",
+                            "failed"
+                          ]
+                        },
+                        "address": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Join address, ip:port, once known"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "status",
+                        "address"
+                      ]
                     }
                   },
                   "required": [
                     "id",
                     "status",
                     "error",
-                    "result"
+                    "result",
+                    "server"
                   ]
                 }
               }
@@ -4142,6 +4172,149 @@
                     "error": {
                       "type": "string",
                       "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engine/servers": {
+      "get": {
+        "tags": [
+          "engine"
+        ],
+        "description": "List Engine servers (admin view, unauthenticated, restricted by origin)",
+        "responses": {
+          "200": {
+            "description": "Servers, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "servers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "jobId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "provisioning",
+                              "running",
+                              "deleted",
+                              "failed"
+                            ]
+                          },
+                          "ip": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Public IPv4 address"
+                          },
+                          "address": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Join address, ip:port"
+                          },
+                          "createdUtc": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "lastActiveUtc": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "jobId",
+                          "name",
+                          "status",
+                          "ip",
+                          "address",
+                          "createdUtc",
+                          "lastActiveUtc"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "servers"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engine/servers/{id}": {
+      "delete": {
+        "tags": [
+          "engine"
+        ],
+        "description": "Delete a running Engine server",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Server ID"
+            },
+            "required": true,
+            "description": "Server ID",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "deleted"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Server not found or already deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
                     }
                   },
                   "required": [

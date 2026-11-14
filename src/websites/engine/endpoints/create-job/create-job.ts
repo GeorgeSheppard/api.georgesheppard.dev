@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { DatabaseClient } from '@core/database/client.js';
 import { enqueueEngineJob, type QueueClient } from '@core/queue/client.js';
-import { createJob } from '../../repository.js';
+import { countActiveServers, createJob } from '../../repository.js';
 
 export const CreateJobRequestSchema = z.object({
   prompt: z.string().trim().min(1).max(4000).describe('Plain-language description of the plugin'),
@@ -20,9 +20,12 @@ export async function createEngineJob(
   databaseClient: DatabaseClient,
   queueClient: QueueClient,
   request: CreateJobRequest,
-  maxQueued: number
+  limits: { maxQueued: number; maxServers: number }
 ): Promise<CreateJobResponse> {
-  const job = await createJob(databaseClient, maxQueued);
+  if ((await countActiveServers(databaseClient)) >= limits.maxServers) {
+    throw new QueueFullError('All servers are in use right now, try again later');
+  }
+  const job = await createJob(databaseClient, limits.maxQueued);
   if (!job) throw new QueueFullError('Too many jobs are in progress, try again shortly');
   enqueueEngineJob(queueClient, { jobId: job.id, prompt: request.prompt });
   return { jobId: job.id };

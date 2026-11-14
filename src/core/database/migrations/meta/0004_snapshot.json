@@ -1,5 +1,5 @@
 {
-  "id": "6fb95cf5-758f-45a7-8326-a8462ab34651",
+  "id": "b96d7eae-498b-4fc8-a020-48e372652d01",
   "prevId": "e981d9e7-5626-4bf6-a463-8049b4982593",
   "version": "7",
   "dialect": "postgresql",
@@ -37,6 +37,72 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.engine_servers": {
+      "name": "engine_servers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "job_id": {
+          "name": "job_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hetzner_id": {
+          "name": "hetzner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'provisioning'"
+        },
+        "ip": {
+          "name": "ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_utc": {
+          "name": "created_utc",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "last_active_utc": {
+          "name": "last_active_utc",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "engine_servers_job_id_engine_jobs_id_fk": {
+          "name": "engine_servers_job_id_engine_jobs_id_fk",
+          "tableFrom": "engine_servers",
+          "tableTo": "engine_jobs",
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },

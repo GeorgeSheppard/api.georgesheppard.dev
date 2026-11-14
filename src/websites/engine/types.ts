@@ -8,3 +8,5 @@ export interface EngineJobMeta {
   loader: string;
   artifacts: string[];
 }
+
+export type EngineServerStatus = 'provisioning' | 'running' | 'deleted' | 'failed';
