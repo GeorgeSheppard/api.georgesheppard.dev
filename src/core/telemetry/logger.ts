@@ -1,9 +1,12 @@
 import { logs, SeverityNumber } from '@opentelemetry/api-logs';
 
-function emit(severity: SeverityNumber, args: unknown[]) {
+type Attributes = Record<string, string>;
+
+function emit(severity: SeverityNumber, args: unknown[], attributes?: Attributes) {
   logs.getLogger('app').emit({
     severityNumber: severity,
     body: args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '),
+    attributes,
   });
 }
 
@@ -14,17 +17,25 @@ export async function flushLogs() {
   }
 }
 
-export const logger = {
-  info(...args: unknown[]) {
-    console.log(...args);
-    emit(SeverityNumber.INFO, args);
-  },
-  warn(...args: unknown[]) {
-    console.warn(...args);
-    emit(SeverityNumber.WARN, args);
-  },
-  error(...args: unknown[]) {
-    console.error(...args);
-    emit(SeverityNumber.ERROR, args);
-  },
-};
+function createLogger(attributes?: Attributes) {
+  const prefix = attributes ? [`[${Object.values(attributes).join(' ')}]`] : [];
+  return {
+    info(...args: unknown[]) {
+      console.log(...prefix, ...args);
+      emit(SeverityNumber.INFO, args, attributes);
+    },
+    warn(...args: unknown[]) {
+      console.warn(...prefix, ...args);
+      emit(SeverityNumber.WARN, args, attributes);
+    },
+    error(...args: unknown[]) {
+      console.error(...prefix, ...args);
+      emit(SeverityNumber.ERROR, args, attributes);
+    },
+    child(extra: Attributes) {
+      return createLogger({ ...attributes, ...extra });
+    },
+  };
+}
+
+export const logger = createLogger();

@@ -6,8 +6,8 @@ const ErrorSchema = z.object({ error: z.string().describe('Error message') });
 
 export const createJobRoute = createRoute({
   method: 'post',
-  path: '/silo/jobs',
-  tags: ['silo'],
+  path: '/engine/jobs',
+  tags: ['engine'],
   description: 'Start generating a Minecraft plugin from a description',
   request: {
     body: { content: { 'application/json': { schema: CreateJobRequestSchema } }, required: true },

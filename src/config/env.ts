@@ -71,10 +71,10 @@ const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string(),
   S3_ENDPOINT: z.string().url().optional(),
 
-  // Silo (Minecraft plugin generation)
+  // Engine (Minecraft plugin generation)
   ANTHROPIC_API_KEY: z.string(),
-  SILO_MODEL: z.string().optional(),
-  SILO_MAX_QUEUED_JOBS: z.coerce.number().default(5),
+  ENGINE_MODEL: z.string().optional(),
+  ENGINE_MAX_QUEUED_JOBS: z.coerce.number().default(5),
 
   // Cron monitoring (optional — ping disabled when unset)
   RECOMMENDATIONS_CRON_HEALTHCHECK_URL: z.string().url().optional(),

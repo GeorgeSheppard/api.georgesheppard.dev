@@ -24,7 +24,7 @@ RUN pnpm build
 # Runtime stage
 FROM node:22-alpine
 
-# JDK + Maven: the Silo worker compiles generated Minecraft plugins
+# JDK + Maven: the Engine worker compiles generated Minecraft plugins
 RUN apk add --no-cache openjdk21-jdk maven
 
 WORKDIR /app

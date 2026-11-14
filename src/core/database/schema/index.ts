@@ -1,2 +1,2 @@
 export * from './shelfie.schema.js';
-export * from './silo.schema.js';
+export * from './engine.schema.js';

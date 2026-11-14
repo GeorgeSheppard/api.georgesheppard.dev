@@ -6,8 +6,8 @@ const ErrorSchema = z.object({ error: z.string().describe('Error message') });
 
 export const getJobRoute = createRoute({
   method: 'get',
-  path: '/silo/jobs/{id}',
-  tags: ['silo'],
+  path: '/engine/jobs/{id}',
+  tags: ['engine'],
   description: 'Get the status, progress log and result of a generation job',
   request: { params: GetJobParamsSchema },
   responses: {

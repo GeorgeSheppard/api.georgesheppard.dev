@@ -12,15 +12,16 @@ export interface RecommendationJob {
   recommendationId: string;
 }
 
-export interface SiloJob {
+export interface EngineJob {
   jobId: string;
+  prompt: string;
 }
 
 export interface QueueClient {
   channel: amqp.Channel;
   connection: amqp.ChannelModel;
   recommendationQueue: string;
-  siloQueue: string;
+  engineQueue: string;
   close(): Promise<void>;
 }
 
@@ -38,8 +39,8 @@ export function enqueueRecommendationJob(queueClient: QueueClient, job: Recommen
   );
 }
 
-export function enqueueSiloJob(queueClient: QueueClient, job: SiloJob): void {
-  queueClient.channel.sendToQueue(queueClient.siloQueue, Buffer.from(JSON.stringify(job)), {
+export function enqueueEngineJob(queueClient: QueueClient, job: EngineJob): void {
+  queueClient.channel.sendToQueue(queueClient.engineQueue, Buffer.from(JSON.stringify(job)), {
     persistent: true,
   });
 }
@@ -51,13 +52,13 @@ export async function createQueueClient(url: string): Promise<QueueClient> {
   // Declare queues
   const recommendationQueue = 'recommendations';
 
-  const siloQueue = 'silo-jobs';
+  const engineQueue = 'engine-jobs';
 
   await channel.assertQueue(recommendationQueue, { durable: true });
-  await channel.assertQueue(siloQueue, { durable: true });
+  await channel.assertQueue(engineQueue, { durable: true });
 
   const callback = async (observableResult: ObservableResult) => {
-    for (const queue of [recommendationQueue, siloQueue]) {
+    for (const queue of [recommendationQueue, engineQueue]) {
       try {
         const { messageCount } = await channel.checkQueue(queue);
         observableResult.observe(messageCount, { queue });
@@ -72,7 +73,7 @@ export async function createQueueClient(url: string): Promise<QueueClient> {
     channel,
     connection,
     recommendationQueue,
-    siloQueue,
+    engineQueue,
     close: async () => {
       queueDepthGauge.removeCallback(callback);
       await channel.close();

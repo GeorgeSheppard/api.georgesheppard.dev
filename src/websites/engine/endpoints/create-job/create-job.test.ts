@@ -1,27 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { DatabaseClient } from '@core/database/client.js';
 import type { QueueClient } from '@core/queue/client.js';
-import { createSiloJob, QueueFullError, CreateJobRequestSchema } from './create-job.js';
+import { createEngineJob, QueueFullError, CreateJobRequestSchema } from './create-job.js';
 
 vi.mock('../../repository.js');
 import { createJob } from '../../repository.js';
 
 const queueClient = {
-  siloQueue: 'silo-jobs',
+  engineQueue: 'engine-jobs',
   channel: { sendToQueue: vi.fn() },
 } as unknown as QueueClient;
 const databaseClient = {} as DatabaseClient;
 
-describe('createSiloJob', () => {
+describe('createEngineJob', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('creates a job and enqueues it', async () => {
     vi.mocked(createJob).mockResolvedValue({ id: 'abc' } as Awaited<ReturnType<typeof createJob>>);
-    const res = await createSiloJob(databaseClient, queueClient, { prompt: 'a sword' }, 5);
+    const res = await createEngineJob(databaseClient, queueClient, { prompt: 'a sword' }, 5);
     expect(res).toEqual({ jobId: 'abc' });
     expect(queueClient.channel.sendToQueue).toHaveBeenCalledWith(
-      'silo-jobs',
-      Buffer.from(JSON.stringify({ jobId: 'abc' })),
+      'engine-jobs',
+      Buffer.from(JSON.stringify({ jobId: 'abc', prompt: 'a sword' })),
       { persistent: true }
     );
   });
@@ -29,7 +29,7 @@ describe('createSiloJob', () => {
   it('rejects when too many jobs are in progress', async () => {
     vi.mocked(createJob).mockResolvedValue(undefined);
     await expect(
-      createSiloJob(databaseClient, queueClient, { prompt: 'x' }, 5)
+      createEngineJob(databaseClient, queueClient, { prompt: 'x' }, 5)
     ).rejects.toBeInstanceOf(QueueFullError);
     expect(queueClient.channel.sendToQueue).not.toHaveBeenCalled();
   });

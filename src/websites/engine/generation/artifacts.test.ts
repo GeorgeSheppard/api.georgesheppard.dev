@@ -21,12 +21,12 @@ describe('buildArtifacts', () => {
       'src/main/java/a/Plugin.java': 'class A {}',
       'src/main/resources/assets/x/textures/item/a.png': Buffer.from([1]),
     };
-    const out = await buildArtifacts('silo/j/', files, Buffer.from('jar'), 'A');
+    const out = await buildArtifacts('engine/j/', files, Buffer.from('jar'), 'A');
     expect(out.map((a) => a.key).sort()).toEqual([
-      'silo/j/Dockerfile',
-      'silo/j/pack.zip',
-      'silo/j/plugin.jar',
-      'silo/j/source.zip',
+      'engine/j/Dockerfile',
+      'engine/j/pack.zip',
+      'engine/j/plugin.jar',
+      'engine/j/source.zip',
     ]);
     const pack = out.find((a) => a.key.endsWith('pack.zip'));
     const zip = await JSZip.loadAsync(pack?.body as Buffer);

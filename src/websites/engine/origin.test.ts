@@ -1,18 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { Hono } from 'hono';
-import { isSiloOrigin, siloOriginGuard } from './origin.js';
+import { isEngineOrigin, engineOriginGuard } from './origin.js';
 
-describe('silo origin', () => {
-  it('only allows the engine site (plus localhost outside production)', () => {
-    expect(isSiloOrigin('https://engine.georgesheppard.dev')).toBe(true);
-    expect(isSiloOrigin('https://evil.example')).toBe(false);
-    expect(isSiloOrigin('https://mise.georgesheppard.dev')).toBe(false);
-    expect(isSiloOrigin(undefined)).toBe(false);
+describe('engine origin', () => {
+  it('only allows the engine site', () => {
+    expect(isEngineOrigin('https://engine.georgesheppard.dev')).toBe(true);
+    expect(isEngineOrigin('https://evil.example')).toBe(false);
+    expect(isEngineOrigin('http://localhost:5173')).toBe(false);
+    expect(isEngineOrigin('https://mise.georgesheppard.dev')).toBe(false);
+    expect(isEngineOrigin(undefined)).toBe(false);
   });
 
   it('guards requests by Origin header', async () => {
     const app = new Hono();
-    app.use('*', siloOriginGuard);
+    app.use('*', engineOriginGuard);
     app.get('/x', (c) => c.text('ok'));
     const headers = (origin?: string) => (origin ? { Origin: origin } : undefined);
     expect(

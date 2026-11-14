@@ -14,8 +14,8 @@ import { registerShelfieRoutes } from '@websites/shelfie/index.js';
 import { registerRoutes as registerMiseRoutes, tools as miseTools } from '@websites/mise/index.js';
 import { registerRoutes as registerTflRoutes } from '@websites/tfl/index.js';
 import { registerRoutes as registerFlightsRoutes } from '@websites/flights/index.js';
-import { registerRoutes as registerSiloRoutes } from '@websites/silo/index.js';
-import { isSiloOrigin } from '@websites/silo/origin.js';
+import { registerRoutes as registerEngineRoutes } from '@websites/engine/index.js';
+import { isEngineOrigin } from '@websites/engine/origin.js';
 import { registerMcpSseRoute } from '@core/mcp/sse.js';
 import { registerAuthRoutes } from '@core/auth/index.js';
 import { isAllowedOrigin } from '@core/auth/redirect.js';
@@ -96,7 +96,7 @@ export async function createApp(dependencies: AppDependencies) {
     '*',
     cors({
       origin: (origin, c) => {
-        if (c.req.path.startsWith('/silo/')) return isSiloOrigin(origin) ? origin : undefined;
+        if (c.req.path.startsWith('/engine/')) return isEngineOrigin(origin) ? origin : undefined;
         return origin && isAllowedOrigin(origin) ? origin : undefined;
       },
       credentials: true,
@@ -118,7 +118,7 @@ export async function createApp(dependencies: AppDependencies) {
   registerMiseRoutes(app);
   registerTflRoutes(app);
   registerFlightsRoutes(app);
-  registerSiloRoutes(app);
+  registerEngineRoutes(app);
 
   // Register MCP with all tools from all websites
   const allMcpTools = [...miseTools];

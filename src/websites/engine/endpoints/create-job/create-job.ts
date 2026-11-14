@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { DatabaseClient } from '@core/database/client.js';
-import { enqueueSiloJob, type QueueClient } from '@core/queue/client.js';
+import { enqueueEngineJob, type QueueClient } from '@core/queue/client.js';
 import { createJob } from '../../repository.js';
 
 export const CreateJobRequestSchema = z.object({
@@ -16,14 +16,14 @@ export type CreateJobResponse = z.infer<typeof CreateJobResponseSchema>;
 
 export class QueueFullError extends Error {}
 
-export async function createSiloJob(
+export async function createEngineJob(
   databaseClient: DatabaseClient,
   queueClient: QueueClient,
   request: CreateJobRequest,
   maxQueued: number
 ): Promise<CreateJobResponse> {
-  const job = await createJob(databaseClient, request.prompt, maxQueued);
+  const job = await createJob(databaseClient, maxQueued);
   if (!job) throw new QueueFullError('Too many jobs are in progress, try again shortly');
-  enqueueSiloJob(queueClient, { jobId: job.id });
+  enqueueEngineJob(queueClient, { jobId: job.id, prompt: request.prompt });
   return { jobId: job.id };
 }

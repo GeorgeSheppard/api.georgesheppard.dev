@@ -3937,10 +3937,10 @@
         }
       }
     },
-    "/silo/jobs": {
+    "/engine/jobs": {
       "post": {
         "tags": [
-          "silo"
+          "engine"
         ],
         "description": "Start generating a Minecraft plugin from a description",
         "requestBody": {
@@ -4026,10 +4026,10 @@
         }
       }
     },
-    "/silo/jobs/{id}": {
+    "/engine/jobs/{id}": {
       "get": {
         "tags": [
-          "silo"
+          "engine"
         ],
         "description": "Get the status, progress log and result of a generation job",
         "parameters": [
@@ -4066,12 +4066,6 @@
                         "failed"
                       ]
                     },
-                    "logs": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
                     "error": {
                       "type": "string",
                       "nullable": true
@@ -4107,19 +4101,13 @@
                         "loader",
                         "s3Prefix"
                       ]
-                    },
-                    "createdUtc": {
-                      "type": "string",
-                      "format": "date-time"
                     }
                   },
                   "required": [
                     "id",
                     "status",
-                    "logs",
                     "error",
-                    "result",
-                    "createdUtc"
+                    "result"
                   ]
                 }
               }

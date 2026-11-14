@@ -1,11 +1,13 @@
 import { PutObjectCommand, type S3Client } from '@aws-sdk/client-s3';
 import { config } from '@config/index.js';
 import type { DatabaseClient } from '@core/database/client.js';
+import type { EngineJob } from '@core/queue/client.js';
 import { logger } from '@core/telemetry/logger.js';
 import { getJob, updateJob } from '../repository.js';
 import { runAgent } from './agent.js';
 import { buildArtifacts } from './artifacts.js';
 import * as C from './config.js';
+import { writeJobMeta } from './job-meta.js';
 import type { Builder, ModelClient } from './types.js';
 
 export interface ProcessJobDeps {
@@ -16,32 +18,29 @@ export interface ProcessJobDeps {
   model?: string;
 }
 
-export const jobPrefix = (jobId: string) => `silo/${jobId}/`;
+export const jobPrefix = (jobId: string) => `engine/${jobId}/`;
 
-export async function processSiloJob(jobId: string, deps: ProcessJobDeps): Promise<void> {
+export async function processEngineJob(
+  { jobId, prompt }: EngineJob,
+  deps: ProcessJobDeps
+): Promise<void> {
   const { databaseClient, s3Client } = deps;
   const job = await getJob(databaseClient, jobId);
   if (!job || job.status !== 'queued') return;
 
-  const logs: string[] = [];
-  const log = (message: string) => {
-    logs.push(message);
-    updateJob(databaseClient, jobId, { logs: [...logs] }).catch((e: unknown) =>
-      logger.warn('Failed to persist silo job log', e)
-    );
-  };
-
+  const jobLogger = logger.child({ 'engine.job_id': jobId });
   await updateJob(databaseClient, jobId, { status: 'running' });
+  jobLogger.info('Engine job started');
   try {
     const out = await runAgent({
       client: deps.modelClient,
       builder: deps.builder,
-      description: job.prompt,
+      description: prompt,
       model: deps.model,
-      log,
+      log: (message) => jobLogger.info(message),
     });
     const prefix = jobPrefix(jobId);
-    log('Uploading to storage…');
+    jobLogger.info('Uploading to storage');
     const artifacts = await buildArtifacts(prefix, out.files, out.jar, out.meta.name);
     for (const a of artifacts) {
       await s3Client.send(
@@ -53,23 +52,20 @@ export async function processSiloJob(jobId: string, deps: ProcessJobDeps): Promi
         })
       );
     }
-    await updateJob(databaseClient, jobId, {
-      status: 'succeeded',
-      logs,
-      result: {
-        pluginId: out.meta.pluginId,
-        name: out.meta.name,
-        summary: out.summary,
-        mcVersion: C.MC_VERSION,
-        loader: C.LOADER,
-        s3Prefix: prefix,
-      },
+    await writeJobMeta(s3Client, prefix, {
+      pluginId: out.meta.pluginId,
+      name: out.meta.name,
+      summary: out.summary,
+      mcVersion: C.MC_VERSION,
+      loader: C.LOADER,
+      artifacts: artifacts.map((a) => a.key.slice(prefix.length)),
     });
+    await updateJob(databaseClient, jobId, { status: 'succeeded', s3Prefix: prefix });
+    jobLogger.info('Engine job succeeded');
   } catch (e) {
-    logger.error('Silo job failed', e);
+    jobLogger.error('Engine job failed', e);
     await updateJob(databaseClient, jobId, {
       status: 'failed',
-      logs,
       error: e instanceof Error ? e.message : 'Generation failed',
     });
   }

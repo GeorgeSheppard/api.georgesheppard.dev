@@ -1,14 +1,14 @@
 import '@core/telemetry/init.js';
 import amqp from 'amqplib';
-import { createQueueClient } from './client.js';
+import { createQueueClient, type EngineJob } from './client.js';
 import { createDatabaseClient } from '@core/database/client.js';
 import { processRecommendationJob } from '@websites/shelfie/workers/recommendation-worker.js';
 import { config } from '@config/index.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { OpenAIRecommender } from '@core/utils/openai-recommender.js';
-import { processSiloJob } from '@websites/silo/generation/process-job.js';
-import { MavenBuilder } from '@websites/silo/generation/builder.js';
-import { createAnthropicModelClient } from '@websites/silo/generation/anthropic-model-client.js';
+import { processEngineJob } from '@websites/engine/generation/process-job.js';
+import { MavenBuilder } from '@websites/engine/generation/builder.js';
+import { createAnthropicModelClient } from '@websites/engine/generation/anthropic-model-client.js';
 import { createS3ClientWrapper } from '@core/s3/client.js';
 import { logger } from '@core/telemetry/logger.js';
 
@@ -38,7 +38,7 @@ async function main() {
   const databaseClient = await createDatabaseClient(config.DATABASE_URL);
   const emailClient = new MailgunClient();
   const recommender = new OpenAIRecommender();
-  const { channel, recommendationQueue, siloQueue } = queueClient;
+  const { channel, recommendationQueue, engineQueue } = queueClient;
   const s3Client = await createS3ClientWrapper(
     config.S3_REGION,
     config.S3_ENDPOINT,
@@ -68,20 +68,20 @@ async function main() {
   });
 
   // Jobs are costly and not idempotent: ack immediately and mark the job failed instead of retrying
-  await channel.consume(siloQueue, async (msg) => {
+  await channel.consume(engineQueue, async (msg) => {
     if (!msg) return;
     channel.ack(msg);
     try {
-      const { jobId } = JSON.parse(msg.content.toString()) as { jobId: string };
-      await processSiloJob(jobId, {
+      const job = JSON.parse(msg.content.toString()) as EngineJob;
+      await processEngineJob(job, {
         databaseClient,
         s3Client: s3Client.client,
         modelClient,
         builder,
-        model: config.SILO_MODEL,
+        model: config.ENGINE_MODEL,
       });
     } catch (err) {
-      logger.error('Silo job failed:', err);
+      logger.error('Engine job failed:', err);
     }
   });
 

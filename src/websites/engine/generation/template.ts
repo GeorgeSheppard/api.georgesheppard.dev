@@ -3,7 +3,7 @@ import type { Files } from './types.js';
 
 /** Fixed project scaffold. The agent only writes src/main/** files, so builds stay reproducible. */
 export function scaffold(pluginId: string, name: string): Files {
-  const pkg = `com.silo.${pluginId.replace(/[^a-z0-9]/g, '')}`;
+  const pkg = `com.engine.${pluginId.replace(/[^a-z0-9]/g, '')}`;
   const pkgPath = pkg.replace(/\./g, '/');
   const safeName = name.replace(/\s+/g, ''); // Remove spaces from plugin name for plugin.yml
   return {
@@ -12,7 +12,7 @@ export function scaffold(pluginId: string, name: string): Files {
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.silo</groupId>
+    <groupId>com.engine</groupId>
     <artifactId>${pluginId}</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
@@ -104,7 +104,7 @@ public class Plugin extends JavaPlugin {
 `,
   };
 }
-export const packageFor = (pluginId: string) => `com.silo.${pluginId.replace(/[^a-z0-9]/g, '')}`;
+export const packageFor = (pluginId: string) => `com.engine.${pluginId.replace(/[^a-z0-9]/g, '')}`;
 
 /** Paths the agent may write. Everything else is scaffold-owned. */
 export function isWritable(p: string): boolean {

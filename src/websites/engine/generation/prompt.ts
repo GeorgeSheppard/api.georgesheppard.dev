@@ -28,7 +28,7 @@ Key API patterns:
 - Give items to players: player.getInventory().addItem(itemStack)
 
 Example - Plugin.java with a command:
-  package com.silo.myplugin;
+  package com.engine.myplugin;
   import org.bukkit.command.Command;
   import org.bukkit.command.CommandSender;
   import org.bukkit.entity.Player;
