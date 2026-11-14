@@ -24,6 +24,9 @@ RUN pnpm build
 # Runtime stage
 FROM node:22-alpine
 
+# JDK + Maven: the Silo worker compiles generated Minecraft plugins
+RUN apk add --no-cache openjdk21-jdk maven
+
 WORKDIR /app
 
 # Enable corepack so it installs the exact pnpm version pinned in package.json's

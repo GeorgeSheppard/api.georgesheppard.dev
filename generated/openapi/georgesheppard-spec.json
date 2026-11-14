@@ -3936,6 +3936,235 @@
           }
         }
       }
+    },
+    "/silo/jobs": {
+      "post": {
+        "tags": [
+          "silo"
+        ],
+        "description": "Start generating a Minecraft plugin from a description",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000,
+                    "description": "Plain-language description of the plugin"
+                  }
+                },
+                "required": [
+                  "prompt"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Job queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jobId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Job ID to poll"
+                    }
+                  },
+                  "required": [
+                    "jobId"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many jobs in progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/silo/jobs/{id}": {
+      "get": {
+        "tags": [
+          "silo"
+        ],
+        "description": "Get the status, progress log and result of a generation job",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Job ID"
+            },
+            "required": true,
+            "description": "Job ID",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "running",
+                        "succeeded",
+                        "failed"
+                      ]
+                    },
+                    "logs": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "result": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "pluginId": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "summary": {
+                          "type": "string"
+                        },
+                        "mcVersion": {
+                          "type": "string"
+                        },
+                        "loader": {
+                          "type": "string"
+                        },
+                        "s3Prefix": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "pluginId",
+                        "name",
+                        "summary",
+                        "mcVersion",
+                        "loader",
+                        "s3Prefix"
+                      ]
+                    },
+                    "createdUtc": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status",
+                    "logs",
+                    "error",
+                    "result",
+                    "createdUtc"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

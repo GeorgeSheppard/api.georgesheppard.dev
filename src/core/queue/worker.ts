@@ -6,6 +6,10 @@ import { processRecommendationJob } from '@websites/shelfie/workers/recommendati
 import { config } from '@config/index.js';
 import { MailgunClient } from '@core/utils/mailgun.js';
 import { OpenAIRecommender } from '@core/utils/openai-recommender.js';
+import { processSiloJob } from '@websites/silo/generation/process-job.js';
+import { MavenBuilder } from '@websites/silo/generation/builder.js';
+import { createAnthropicModelClient } from '@websites/silo/generation/anthropic-model-client.js';
+import { createS3ClientWrapper } from '@core/s3/client.js';
 import { logger } from '@core/telemetry/logger.js';
 
 const MAX_RETRIES = 2;
@@ -34,7 +38,15 @@ async function main() {
   const databaseClient = await createDatabaseClient(config.DATABASE_URL);
   const emailClient = new MailgunClient();
   const recommender = new OpenAIRecommender();
-  const { channel, recommendationQueue } = queueClient;
+  const { channel, recommendationQueue, siloQueue } = queueClient;
+  const s3Client = await createS3ClientWrapper(
+    config.S3_REGION,
+    config.S3_ENDPOINT,
+    config.S3_ACCESS_KEY_ID,
+    config.S3_SECRET_ACCESS_KEY
+  );
+  const modelClient = createAnthropicModelClient(config.ANTHROPIC_API_KEY);
+  const builder = new MavenBuilder();
 
   // Set prefetch to 1 to ensure fair distribution
   await channel.prefetch(1);
@@ -55,6 +67,24 @@ async function main() {
     }
   });
 
+  // Jobs are costly and not idempotent: ack immediately and mark the job failed instead of retrying
+  await channel.consume(siloQueue, async (msg) => {
+    if (!msg) return;
+    channel.ack(msg);
+    try {
+      const { jobId } = JSON.parse(msg.content.toString()) as { jobId: string };
+      await processSiloJob(jobId, {
+        databaseClient,
+        s3Client: s3Client.client,
+        modelClient,
+        builder,
+        model: config.SILO_MODEL,
+      });
+    } catch (err) {
+      logger.error('Silo job failed:', err);
+    }
+  });
+
   logger.info('Recommendation worker started');
 
   // Graceful shutdown
@@ -62,7 +92,7 @@ async function main() {
     logger.info(`${signal} received. Shutting down workers...`);
 
     try {
-      await Promise.all([queueClient.close(), databaseClient.close()]);
+      await Promise.all([queueClient.close(), databaseClient.close(), s3Client.close()]);
       logger.info('Workers closed');
       process.exit(0);
     } catch (err) {
